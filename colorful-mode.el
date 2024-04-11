@@ -3,6 +3,10 @@
 ;; Copyright (C) 2024 Elias G.B. Perez
 
 ;; Author: Elias G.B. Perez <eg642616@gmail.com>
+;; Maintainer: Elias G.B. Perez <eg642616@gmail.com>
+;; Created: 2024
+;; Package-Requires: ((emacs "29.1"))
+;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
 ;; Keywords: faces
 ;; Version: 0.1.1
 
@@ -86,7 +90,7 @@ Must be a list containing regex strings.")
 
 
 ;; Customizable User options.
-(defgroup colorful-mode nil
+(defgroup colorful nil
   "Preview hex colors values in current buffer.."
   :tag "Colorful mode"
   :group 'help)
@@ -308,7 +312,7 @@ This is intended to be used with `colorful-extra-color-keywords-hook'."
 (define-minor-mode colorful-mode
   "Preview color hexs in current buffer.
 This will fontify colors strings like \"#aabbcc\" or \"blue\"."
-  :lighter nil :group 'colorful-mode :keymap colorful-mode-map
+  :lighter nil :group 'colorful :keymap colorful-mode-map
   (if colorful-mode
       (colorful--turn-on)
     (colorful--turn-off)))
@@ -316,7 +320,7 @@ This will fontify colors strings like \"#aabbcc\" or \"blue\"."
 ;;;###autoload
 (define-globalized-minor-mode global-colorful-mode
   colorful-mode colorful--turn-on
-  :predicate '(prog-mode text-mode) :group 'colorful-mode)
+  :predicate '(prog-mode text-mode) :group 'colorful)
 
 
 (provide 'colorful-mode)
