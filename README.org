@@ -33,27 +33,44 @@ friendly way based on 🌈[[https://elpa.gnu.org/packages/rainbow-mode.html][rai
 
 * User Setup and Guides 📖
 ** Customizable User options
-
-- =colorful-allow-mouse-clicks= If non-nil, allow using mouse buttons
+- =colorful-allow-mouse-clicks (default: t)= If non-nil, allow using mouse buttons
   for change color.
-- =colorful-use-prefix= If non-nil, use prefix for preview color
+- =colorful-use-prefix (default: nil)= If non-nil, use prefix for preview color
   instead highlight them.
-- =colorful-prefix-string= Prefix symbol to be used according
+- =colorful-prefix-string (default: "●")= Prefix symbol to be used according
   =colorful-use-prefix=.
-- =colorful-prefix-alignment= The position to put prefix string.
-The value can be left or right.
-- =colorful-extra-color-keywords-hook= Hook used for add extra color
+- =colorful-prefix-alignment (default: 'left)= The position to put prefix string.
+  The value can be left or right.
+- =colorful-extra-color-keywords-hook (default: nil)= Hook used for add extra color
   keywords to =colorful-color-keywords=.
   Available functions are: =colorful-add-color-names=.
-- =global-colorful-modes= Which major modes colorful-mode is switched
-  on in (globally).
+- =colorful-exclude-colors (default: '("#def"))= List of keyword to don't highlight.
+- =colorful-short-hex-convertions (default: t)= If non nil, hex
+  values converted by coloful should be as short as possible.
+  Setting this to t will make hex values follow a 24-bit specification
+  and can make them inaccurate.
+- =global-colorful-modes (default: '(mhtml-mode html-ts-mode css-mode css-ts-mode emacs-lisp-mode))= Which major modes colorful-mode is switched on in (globally).
 
 ** Interactive User Functions.
 - =colorful-change-color= Change color at current cursor position.
+- =colorful-mode= Buffer-local minor mode.
+- =global-colorful-mode= Global minor mode.
 
 ** Key bindings
 These key bindings are defined by: =colorful-mode-map=
-- =C-c c= → =colorful-change-color=.
+- =C-c c c= → =colorful-change-color=.
+
+** Adding extra colors
+Colorful by default provides extra functions that highlight additional
+colors:
+
+- =colorful-add-color-names= Add emacs color names to colorful-color-keywords.
+
+For use them add it to =colorful-extra-color-keywords-hook=:
+#+begin_src emacs-lisp
+;; In this example highlight emacs color names.
+(add-hook 'colorful-extra-color-keywords-hook #'colorful-add-color-names)
+#+end_src
 
 * Installation 📦
 Currently colorful-mode is not available in any elisp package archive,
@@ -73,14 +90,31 @@ For emacs 30 users you can use =use-package=
 
 * How does it compare to =rainbow-mode=?
 =colorful-mode= improves =rainbow-mode= in adding more features
-and fixing some /(and old)/ bugs like:
-- The well know issue with hl-line.
-- Deprecated (and some old functions) in source code.
-- Refactoring.
-- &c.
+and fixing some /(and old)/ bugs:
+
+| Comparation                                             | colorful-mode.el | rainbow-mode.el |
+|---------------------------------------------------------+------------------+-----------------|
+| Compatible with hl-line and other overlays?             | ✓                | ❌              |
+| Convert color to other formats?                         | ✓                | ❌              |
+| Insert open color hex                                   | not yet          | ❌(?)           |
+| Opcionally use string preffix/suffix instead highlight  | ✓                | ❌              |
+| Use emacs built-in functions instead define custom ones | ✓^{1}               | ✓^{2}              |
+| No performance issues?^{3}                                 | ❌               | ✓               |
+
+1. However colorful defines helper funtion for some cases avoiding
+    innecesary computation.
+2. Only for some cases.
+3. I didn't a benchmark however due colorful-mode uses overlays
+    instead text properties (like rainbow-mode) it can be a bit slow.
 
 The intention is to provide a featured alternative to
 =rainbow-mode.el= with a user-friendy approach
+
+If you prefer only highlights without color convertion or
+preffix/suffix you can use =rainbow-mode.el=.
+
+On the other hand, if you want convert colors, overlays and
+optional prefix strings you can use =colorful-mode.el=.
 
 * Plans for future
 Currently this repo will only be used for feature-request /(i can't

@@ -8,7 +8,7 @@
 ;; Package-Requires: ((emacs "29.1"))
 ;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
 ;; Keywords: faces
-;; Version: 0.1.1
+;; Version: 0.1.2
 
 ;; This file is not part of GNU Emacs.
 
@@ -102,7 +102,6 @@ Must be a list containing regex strings.")
 (defcustom colorful-extra-color-keywords-hook nil
   "Hook used for add extra color keywords to `colorful-color-keywords'.
 Available functions are: `colorful-add-color-names'."
-  :group 'dashboard
   :type 'hook)
 
 (defcustom colorful-allow-mouse-clicks t
@@ -123,11 +122,21 @@ The value can be left or right."
   :type '(choice (const :tag "Left" left)
                  (const :tag "Right" right)))
 
+(defcustom colorful-exclude-colors '("#def")
+  "List of keyword to don't highlight."
+  :type '(repeat string))
+
+(defcustom colorful-short-hex-convertions t
+  "If non nil, hex values converted by coloful should be as short as possible.
+Setting this to t will make hex values follow a 24-bit specification
+and can make them inaccurate."
+  :type 'boolean)
+
 
 ;; Keymaps
 (defvar-keymap colorful-mode-map
   :doc "Keymap when `colorful-mode' is active."
-  "C-c c" #'colorful-change-color)
+  "C-c c c" #'colorful-change-color)
 
 
 ;; Internal Functions
@@ -148,7 +157,8 @@ The value can be left or right."
 
 (defun colorful--name-to-hex (name)
   "Return Emacs color NAME as hex color format."
-  (let ((color (color-name-to-rgb name)))
+  (let* ((short (if colorful-short-hex-convertions 2 1))
+         (color (append (color-name-to-rgb name) `(,short))))
     (apply #'color-rgb-to-hex color)))
 
 (defun colorful--replace-region (beg end text)
@@ -269,11 +279,12 @@ The background uses COLOR color value.  The foreground is computed using
   "Helper function for Colorize MATCH with itself."
   (let* ((match1 (or match 0))
          (string (match-string-no-properties match1)))
-    ;; Delete duplicates overlays found
-    (dolist (ov (overlays-in (match-beginning match1) (match-end match1)))
-      (if (overlay-get ov 'colorful--overlay)
-          (colorful--delete-overlay ov)))
-    (colorful--colorize-match string match)))
+    (unless (member string colorful-exclude-colors)
+      ;; Delete duplicates overlays found
+      (dolist (ov (overlays-in (match-beginning match1) (match-end match1)))
+        (if (overlay-get ov 'colorful--overlay)
+            (colorful--delete-overlay ov)))
+      (colorful--colorize-match string match))))
 
 
 ;; Extras color regex functions and variables.
@@ -294,8 +305,7 @@ This is intended to be used with `colorful-extra-color-keywords-hook'."
   "Helper function for turn on `colorful-mode'."
   (run-hooks 'colorful-extra-color-keywords-hook)
 
-  (font-lock-add-keywords nil
-                          colorful-color-keywords)
+  (font-lock-add-keywords nil colorful-color-keywords)
 
   ;; Refresh font-lock
   (font-lock-flush))
@@ -320,7 +330,9 @@ This will fontify colors strings like \"#aabbcc\" or \"blue\"."
 ;;;###autoload
 (define-globalized-minor-mode global-colorful-mode
   colorful-mode colorful--turn-on
-  :predicate '(prog-mode text-mode) :group 'colorful)
+  :predicate
+  '(mhtml-mode html-ts-mode css-mode css-ts-mode emacs-lisp-mode)
+  :group 'colorful)
 
 
 (provide 'colorful-mode)
