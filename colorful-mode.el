@@ -4,7 +4,7 @@
 
 ;; Author: Elias G.B. Perez <eg642616@gmail.com>
 ;; Keywords: faces
-;; Version: 0.1.0
+;; Version: 0.1.1
 
 ;; This file is not part of GNU Emacs.
 
@@ -33,8 +33,8 @@
 (require 'color)
 (require 'rx)
 
-;; Buffer-local variables
 
+;; Buffer-local variables
 (defvar-local colorful-color-keywords
     `((,(rx (seq (not (any "&"))
                  (group "#" (repeat 1 4 (= 3 (any "0-9A-Fa-f"))))
@@ -86,7 +86,6 @@ Must be a list containing regex strings.")
 
 
 ;; Customizable User options.
-
 (defgroup colorful-mode nil
   "Preview hex colors values in current buffer.."
   :tag "Colorful mode"
@@ -95,6 +94,12 @@ Must be a list containing regex strings.")
 (defface colorful-base
   '((t (:box (:line-width (1 . 1) :color "grey75" :style flat-button))))
   "Face used as base for highlight color names.")
+
+(defcustom colorful-extra-color-keywords-hook nil
+  "Hook used for add extra color keywords to `colorful-color-keywords'.
+Available functions are: `colorful-add-color-names'."
+  :group 'dashboard
+  :type 'hook)
 
 (defcustom colorful-allow-mouse-clicks t
   "If non-nil, allow using mouse buttons for change color."
@@ -115,20 +120,13 @@ The value can be left or right."
                  (const :tag "Right" right)))
 
 
-;; Functions
+;; Keymaps
+(defvar-keymap colorful-mode-map
+  :doc "Keymap when `colorful-mode' is active."
+  "C-c c" #'colorful-change-color)
 
-(defun colorful--color-luminance (color)
-  "Calculate the relative luminance of COLOR string.
-Return a value between 0 and 1."
-  (let* ((values (color-values color))
-         (r (/ (nth 0 values) 256.0))
-         (g (/ (nth 1 values) 256.0))
-         (b (/ (nth 2 values) 256.0)))
-    ;; Return computed value
-    (/ (+ (* .2126 r)
-          (* .7152 g)
-          (* .0722 b)
-          255))))
+
+;; Internal Functions
 
 ;; (defun colorful--hex-to-rgb (hex)
 ;;   "Return HEX color as CSS rgb format."
@@ -156,11 +154,11 @@ Return a value between 0 and 1."
     (insert text)))
 
 ;;;###autoload
-(defun colorful-change-color (&optional color beg end prompt)
-  "Change COLOR from BEG to END, opcionally use a PROMPT message text."
+(defun colorful-change-color (&optional prompt color beg end)
+  "Change COLOR at current cursor position.
+COLOR, BEG, PROMPT and END are only used as internal values, not intended
+to be used externally."
   (interactive "*")
-  ;; COLOR BEG and END are only used as lexical values,
-  ;; not intended to be used externally.
   (dolist (ov (overlays-at (point)))
     (when (overlay-get ov 'colorful--overlay)
       (setq beg (or beg (overlay-start ov))
@@ -187,23 +185,22 @@ Return a value between 0 and 1."
                    ;; TODO: () ; rgb
                    )
            (colorful-change-color
-            color beg end
-            (format "%s is already a Hex value. Try again: " color))))
+            (format "%s is already a Hex value. Try again: " color)
+            color beg end)))
         ;; ('rgb (unless (string-prefix-p "rgb" color)))
         ('name
          (if (not (assoc color color-name-rgb-alist))
              (cond ((string-prefix-p "#" color) ; Hex
-                    (let ((rep (colorful--hex-to-name color)))
-                      (if rep
-                          (colorful--replace-region beg end rep)
-                        (message "No color name available."))))
+                    (if-let ((rep (colorful--hex-to-name color)))
+                        (colorful--replace-region beg end rep)
+                      (message "No color name available.")))
                    ;; ((string-prefix-p "rgb" color) ; CSS rgb
                    ;; (let ((rep (colorful--hex-to-name color)))
                    ;; (colorful--replace-region beg end rep)))
                    )
            (colorful-change-color
-            color beg end
-            (format "%s is already a color name value. Try again: " color)))))
+            (format "%s is already a color name value. Try again: " color)
+            color beg end))))
     (message "No color found at position.")))
 
 (defun colorful--delete-overlay (overlay &rest _)
@@ -211,9 +208,9 @@ Return a value between 0 and 1."
   (delete-overlay overlay))
 
 (defun colorful--colorize-match (color &optional match)
-  "Return a matched (MATCH) string propertized with a face in BG and END range.
-Propertize with background COLOR value.  The foreground is computed using
-`colorful--color-luminance', and is either white or black."
+  "Return a matched MATCH string propertized with a face.
+The background uses COLOR color value.  The foreground is computed using
+`color-dark-p', and is either white or black."
   (let* ((match (or match 0))
          (start (match-beginning match))
          (end (match-end match))
@@ -222,19 +219,9 @@ Propertize with background COLOR value.  The foreground is computed using
     ;; Define colorful overlay tag
     (overlay-put ov 'colorful--overlay t)
 
-    ;; NOTE: Using colorful prefix bugs background color,
-    ;;      this is the way i found for fix this.
-    (when (and colorful-allow-mouse-clicks
-               (not colorful-use-prefix))
-      (overlay-put ov 'mouse-face 'highlight)
-      (overlay-put ov 'keymap
-                   (let ((map (make-sparse-keymap)))
-                     (keymap-set map "<mouse-1>" #'colorful-change-color)
-                     map)))
-
     ;; Delete overlays when they are modified.
     ;; This refresh them with without using `jit-lock-register' or
-    ;; any hook.
+    ;; any other hook.
     (overlay-put ov 'evaporate t)
     (overlay-put ov 'modification-hooks `(colorful--delete-overlay))
     (overlay-put ov 'insert-in-front-hooks `(colorful--delete-overlay))
@@ -259,9 +246,17 @@ Propertize with background COLOR value.  The foreground is computed using
       ;; NOTE: This fixs an error for invalid face when using prefix
       (overlay-put ov 'face nil))
      (t
+      ;; NOTE: Using colorful prefix bugs background color,
+      ;;      this is the way i found for fix this.
+      (when colorful-allow-mouse-clicks
+        (overlay-put ov 'mouse-face 'highlight)
+        (overlay-put ov 'keymap
+                     (let ((map (make-sparse-keymap)))
+                       (keymap-set map "<mouse-1>" #'colorful-change-color)
+                       map)))
       (overlay-put ov 'face
                    `((:foreground
-                      ,(if (< 0.0026 (colorful--color-luminance color))
+                      ,(if (color-dark-p (color-name-to-rgb color))
                            "white" "black"))
                      (:background ,color)
                      (:inherit colorful-base)))))))
@@ -278,16 +273,10 @@ Propertize with background COLOR value.  The foreground is computed using
 
 
 ;; Extras color regex functions and variables.
-
 (defvar colorful-color-name-font-lock-keywords
   `((,(regexp-opt (defined-colors) 'words)
      (0 (colorful-colorize-itself))))
   "Font-lock keywords to add for `colorful-color-keywords'.")
-
-(defcustom colorful-extra-color-keywords-hook nil
-  "Hook used for add extra color keywords to `colorful-color-keywords'."
-  :group 'dashboard
-  :type 'hook)
 
 (defun colorful-add-color-names ()
   "Function for add Emacs color names to `colorful-color-keywords'.
@@ -297,7 +286,6 @@ This is intended to be used with `colorful-extra-color-keywords-hook'."
 
 
 ;; Minor mode definitions.
-
 (defun colorful--turn-on ()
   "Helper function for turn on `colorful-mode'."
   (run-hooks 'colorful-extra-color-keywords-hook)
@@ -320,8 +308,7 @@ This is intended to be used with `colorful-extra-color-keywords-hook'."
 (define-minor-mode colorful-mode
   "Preview color hexs in current buffer.
 This will fontify colors strings like \"#aabbcc\" or \"blue\"."
-  :lighter nil
-  :group 'colorful-mode
+  :lighter nil :group 'colorful-mode :keymap colorful-mode-map
   (if colorful-mode
       (colorful--turn-on)
     (colorful--turn-off)))
@@ -329,9 +316,8 @@ This will fontify colors strings like \"#aabbcc\" or \"blue\"."
 ;;;###autoload
 (define-globalized-minor-mode global-colorful-mode
   colorful-mode colorful--turn-on
-  :predicate '(prog-mode text-mode)
-  :group 'corfu)
+  :predicate '(prog-mode text-mode) :group 'colorful-mode)
 
-
+
 (provide 'colorful-mode)
 ;;; colorful-mode.el ends here

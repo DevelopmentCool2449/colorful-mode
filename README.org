@@ -7,13 +7,13 @@
 #+texinfo_dir_title: colorful-mode: (colorful-mode).
 #+texinfo_dir_desc: Preview color hexs in your buffer
 
-#+html: <img src="./assets/elisp_logo_warning.svg" align="right" width="10%">
+#+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/elisp_logo_warning.svg" align="right" width="10%">
 
-🟠colorful-mode is a minor mode that allow you preview *color hex* and
-*color names*, in your current buffer in a user friendly way based on
-🌈[[https://elpa.gnu.org/packages/rainbow-mode.html][rainbow-mode.el]].
+🟢colorful-mode is a minor mode that allow you preview *color hex* and
+*color names*, in your current buffer in real time and in a user
+friendly way based on 🌈[[https://elpa.gnu.org/packages/rainbow-mode.html][rainbow-mode.el]].
 
-* Features 🔧
+* Features ✨
 - Preview emacs colors names and hex in your current buffer /(soon
   support for CSS rgb)/.
 - Changing highlighted colors to other formats.
@@ -30,6 +30,30 @@
 [[./assets/screenshot3.png]]
 #+CAPTION: with a custom prefix (in this example a nerd font character)
 [[./assets/screenshot4.png]]
+
+* User Setup and Guides 📖
+** Customizable User options
+
+- =colorful-allow-mouse-clicks= If non-nil, allow using mouse buttons
+  for change color.
+- =colorful-use-prefix= If non-nil, use prefix for preview color
+  instead highlight them.
+- =colorful-prefix-string= Prefix symbol to be used according
+  =colorful-use-prefix=.
+- =colorful-prefix-alignment= The position to put prefix string.
+The value can be left or right.
+- =colorful-extra-color-keywords-hook= Hook used for add extra color
+  keywords to =colorful-color-keywords=.
+  Available functions are: =colorful-add-color-names=.
+- =global-colorful-modes= Which major modes colorful-mode is switched
+  on in (globally).
+
+** Interactive User Functions.
+- =colorful-change-color= Change color at current cursor position.
+
+** Key bindings
+These key bindings are defined by: =colorful-mode-map=
+- =C-c c= → =colorful-change-color=.
 
 * Installation 📦
 Currently colorful-mode is not available in any elisp package archive,
@@ -49,11 +73,14 @@ For emacs 30 users you can use =use-package=
 
 * How does it compare to =rainbow-mode=?
 =colorful-mode= improves =rainbow-mode= in adding more features
-and fixing some /(and old)/ bugs.
+and fixing some /(and old)/ bugs like:
+- The well know issue with hl-line.
+- Deprecated (and some old functions) in source code.
+- Refactoring.
+- &c.
 
-The intention is to provide a featured alternative to =rainbow.el=
-with a user-friendy approach
-
+The intention is to provide a featured alternative to
+=rainbow-mode.el= with a user-friendy approach
 
 * Plans for future
 Currently this repo will only be used for feature-request /(i can't
