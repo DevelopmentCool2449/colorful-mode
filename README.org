@@ -52,13 +52,20 @@ friendly way based on 🌈[[https://elpa.gnu.org/packages/rainbow-mode.html][rai
 - =global-colorful-modes (default: '(mhtml-mode html-ts-mode css-mode css-ts-mode emacs-lisp-mode))= Which major modes colorful-mode is switched on in (globally).
 
 ** Interactive User Functions.
-- =colorful-change-color= Change color at current cursor position.
+- =colorful-change-or-copy-color= Change or copy color to a converted
+  format at current cursor position.
+- =colorful-convert-and-change-color= Convert color to a valid format
+  and replace color at current cursor position.
+- =colorful-convert-and-copy-color= Convert color to a valid format
+  and copy it at current cursor position.
 - =colorful-mode= Buffer-local minor mode.
 - =global-colorful-mode= Global minor mode.
 
 ** Key bindings
 These key bindings are defined by: =colorful-mode-map=
-- =C-c c c= → =colorful-change-color=.
+- =C-c c c= → =colorful-change-or-copy-color=.
+- =C-c c k= → =colorful-convert-and-copy-color=.
+- =C-c c r= → =colorful-convert-and-change-color=.
 
 ** Adding extra colors
 Colorful by default provides extra functions that highlight additional

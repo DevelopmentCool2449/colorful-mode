@@ -136,7 +136,9 @@ and can make them inaccurate."
 ;; Keymaps
 (defvar-keymap colorful-mode-map
   :doc "Keymap when `colorful-mode' is active."
-  "C-c c c" #'colorful-change-color)
+  "C-c c c" #'colorful-change-or-copy-color
+  "C-c c k" #'colorful-convert-and-copy-color
+  "C-c c r" #'colorful-convert-and-change-color)
 
 
 ;; Internal Functions
@@ -161,18 +163,54 @@ and can make them inaccurate."
          (color (append (color-name-to-rgb name) `(,short))))
     (apply #'color-rgb-to-hex color)))
 
-(defun colorful--replace-region (beg end text)
-  "Delete region from BEG to END with TEXT."
-  (save-excursion
-    (delete-region beg end)
-    (insert text)))
+;;;###autoload
+(defun colorful-convert-and-change-color ()
+  "Convert color to a valid format and replace color at current cursor position."
+  (interactive "*")
+  (if-let* ((result (colorful--change-color "Change %s to: "))
+            (range (cdr result))
+            (text (car result)))
+      (save-excursion
+        (apply #'delete-region range)
+        (insert text))))
 
 ;;;###autoload
-(defun colorful-change-color (&optional prompt color beg end)
-  "Change COLOR at current cursor position.
-COLOR, BEG, PROMPT and END are only used as internal values, not intended
-to be used externally."
-  (interactive "*")
+(defun colorful-convert-and-copy-color ()
+  "Convert color to a valid format and copy it at current cursor position."
+  (interactive)
+  (when-let* ((result (car (colorful--change-color "Copy %s as: ")))
+              (color (if (color-defined-p result)
+                         (propertize result 'face
+                                     `(:background
+                                       ,result
+                                       :foreground
+                                       ,(if (color-dark-p (color-name-to-rgb result))
+                                            "white"
+                                          "black")))
+                       result))
+              (text (format "`%s' copied." color)))
+    (kill-new color)
+    (message text)))
+
+;;;###autoload
+(defun colorful-change-or-copy-color ()
+  "Change or copy color to a converted format at current cursor position."
+  (interactive)
+  (let* ((prompt "Please type an option: ")
+         (choices '(("Convert and copy color." . copy)
+                    ("Convert and change color." . convert)))
+         (result (alist-get
+                  (completing-read prompt choices nil t nil nil)
+                  choices nil nil 'equal)))
+    (if (eq result 'copy)
+        (colorful-convert-and-copy-color)
+      (colorful-convert-and-change-color))))
+
+(defun colorful--change-color (&optional prompt color beg end)
+  "Return COLOR as other color format.
+COLOR, BEG, and END are only used as internal values, not intended to
+be used externally.
+PROMPT must be a string with 1 format control (generally a sring argument)."
   (dolist (ov (overlays-at (point)))
     (when (overlay-get ov 'colorful--overlay)
       (setq beg (or beg (overlay-start ov))
@@ -182,8 +220,7 @@ to be used externally."
   (if-let* (beg
             end
             color
-            (prompt (or prompt
-                        (format "Change %s to: " color)))
+            (prompt (format prompt color))
             (choices '(("Hex value" . hex)
                        ;; ("RGB (CSS)" . rgb)
                        ("Emacs color name" . name)))
@@ -194,35 +231,34 @@ to be used externally."
         ('hex
          (if (not (string-prefix-p "#" color)) ; Ensure is not already a hex
              (cond ((member color (defined-colors)) ; Name
-                    (let ((rep (colorful--name-to-hex color)))
-                      (colorful--replace-region beg end rep)))
+                    (list (colorful--name-to-hex color) beg end))
                    ;; TODO: () ; rgb
                    )
-           (colorful-change-color
-            (format "%s is already a Hex value. Try again: " color)
+           (colorful--change-color
+            "%s is already a Hex color. Try again: "
             color beg end)))
         ;; ('rgb (unless (string-prefix-p "rgb" color)))
         ('name
          (if (not (assoc color color-name-rgb-alist))
              (cond ((string-prefix-p "#" color) ; Hex
                     (if-let ((rep (colorful--hex-to-name color)))
-                        (colorful--replace-region beg end rep)
-                      (message "No color name available.")))
+                        (list rep beg end)
+                      (user-error "No color name available")
+                      nil))
                    ;; ((string-prefix-p "rgb" color) ; CSS rgb
                    ;; (let ((rep (colorful--hex-to-name color)))
-                   ;; (colorful--replace-region beg end rep)))
+                   ;; (list rep beg end)))
                    )
-           (colorful-change-color
-            (format "%s is already a color name value. Try again: " color)
-            color beg end))))
-    (message "No color found at position.")))
+           (colorful--change-color
+            "%s is already a color name. Try again: "
+            color beg end))))))
 
 (defun colorful--delete-overlay (overlay &rest _)
   "Helper function for delete OVERLAY."
   (delete-overlay overlay))
 
 (defun colorful--colorize-match (color &optional match)
-  "Return a matched MATCH string propertized with a face.
+  "Overlay MATCH string with a face.
 The background uses COLOR color value.  The foreground is computed using
 `color-dark-p', and is either white or black."
   (let* ((match (or match 0))
@@ -253,7 +289,7 @@ The background uses COLOR color value.  The foreground is computed using
                                    'mouse-face 'highlight
                                    'keymap
                                    (let ((map (make-sparse-keymap)))
-                                     (keymap-set map "<mouse-1>" #'colorful-change-color)
+                                     (keymap-set map "<mouse-1>" #'colorful-change-or-copy-color)
                                      map))
                      (propertize colorful-prefix-string
                                  'face `(:foreground ,color))))
@@ -266,7 +302,7 @@ The background uses COLOR color value.  The foreground is computed using
         (overlay-put ov 'mouse-face 'highlight)
         (overlay-put ov 'keymap
                      (let ((map (make-sparse-keymap)))
-                       (keymap-set map "<mouse-1>" #'colorful-change-color)
+                       (keymap-set map "<mouse-1>" #'colorful-change-or-copy-color)
                        map)))
       (overlay-put ov 'face
                    `((:foreground
