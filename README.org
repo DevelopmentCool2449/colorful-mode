@@ -1,5 +1,5 @@
 #+title: [[./assets/colorful-mode-logo.svg]]
-#+subtitle: Preview any color in your buffer
+#+subtitle: Preview any color in your buffer in real time.
 #+author: Elias G.B. Perez
 #+language: en
 #+export_file_name: colorful-mode.texi
@@ -9,15 +9,15 @@
 
 #+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/elisp_logo_warning.svg" align="right" width="10%">
 
-🟢colorful-mode is a minor mode that allow you preview *color hex* and
-*color names*, in your current buffer in real time and in a user
-friendly way based on 🌈[[https://elpa.gnu.org/packages/rainbow-mode.html][rainbow-mode.el]].
+🟢colorful-mode is a minor mode that allow you preview any color
+format such as *color hex* and *color names*, in your current buffer
+in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/packages/rainbow-mode.html][rainbow-mode.el]].
 
-*WARNING: THIS PACKAGE STILL IN A EARLY STATE, ABRUPT CHANGES SUCH AS DELETE USER FUNCTIONS, OPTIONS AND KEYBINDINGS OR UNEXPECTED BREAKS ARE USUALLY COMMON*
+*WARNING: THIS PACKAGE STILL IN A EXPERIMENTAL STATE, ABRUPT CHANGES SUCH AS DELETE USER FUNCTIONS, OPTIONS AND KEYBINDINGS OR UNEXPECTED BREAKS ARE USUALLY COMMON*
 
 * Features ✨
-- Preview emacs colors names and hex in your current buffer in real
-  time /(soon support for CSS rgb)/.
+- Preview emacs colors names, hexadecimal colors and CSS rgb functions
+  in your current buffer in real time.
 - Convert color to other formats or copy them without replace current
   color.
 - Preview using highlight or a prefix/suffix string.
@@ -26,7 +26,7 @@ friendly way based on 🌈[[https://elpa.gnu.org/packages/rainbow-mode.html][rai
 
 * Screenshots and animated GIFs 📷
 [[./assets/gif1.gif]]
-/With prefix instead highliht./
+/With prefix instead highliht/.
 
 [[./assets/gif2.gif]]
 [[./assets/gif3.gif]]
@@ -35,7 +35,7 @@ friendly way based on 🌈[[https://elpa.gnu.org/packages/rainbow-mode.html][rai
 [[./assets/screenshot3.png]]
 
 [[./assets/screenshot4.png]]
-/With a custom prefix (in this example a non-ASCII/Unicode character)./
+/With a custom prefix (in this example a non-ASCII/Unicode character)/.
 
 * User Options, Setups and Guides 📖
 ** Customizable User options
@@ -43,13 +43,36 @@ friendly way based on 🌈[[https://elpa.gnu.org/packages/rainbow-mode.html][rai
   for change color.
 - =colorful-use-prefix (default: nil)= If non-nil, use prefix for preview color
   instead highlight them.
+  *NOTE: css-mode and css-ts-mode by default colorize rgb and hex colors, this may interfere with colorful prefix, you can disable this setting =css-fontify-colors= to nil*
 - =colorful-prefix-string (default: "●")= Prefix symbol to be used according
   =colorful-use-prefix=.
 - =colorful-prefix-alignment (default: 'left)= The position to put prefix string.
   The value can be left or right.
-- =colorful-extra-color-keywords-hook (default: nil)= Hook used for add extra color
-  keywords to =colorful-color-keywords=.
-  Available functions are: =colorful-add-color-names=.
+- =colorful-extra-color-keyword-functions=
+  default:
+#+begin_src emacs-lisp
+  '((emacs-lisp-mode . (colorful-add-color-names colorful-add-rgb-colors))
+    ((css-mode css-ts-mode) . colorful-add-rgb-colors))
+#+end_src
+  List of functions to add extra color keywords to colorful-color-keywords.
+
+  It can be a cons cell specifing the mode (or a list of modes)
+  e.g:
+#+begin_src emacs-lisp
+  (((css-mode css-ts-mode) . colorful-add-rgb-colors)
+    (emacs-lisp-mode . (colorful-add-color-names colorful-add-rgb-colors))
+    ((text-mode html-mode) . (colorful-add-color-names
+                              colorful-add-rgb-colors))
+    ...)
+#+end_src
+  Or a simple list of functions for executing wherever colorful is active:
+  (colorful-add-color-names
+    colorful-add-rgb-colors)
+
+  Available functions are:
+   - colorful-add-color-names.
+   - colorful-add-rgb-colors.
+
 - =colorful-exclude-colors (default: '("#def"))= List of keyword to don't highlight.
 - =colorful-short-hex-convertions (default: t)= If non nil, hex
   values converted by coloful should be as short as possible.
@@ -57,7 +80,7 @@ friendly way based on 🌈[[https://elpa.gnu.org/packages/rainbow-mode.html][rai
   and can make them inaccurate.
 - =colorful-only-strings (default: nil)= If non-nil colorful will only
   highlight colors inside strings.
-- =global-colorful-modes (default: '(mhtml-mode html-ts-mode css-mode css-ts-mode emacs-lisp-mode))= Which major modes colorful-mode is switched on in (globally).
+- =global-colorful-modes (default: '(mhtml-mode html-ts-mode css-mode css-ts-mode emacs-lisp-mode))= Which major modes global-colorful-mode is switched on in (globally).
 
 ** Interactive User Functions.
 - =colorful-change-or-copy-color= Change or copy color to a converted
@@ -80,19 +103,21 @@ Colorful by default provides extra functions that highlight additional
 colors:
 
 - =colorful-add-color-names= Add emacs color names to colorful-color-keywords.
+- =colorful-add-rgb-colors= Add CSS rgb color to colorful-color-keywords.
 
-For use them add it to =colorful-extra-color-keywords-hook=:
+For use them add it to:
 #+begin_src emacs-lisp
 ;; In this example add emacs color names to colorful-keywords.
-(add-hook 'colorful-extra-color-keywords-hook #'colorful-add-color-names)
+(add-to-list 'colorful-extra-color-keyword-functions #'colorful-add-color-names)
 #+end_src
 
+See: =colorful-extra-color-keyword-functions= for more details.
+
 * Installation 📦
-It's recommended that you must use emacs-29.3 or higher,
-however you can use it in emacs-28.1.
+It's recommended that you must use emacs-28.X or higher.
 
 Currently colorful-mode is not available in any elisp package archive,
-however you can install it with =package-vc-install=
+however you can install it with =package-vc-install= in emacs-29.X
 
 Run =M-x package-vc-install=
 And type =https://github.com/DevelopmentCool2449/colorful-mode.git=
@@ -114,11 +139,12 @@ and fixing some /(and old)/ bugs:
 |---------------------------------------------------------+------------------+-----------------|
 | Compatible with hl-line and other overlays?             | ✓                | ❌              |
 | Convert color to other formats?                         | ✓                | ❌              |
-| Insert open color hex                                   | not yet          | ❌(?)           |
+| Insert open color hex                                   | Work in progress | ❌              |
 | Opcionally use string preffix/suffix instead highlight  | ✓                | ❌              |
 | Use emacs built-in functions instead define custom ones | ✓^{1}            | ✓^{2}           |
 | Exclude keywords/colors to highlight                    | ✓                | ❌^{3}          |
 | Highlight only in strings and docstrings                | ✓                | ❌              |
+| Allow highlight some colors only in specific modes      | ✓                | ❌              |
 | No performance issues?^{4}                              | ❌               | ✓               |
 
 1. However colorful defines some helper funtions for some cases and
@@ -154,3 +180,6 @@ submit it to ELPA, later that *I won't be able to be the mantainer* of
 this package, However I would like if someone would be able to be the
 mantainer (if you are interested please email me
 <eg642616@gmail.com>).
+
+#+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/powered_by_emacs.svg" align="right" width="10%">
+#+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/powered_by_org_mode.svg" align="right" width="10%">
