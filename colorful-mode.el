@@ -5,7 +5,7 @@
 ;; Author: Elias G.B. Perez <eg642616@gmail.com>
 ;; Maintainer: Elias G.B. Perez <eg642616@gmail.com>
 ;; Created: 2024
-;; Package-Requires: ((emacs "29.1"))
+;; Package-Requires: ((emacs "28.1") (compat "29.1.4.5"))
 ;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
 ;; Keywords: faces
 ;; Version: 0.1.2
@@ -33,6 +33,8 @@
 ;;; Code:
 
 ;; Importing Libraries.
+(require 'compat)
+
 (require 'faces)
 (require 'color)
 (require 'rx)
@@ -127,9 +129,13 @@ The value can be left or right."
   :type '(repeat string))
 
 (defcustom colorful-short-hex-convertions t
-  "If non nil, hex values converted by coloful should be as short as possible.
+  "If non-nil, hex values converted by coloful should be as short as possible.
 Setting this to t will make hex values follow a 24-bit specification
 and can make them inaccurate."
+  :type 'boolean)
+
+(defcustom colorful-only-strings nil
+  "If non-nil colorful will only highlight colors inside strings."
   :type 'boolean)
 
 
@@ -163,34 +169,65 @@ and can make them inaccurate."
          (color (append (color-name-to-rgb name) `(,short))))
     (apply #'color-rgb-to-hex color)))
 
+;; FIXME: THIS MACRO WORKS FINE, HOWEVER IT DOESN'T WORK WITH
+;;       MOUSE CLICKS, IF ANYONE KNOW WHY, PLEASE OPEN AN ISSUE.
+;;       MAYBE THIS CAN BE DELETED.
+;;;; (defmacro colorful--check-ov (varlist &rest then)
+;;   "Check if there is a colorful-ov at current position, execute THEN.
+;; Otherwise throw a user error message.
+;; Works as a let* macro using VARLIST for lexical values but only for
+;; colorful in a Don't Repeat Yourself way.
+;; After executing THEN, throw a variable \"colorful-ov\" with overlay gotten."
+;;   `(if-let*
+;;        ,(internal--build-bindings
+;;          (append
+;;           `((colorful-ov ,(catch 'val
+;;                             (dolist (ov (overlays-at (point)))
+;;                               (if (overlay-get ov 'colorful--overlay)
+;;                                   (throw 'val ov))))))
+;;           varlist))
+
+;;        ,(macroexp-progn then)
+;;      (user-error "No color found")))
+
 ;;;###autoload
 (defun colorful-convert-and-change-color ()
   "Convert color to a valid format and replace color at current cursor position."
   (interactive "*")
-  (if-let* ((result (colorful--change-color "Change %s to: "))
+  (if-let* ((colorful-ov (catch 'val
+                           (dolist (ov (overlays-at (point)))
+                             (if (overlay-get ov 'colorful--overlay)
+                                 (throw 'val ov)))))
+            (result (colorful--change-color colorful-ov "Change %s to: "))
             (range (cdr result))
             (text (car result)))
       (save-excursion
         (apply #'delete-region range)
-        (insert text))))
+        (insert text))
+    (user-error "No color found")))
 
 ;;;###autoload
 (defun colorful-convert-and-copy-color ()
   "Convert color to a valid format and copy it at current cursor position."
   (interactive)
-  (when-let* ((result (car (colorful--change-color "Copy %s as: ")))
-              (color (if (color-defined-p result)
-                         (propertize result 'face
-                                     `(:background
-                                       ,result
-                                       :foreground
-                                       ,(if (color-dark-p (color-name-to-rgb result))
-                                            "white"
-                                          "black")))
-                       result))
-              (text (format "`%s' copied." color)))
-    (kill-new color)
-    (message text)))
+  (if-let* ((colorful-ov (catch 'val
+                           (dolist (ov (overlays-at (point)))
+                             (if (overlay-get ov 'colorful--overlay)
+                                 (throw 'val ov)))))
+            (result (car (colorful--change-color colorful-ov "Copy %s as: ")))
+            (color (if (color-defined-p result)
+                       (propertize result 'face
+                                   `(:background
+                                     ,result
+                                     :foreground
+                                     ,(if (color-dark-p (color-name-to-rgb result))
+                                          "white"
+                                        "black")))
+                     result))
+            (text (format "`%s' copied." color)))
+      (progn (kill-new color)
+             (message text))
+    (user-error "No color found")))
 
 ;;;###autoload
 (defun colorful-change-or-copy-color ()
@@ -206,52 +243,44 @@ and can make them inaccurate."
         (colorful-convert-and-copy-color)
       (colorful-convert-and-change-color))))
 
-(defun colorful--change-color (&optional prompt color beg end)
+(defun colorful--change-color (ov &optional prompt color beg end)
   "Return COLOR as other color format.
 COLOR, BEG, and END are only used as internal values, not intended to
-be used externally.
+be used externally.  OV must be an overlay
 PROMPT must be a string with 1 format control (generally a sring argument)."
-  (dolist (ov (overlays-at (point)))
-    (when (overlay-get ov 'colorful--overlay)
-      (setq beg (or beg (overlay-start ov))
-            end (or end (overlay-end ov))
-            color (or color (buffer-substring-no-properties beg end)))))
-
-  (if-let* (beg
-            end
-            color
-            (prompt (format prompt color))
-            (choices '(("Hex value" . hex)
-                       ;; ("RGB (CSS)" . rgb)
-                       ("Emacs color name" . name)))
-            (choice (alist-get
-                     (completing-read prompt choices nil t nil nil)
-                     choices nil nil 'equal)))
-      (pcase choice ; Convert to...
-        ('hex
-         (if (not (string-prefix-p "#" color)) ; Ensure is not already a hex
-             (cond ((member color (defined-colors)) ; Name
-                    (list (colorful--name-to-hex color) beg end))
-                   ;; TODO: () ; rgb
-                   )
-           (colorful--change-color
-            "%s is already a Hex color. Try again: "
-            color beg end)))
-        ;; ('rgb (unless (string-prefix-p "rgb" color)))
-        ('name
-         (if (not (assoc color color-name-rgb-alist))
-             (cond ((string-prefix-p "#" color) ; Hex
-                    (if-let ((rep (colorful--hex-to-name color)))
-                        (list rep beg end)
-                      (user-error "No color name available")
-                      nil))
-                   ;; ((string-prefix-p "rgb" color) ; CSS rgb
-                   ;; (let ((rep (colorful--hex-to-name color)))
-                   ;; (list rep beg end)))
-                   )
-           (colorful--change-color
-            "%s is already a color name. Try again: "
-            color beg end))))))
+  (let* ((beg (or beg (overlay-start ov)))
+         (end (or end (overlay-end ov)))
+         (color (or color (buffer-substring-no-properties beg end)))
+         (prompt (format prompt color))
+         (choices '(("Hex value" . hex)
+                    ;; ("RGB (CSS)" . rgb)
+                    ("Emacs color name" . name)))
+         (choice (alist-get
+                  (completing-read prompt choices nil t nil nil)
+                  choices nil nil 'equal)))
+    (pcase choice ; Convert to...
+      ('hex
+       (if (not (string-prefix-p "#" color)) ; Ensure is not already a hex
+           (cond ((member color (defined-colors)) ; Name
+                  (list (colorful--name-to-hex color) beg end))
+                 ;; TODO: () ; rgb
+                 )
+         (colorful--change-color ov "%s is already a Hex color. Try again: "
+                                 color beg end)))
+      ;; ('rgb (unless (string-prefix-p "rgb" color)))
+      ('name
+       (if (not (assoc color color-name-rgb-alist))
+           (cond ((string-prefix-p "#" color) ; Hex
+                  (if-let ((rep (colorful--hex-to-name color)))
+                      (list rep beg end)
+                    (user-error "No color name available")
+                    nil))
+                 ;; ((string-prefix-p "rgb" color) ; CSS rgb
+                 ;; (let ((rep (colorful--hex-to-name color)))
+                 ;; (list rep beg end)))
+                 )
+         (colorful--change-color ov "%s is already a color name. Try again: "
+                                 color beg end))))))
 
 (defun colorful--delete-overlay (overlay &rest _)
   "Helper function for delete OVERLAY."
@@ -259,8 +288,9 @@ PROMPT must be a string with 1 format control (generally a sring argument)."
 
 (defun colorful--colorize-match (color &optional match)
   "Overlay MATCH string with a face.
-The background uses COLOR color value.  The foreground is computed using
-`color-dark-p', and is either white or black."
+The background uses COLOR color value.  The foreground is obtained
+converting COLOR to a Emacs RGB value and determined with `color-dark-p',
+it can be white or black."
   (let* ((match (or match 0))
          (start (match-beginning match))
          (end (match-end match))
@@ -315,11 +345,14 @@ The background uses COLOR color value.  The foreground is computed using
   "Helper function for Colorize MATCH with itself."
   (let* ((match1 (or match 0))
          (string (match-string-no-properties match1)))
-    (unless (member string colorful-exclude-colors)
+    (when (and (not (member string colorful-exclude-colors))
+               (or (and colorful-only-strings (nth 3 (syntax-ppss)))
+                   (not colorful-only-strings)))
       ;; Delete duplicates overlays found
       (dolist (ov (overlays-in (match-beginning match1) (match-end match1)))
         (if (overlay-get ov 'colorful--overlay)
             (colorful--delete-overlay ov)))
+
       (colorful--colorize-match string match))))
 
 

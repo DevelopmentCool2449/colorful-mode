@@ -13,25 +13,31 @@
 *color names*, in your current buffer in real time and in a user
 friendly way based on 🌈[[https://elpa.gnu.org/packages/rainbow-mode.html][rainbow-mode.el]].
 
+*WARNING: THIS PACKAGE STILL IN A EARLY STATE, ABRUPT CHANGES SUCH AS DELETE USER FUNCTIONS, OPTIONS AND KEYBINDINGS OR UNEXPECTED BREAKS ARE USUALLY COMMON*
+
 * Features ✨
-- Preview emacs colors names and hex in your current buffer /(soon
-  support for CSS rgb)/.
-- Changing highlighted colors to other formats.
-- Preview colors with highlights or using a prefix string.
+- Preview emacs colors names and hex in your current buffer in real
+  time /(soon support for CSS rgb)/.
+- Convert color to other formats or copy them without replace current
+  color.
+- Preview using highlight or a prefix/suffix string.
+- Preview only colors in strings.
+- Exclude colors such as hex values and color names.
 
 * Screenshots and animated GIFs 📷
-#+CAPTION: with prefix instead highliht
 [[./assets/gif1.gif]]
+/With prefix instead highliht./
 
 [[./assets/gif2.gif]]
 [[./assets/gif3.gif]]
 [[./assets/screenshot1.png]]
 [[./assets/screenshot2.png]]
 [[./assets/screenshot3.png]]
-#+CAPTION: with a custom prefix (in this example a nerd font character)
-[[./assets/screenshot4.png]]
 
-* User Setup and Guides 📖
+[[./assets/screenshot4.png]]
+/With a custom prefix (in this example a non-ASCII/Unicode character)./
+
+* User Options, Setups and Guides 📖
 ** Customizable User options
 - =colorful-allow-mouse-clicks (default: t)= If non-nil, allow using mouse buttons
   for change color.
@@ -49,6 +55,8 @@ friendly way based on 🌈[[https://elpa.gnu.org/packages/rainbow-mode.html][rai
   values converted by coloful should be as short as possible.
   Setting this to t will make hex values follow a 24-bit specification
   and can make them inaccurate.
+- =colorful-only-strings (default: nil)= If non-nil colorful will only
+  highlight colors inside strings.
 - =global-colorful-modes (default: '(mhtml-mode html-ts-mode css-mode css-ts-mode emacs-lisp-mode))= Which major modes colorful-mode is switched on in (globally).
 
 ** Interactive User Functions.
@@ -75,18 +83,21 @@ colors:
 
 For use them add it to =colorful-extra-color-keywords-hook=:
 #+begin_src emacs-lisp
-;; In this example highlight emacs color names.
+;; In this example add emacs color names to colorful-keywords.
 (add-hook 'colorful-extra-color-keywords-hook #'colorful-add-color-names)
 #+end_src
 
 * Installation 📦
+It's recommended that you must use emacs-29.3 or higher,
+however you can use it in emacs-28.1.
+
 Currently colorful-mode is not available in any elisp package archive,
 however you can install it with =package-vc-install=
 
 Run =M-x package-vc-install=
 And type =https://github.com/DevelopmentCool2449/colorful-mode.git=
 
-For emacs 30 users you can use =use-package=
+For emacs 30 users you can use =use-package= macro with =:vc= keyword:
 
 #+begin_src emacs-lisp
   (use-package colorful-mode
@@ -105,14 +116,19 @@ and fixing some /(and old)/ bugs:
 | Convert color to other formats?                         | ✓                | ❌              |
 | Insert open color hex                                   | not yet          | ❌(?)           |
 | Opcionally use string preffix/suffix instead highlight  | ✓                | ❌              |
-| Use emacs built-in functions instead define custom ones | ✓^{1}               | ✓^{2}              |
-| No performance issues?^{3}                                 | ❌               | ✓               |
+| Use emacs built-in functions instead define custom ones | ✓^{1}            | ✓^{2}           |
+| Exclude keywords/colors to highlight                    | ✓                | ❌^{3}          |
+| Highlight only in strings and docstrings                | ✓                | ❌              |
+| No performance issues?^{4}                              | ❌               | ✓               |
 
-1. However colorful defines helper funtion for some cases avoiding
-    innecesary computation.
+1. However colorful defines some helper funtions for some cases and
+   avoiding extra computation.
 2. Only for some cases.
-3. I didn't a benchmark however due colorful-mode uses overlays
-    instead text properties (like rainbow-mode) it can be a bit slow.
+3. rainbow-mode (like colorful) uses regex for highlight some
+   keywords, however it cannot exclude specifics colors keywords
+   (such as "#def" that overrides C "#define" keyword).
+4. I didn't a benchmark however due colorful-mode uses overlays
+   instead text properties (like rainbow-mode) it can be a bit slow.
 
 The intention is to provide a featured alternative to
 =rainbow-mode.el= with a user-friendy approach
