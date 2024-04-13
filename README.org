@@ -135,25 +135,21 @@ For emacs 30 users you can use =use-package= macro with =:vc= keyword:
 =colorful-mode= improves =rainbow-mode= in adding more features
 and fixing some /(and old)/ bugs:
 
-| Comparation                                             | colorful-mode.el | rainbow-mode.el |
-|---------------------------------------------------------+------------------+-----------------|
-| Compatible with hl-line and other overlays?             | ✓                | ❌              |
-| Convert color to other formats?                         | ✓                | ❌              |
-| Insert open color hex                                   | Work in progress | ❌              |
-| Opcionally use string preffix/suffix instead highlight  | ✓                | ❌              |
-| Use emacs built-in functions instead define custom ones | ✓^{1}            | ✓^{2}           |
-| Exclude keywords/colors to highlight                    | ✓                | ❌^{3}          |
-| Highlight only in strings and docstrings                | ✓                | ❌              |
-| Allow highlight some colors only in specific modes      | ✓                | ❌              |
-| No performance issues?^{4}                              | ❌               | ✓               |
+| Comparation                                            | colorful-mode.el | rainbow-mode.el |
+|--------------------------------------------------------+------------------+-----------------|
+| Compatible with hl-line and other overlays?            | ✓                | ❌              |
+| Convert color to other formats?                        | ✓                | ❌              |
+| Insert open color hex                                  | Work in progress | ❌              |
+| Opcionally use string preffix/suffix instead highlight | ✓                | ❌              |
+| Exclude keywords/colors to highlight                   | ✓                | ❌^{1}          |
+| Highlight only in strings and docstrings               | ✓                | ❌              |
+| Allow highlight some colors only in specific modes     | ✓                | ❌              |
+| No performance issues?^{2}                             | ❌               | ✓               |
 
-1. However colorful defines some helper funtions for some cases and
-   avoiding extra computation.
-2. Only for some cases.
-3. rainbow-mode (like colorful) uses regex for highlight some
+1. rainbow-mode (like colorful) uses regex for highlight some
    keywords, however it cannot exclude specifics colors keywords
    (such as "#def" that overrides C "#define" keyword).
-4. I didn't a benchmark however due colorful-mode uses overlays
+2. I didn't a benchmark however due colorful-mode uses overlays
    instead text properties (like rainbow-mode) it can be a bit slow.
 
 The intention is to provide a featured alternative to

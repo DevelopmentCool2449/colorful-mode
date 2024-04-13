@@ -236,8 +236,12 @@ If the percentage value is above 100, it's converted to 100."
 (defun colorful--rgb-to-hex (rgb)
   "Return CSS RGB as hexadecimal format.
 RGB must be a string."
-  (let* ((rgb (string-split (string-remove-prefix "rgb(" rgb) ","))
-	     (r (colorful--percentage-to-absolute (nth 0 rgb)))
+  (let* ((rgb (string-split
+               (if (string-prefix-p "rgba(" rgb)
+                   (string-remove-prefix "rgba(" rgb)
+                 (string-remove-prefix "rgb(" rgb))
+               ","))
+         (r (colorful--percentage-to-absolute (nth 0 rgb)))
          (g (colorful--percentage-to-absolute (nth 1 rgb)))
          (b (colorful--percentage-to-absolute (nth 2 rgb))))
     (format "#%02X%02X%02X" r g b)))
@@ -339,7 +343,8 @@ PROMPT must be a string with 1 format control (generally a string argument)."
             ((member color (defined-colors))
              (list (colorful--name-to-hex color) beg end))
             ;; Is a CSS rgb?
-            ((string-prefix-p "rgb(" color)
+            ((or (string-prefix-p "rgb(" color)
+                 (string-prefix-p "rgba(" color))
              (list (colorful--rgb-to-hex color) beg end)))
 
          (colorful--change-color ov "%s is already a Hex color. Try again: "
@@ -432,8 +437,10 @@ it can be white or black."
               (beg (match-beginning match))
               (end (match-end match)))
     (cond
-     ((string-prefix-p "rgb(" string)
-      (setq string (colorful--rgb-to-hex string))))
+     ((or (string-prefix-p "rgb(" string)
+          (string-prefix-p "rgba(" string))
+      (setq string (colorful--rgb-to-hex string)))
+     )
 
     ;; Delete duplicates overlays found
     (dolist (ov (overlays-in beg end))
@@ -453,11 +460,7 @@ it can be white or black."
   "Font-lock keywords to add for `colorful-color-keywords'.")
 
 (defvar colorful-rgb-font-lock-keywords
-  `((,(rx (seq "rgb(" (zero-or-more " ")
-               (group (repeat 1 3 (any "0-9"))
-                      (opt nonl (any "0-9"))
-                      (opt (zero-or-more " ") "%"))
-               (zero-or-more " ") "," (zero-or-more " ")
+  `((,(rx (seq "rgb" (opt "a") "(" (zero-or-more " ")
                (group (repeat 1 3 (any "0-9"))
                       (opt "." (any "0-9"))
                       (opt (zero-or-more " ") "%"))
@@ -465,10 +468,20 @@ it can be white or black."
                (group (repeat 1 3 (any "0-9"))
                       (opt "." (any "0-9"))
                       (opt (zero-or-more " ") "%"))
+               (zero-or-more " ") "," (zero-or-more " ")
+               (group (repeat 1 3 (any "0-9"))
+                      (opt "." (any "0-9"))
+                      (opt (zero-or-more " ") "%"))
+               (opt
+                (zero-or-more " ") "," (zero-or-more " ")
+                (zero-or-more (any "0-9")) (opt nonl)
+                (one-or-more (any "0-9"))
+                (zero-or-more " ")
+                (opt "%"))
                (zero-or-more " ") ")"))
      (0 (colorful-colorize-itself))))
-
   "Font-lock keywords to add for RGB colors.")
+
 (defun colorful-add-color-names ()
   "Function for add Emacs color names to `colorful-color-keywords'.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
