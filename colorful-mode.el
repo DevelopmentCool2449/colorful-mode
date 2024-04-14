@@ -260,20 +260,18 @@ RGB must be a string."
          (r (colorful--percentage-to-absolute (nth 0 rgb)))
          (g (colorful--percentage-to-absolute (nth 1 rgb)))
          (b (colorful--percentage-to-absolute (nth 2 rgb))))
-    (format "#%02X%02X%02X" r g b)))
+    (color-rgb-to-hex (/ r 255.0) (/ g 255.0) (/ b 255.0) (if colorful-short-hex-convertions 2))))
 
 (defun colorful--hex-to-name (hex)
   "Return HEX as Emacs color name."
-  (let ((color (color-values hex))
-        name)
+  (catch 'name
     (dolist (color-list color-name-rgb-alist)
-      (if (equal (cdr color-list) color)
-          (setq name (car color-list))))
-    name))
+      (if (equal (cdr color-list) (color-values hex))
+          (throw 'name (car color-list))))))
 
 (defun colorful--name-to-hex (name)
   "Return Emacs color NAME as hex color format."
-  (let* ((short (if colorful-short-hex-convertions 2 1))
+  (let* ((short (if colorful-short-hex-convertions 2))
          (color (append (color-name-to-rgb name) `(,short))))
     (apply #'color-rgb-to-hex color)))
 
