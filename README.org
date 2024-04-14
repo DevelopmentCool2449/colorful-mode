@@ -7,6 +7,8 @@
 #+texinfo_dir_title: colorful-mode: (colorful-mode).
 #+texinfo_dir_desc: Preview color hexs in your buffer
 
+#+html: <a href="https://jcs-emacs.github.io/jcs-elpa/"><img alt="JCS ELPA" src="https://raw.githubusercontent.com/jcs-emacs/badges/master/elpa/v/colorful-mode.svg">
+
 #+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/elisp_logo_warning.svg" align="right" width="10%">
 
 🟢colorful-mode is a minor mode that allow you preview any color
@@ -113,23 +115,11 @@ For use them add it to:
 
 See: =colorful-extra-color-keyword-functions= for more details.
 
-* Installation 📦
+* Usage and Installation 📦
 It's recommended that you must use emacs-28.X or higher.
 
-Currently colorful-mode is not available in any elisp package archive,
-however you can install it with =package-vc-install= in emacs-29.X
-
-Run =M-x package-vc-install=
-And type =https://github.com/DevelopmentCool2449/colorful-mode.git=
-
-For emacs 30 users you can use =use-package= macro with =:vc= keyword:
-
-#+begin_src emacs-lisp
-  (use-package colorful-mode
-    :vc (:url "https://github.com/DevelopmentCool2449/colorful-mode.git"
-              :rev :newest)
-    ...)
-#+end_src
+For install colorful run:
+- =M-x package-install colorful=
 
 * How does it compare to =rainbow-mode=?
 =colorful-mode= improves =rainbow-mode= in adding more features
