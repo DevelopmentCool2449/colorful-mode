@@ -7,6 +7,7 @@
 #+texinfo_dir_title: colorful-mode: (colorful-mode).
 #+texinfo_dir_desc: Preview color hexs in your buffer
 
+Available in:
 #+html: <a href="https://jcs-emacs.github.io/jcs-elpa/"><img alt="JCS ELPA" src="https://raw.githubusercontent.com/jcs-emacs/badges/master/elpa/v/colorful-mode.svg">
 
 #+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/elisp_logo_warning.svg" align="right" width="10%">
@@ -52,28 +53,27 @@ in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/pack
   The value can be left or right.
 - =colorful-extra-color-keyword-functions=
   default:
-#+begin_src emacs-lisp
   '((emacs-lisp-mode . (colorful-add-color-names colorful-add-rgb-colors))
     ((css-mode css-ts-mode) . colorful-add-rgb-colors))
-#+end_src
   List of functions to add extra color keywords to colorful-color-keywords.
 
   It can be a cons cell specifing the mode (or a list of modes)
   e.g:
-#+begin_src emacs-lisp
+
   (((css-mode css-ts-mode) . colorful-add-rgb-colors)
-    (emacs-lisp-mode . (colorful-add-color-names colorful-add-rgb-colors))
+    (emacs-lisp-mode . (colorful-add-color-names
+                        colorful-add-rgb-colors))
     ((text-mode html-mode) . (colorful-add-color-names
                               colorful-add-rgb-colors))
     ...)
-#+end_src
+
   Or a simple list of functions for executing wherever colorful is active:
   (colorful-add-color-names
     colorful-add-rgb-colors)
 
   Available functions are:
-   - colorful-add-color-names.
-   - colorful-add-rgb-colors.
+   + colorful-add-color-names.
+   + colorful-add-rgb-colors.
 
 - =colorful-exclude-colors (default: '("#def"))= List of keyword to don't highlight.
 - =colorful-short-hex-convertions (default: t)= If non nil, hex
@@ -112,6 +112,7 @@ For use them add it to:
 ;; In this example add emacs color names to colorful-keywords.
 (add-to-list 'colorful-extra-color-keyword-functions #'colorful-add-color-names)
 #+end_src
+NOTE: colorful-keyword is buffer-local variable.
 
 See: =colorful-extra-color-keyword-functions= for more details.
 
@@ -119,7 +120,16 @@ See: =colorful-extra-color-keyword-functions= for more details.
 It's recommended that you must use emacs-28.X or higher.
 
 For install colorful run:
-- =M-x package-install colorful=
+- =M-x package-install colorful-mode=
+
+Or if you prefer using =use-package= macro:
+#+begin_src emacs-lisp
+  (use-package colorful-mode
+    :ensure t ; (Optional)
+    :hook (prog-mode text-mode)
+    ...)
+
+#+end_src
 
 * How does it compare to =rainbow-mode=?
 =colorful-mode= improves =rainbow-mode= in adding more features
@@ -132,14 +142,15 @@ and fixing some /(and old)/ bugs:
 | Insert open color hex                                  | Work in progress | ❌              |
 | Opcionally use string preffix/suffix instead highlight | ✓                | ❌              |
 | Exclude keywords/colors to highlight                   | ✓                | ❌^{1}          |
+| Allow highlight some colors only in specific modes     | ✓                | ✓^{2}           |
 | Highlight only in strings and docstrings               | ✓                | ❌              |
-| Allow highlight some colors only in specific modes     | ✓                | ❌              |
-| No performance issues?^{2}                             | ❌               | ✓               |
+| No performance issues?^{3}                             | ❌               | ✓               |
 
 1. rainbow-mode (like colorful) uses regex for highlight some
    keywords, however it cannot exclude specifics colors keywords
    (such as "#def" that overrides C "#define" keyword).
-2. I didn't a benchmark however due colorful-mode uses overlays
+2. Only for some highlights and keywords.
+3. I didn't a benchmark however due colorful-mode uses overlays
    instead text properties (like rainbow-mode) it can be a bit slow.
 
 The intention is to provide a featured alternative to

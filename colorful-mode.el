@@ -1,4 +1,4 @@
-;;; colorful-mode.el --- Preview any color in your buffer in real time.  -*- lexical-binding: t; -*-
+;;; colorful-mode.el --- Preview any color in your buffer in real time -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2024 Elias G.B. Perez
 
@@ -109,6 +109,22 @@ Must be a list containing regex strings.")
 (defface colorful-base
   '((t (:box (:line-width -1 :color "grey75" :style flat-button))))
   "Face used as base for highlight color names.")
+
+(defcustom global-colorful-modes t
+  "Which major modes `colorful-mode' is switched on in.
+
+This variable can be either t (all major modes), nil (no major modes),
+or a list of modes and (not modes) to switch use this minor mode or
+not.  For instance
+
+  (c-mode (not message-mode mail-mode) `text-mode')
+
+means \"use this mode in all modes derived from `c-mode', don't use in
+modes derived from `message-mode' or `mail-mode', but do use in other
+modes derived from `text-mode'\".  An element with value t means \"use\"
+and nil means \"don't use\".  There's an implicit nil at the end of the
+list."
+  :type '(choice (const t) (repeat sexp)))
 
 (defcustom colorful-extra-color-keyword-functions
   '((emacs-lisp-mode . (colorful-add-color-names
@@ -439,8 +455,7 @@ it can be white or black."
     (cond
      ((or (string-prefix-p "rgb(" string)
           (string-prefix-p "rgba(" string))
-      (setq string (colorful--rgb-to-hex string)))
-     )
+      (setq string (colorful--rgb-to-hex string))))
 
     ;; Delete duplicates overlays found
     (dolist (ov (overlays-in beg end))
