@@ -80,8 +80,8 @@ in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/pack
   values converted by coloful should be as short as possible.
   Setting this to t will make hex values follow a 24-bit specification
   and can make them inaccurate.
-- =colorful-only-strings (default: nil)= If non-nil colorful will only
-  highlight colors inside strings.
+- =colorful-only-strings (default: nil)= If non-nil colorful will only highlight colors inside strings.
+  If set to only-prog, only highlight colors in strings if current major mode is derived from prog-mode.
 - =global-colorful-modes (default: '(mhtml-mode html-ts-mode css-mode css-ts-mode emacs-lisp-mode))= Which major modes global-colorful-mode is switched on in (globally).
 
 ** Interactive User Functions.

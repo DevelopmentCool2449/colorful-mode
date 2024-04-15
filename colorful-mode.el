@@ -8,7 +8,7 @@
 ;; Package-Requires: ((emacs "28.1") (compat "29.1.4.5"))
 ;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
 ;; Keywords: faces
-;; Version: 0.1.3
+;; Version: 0.2.0
 
 ;; This file is not part of GNU Emacs.
 
@@ -104,27 +104,12 @@ Must be a list containing regex strings.")
 (defgroup colorful nil
   "Preview hex colors values in current buffer.."
   :tag "Colorful mode"
-  :group 'help)
+  :group 'faces
+  :group 'display)
 
 (defface colorful-base
   '((t (:box (:line-width -1 :color "grey75" :style flat-button))))
   "Face used as base for highlight color names.")
-
-(defcustom global-colorful-modes t
-  "Which major modes `colorful-mode' is switched on in.
-
-This variable can be either t (all major modes), nil (no major modes),
-or a list of modes and (not modes) to switch use this minor mode or
-not.  For instance
-
-  (c-mode (not message-mode mail-mode) `text-mode')
-
-means \"use this mode in all modes derived from `c-mode', don't use in
-modes derived from `message-mode' or `mail-mode', but do use in other
-modes derived from `text-mode'\".  An element with value t means \"use\"
-and nil means \"don't use\".  There's an implicit nil at the end of the
-list."
-  :type '(choice (const t) (repeat sexp)))
 
 (defcustom colorful-extra-color-keyword-functions
   '((emacs-lisp-mode . (colorful-add-color-names
@@ -192,8 +177,10 @@ and can make them inaccurate."
   :type 'boolean)
 
 (defcustom colorful-only-strings nil
-  "If non-nil colorful will only highlight colors inside strings."
-  :type 'boolean)
+  "If non-nil colorful will only highlight colors inside strings.
+If set to only-prog, only highlight colors in strings if current major
+mode is derived from `prog-mode'."
+  :type '(choice boolean (const :tag "Only in prog-modes" only-prog)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -212,7 +199,7 @@ and can make them inaccurate."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; FIXME: THIS MACRO WORKS FINE, HOWEVER IT DOESN'T WORK WITH
-;;       MOUSE CLICKS, IF ANYONE KNOW WHY, PLEASE OPEN AN ISSUE.
+;;       MOUSE CLICKS, IF ANYONE KNOWs WHY, PLEASE OPEN AN ISSUE.
 ;;       MAYBE THIS CAN BE DELETED.
 ;;;; (defmacro colorful--check-ov (varlist &rest then)
 ;;   "Check if there is a colorful-ov at current position, execute THEN.
@@ -394,7 +381,13 @@ PROMPT must be a string with 1 format control (generally a string argument)."
 The background uses COLOR color value.  The foreground is obtained
 converting COLOR to a Emacs RGB value and determined with `color-dark-p',
 it can be white or black."
-  (let* ((ov (make-overlay beg end nil t t)))
+  (let* ((ov (make-overlay beg end nil t t))
+         (map (make-sparse-keymap)))
+
+    (if colorful-allow-mouse-clicks
+        (keymap-set map "<mouse-1>" (if buffer-read-only
+                                        #'colorful-convert-and-copy-color
+                                      #'colorful-change-or-copy-color)))
 
     ;; Define colorful overlay tag
     (overlay-put ov 'colorful--overlay t)
@@ -417,10 +410,7 @@ it can be white or black."
                        (propertize colorful-prefix-string
                                    'face `(:foreground ,color)
                                    'mouse-face 'highlight
-                                   'keymap
-                                   (let ((map (make-sparse-keymap)))
-                                     (keymap-set map "<mouse-1>" #'colorful-change-or-copy-color)
-                                     map))
+                                   'keymap map)
                      (propertize colorful-prefix-string
                                  'face `(:foreground ,color))))
       ;; NOTE: This fixs an error for invalid face when using prefix
@@ -430,10 +420,7 @@ it can be white or black."
       ;;      this is the way i found for fix this.
       (when colorful-allow-mouse-clicks
         (overlay-put ov 'mouse-face 'highlight)
-        (overlay-put ov 'keymap
-                     (let ((map (make-sparse-keymap)))
-                       (keymap-set map "<mouse-1>" #'colorful-change-or-copy-color)
-                       map)))
+        (overlay-put ov 'keymap map))
       (overlay-put ov 'face
                    `((:foreground
                       ,(if (color-dark-p (color-name-to-rgb color))
@@ -447,6 +434,8 @@ it can be white or black."
               (string (match-string-no-properties match))
               ((and (not (member string colorful-exclude-colors))
                     (or (and colorful-only-strings (nth 3 (syntax-ppss)))
+                        (and (eq colorful-only-strings 'only-prog)
+                             (not (derived-mode-p 'prog-mode)))
                         (not colorful-only-strings))))
               (beg (match-beginning match))
               (end (match-end match)))
@@ -544,17 +533,20 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 (define-minor-mode colorful-mode
   "Preview color hexs in current buffer.
 This will fontify colors strings like \"#aabbcc\" or \"blue\"."
-  :lighter nil :group 'colorful :keymap colorful-mode-map
+  :lighter nil :keymap colorful-mode-map
   (if colorful-mode
       (colorful--turn-on)
     (colorful--turn-off)))
 
+;; Silcense a bye-compile warning about global-colorful-modes not
+;; being defined, if anyone knows why this happens please open an
+;; issue.
+(defvar global-colorful-modes)
+
 ;;;###autoload
 (define-globalized-minor-mode global-colorful-mode
   colorful-mode colorful--turn-on
-  :predicate
-  '(mhtml-mode html-ts-mode css-mode css-ts-mode emacs-lisp-mode)
-  :group 'colorful)
+  :predicate '(mhtml-mode html-ts-mode css-mode css-ts-mode prog-mode))
 
 
 (provide 'colorful-mode)
