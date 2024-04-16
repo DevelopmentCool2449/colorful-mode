@@ -3,11 +3,11 @@
 ;; Copyright (C) 2024 Elias G.B. Perez
 
 ;; Author: Elias G.B. Perez <eg642616@gmail.com>
-;; Maintainer: Elias G.B. Perez <eg642616@gmail.com>
-;; Created: 2024
+;; Maintainer: Elias G.B. Perez
+;; Created: 2024-04-10
 ;; Package-Requires: ((emacs "28.1") (compat "29.1.4.5"))
 ;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
-;; Keywords: faces
+;; Keywords: faces, tools, matching
 ;; Version: 0.3.0
 
 ;; This file is not part of GNU Emacs.
@@ -39,62 +39,16 @@
 (require 'compat) ; This should add compatibility for emacs-28.X and higher.
 
 (require 'color)
-(require 'subr-x)
+(eval-when-compile (require 'subr-x))
 ;; (require 'rx) ; Not sure if this should be added.
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                           Buffer-local variables                           ;
+;;                             Internal variables                             ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar-local colorful-color-keywords
-    `((,(rx (seq (not (any "&"))
-                 (group "#" (repeat 1 4 (= 3 (any "0-9A-Fa-f"))))
-                 word-boundary))
-       (1 (colorful-colorize-itself 1)))
-      (,(rx (seq bol
-                 (group "#" (repeat 1 4 (= 3 (any "0-9A-Fa-f"))))
-                 word-boundary))
-       (0 (colorful-colorize-itself)))
-      (,(rx (seq (any "Rr") (any "Gg") (any "Bb") ":"
-                 (repeat 1 4 (any "0-9A-Fa-f")) "/"
-                 (repeat 1 4 (any "0-9A-Fa-f")) "/"
-                 (repeat 1 4 (any "0-9A-Fa-f"))))
-       (0 (colorful-colorize-itself)))
-      (,(rx (seq (any "Rr") (any "Gg") (any "Bb") (any "Ii") ":"
-                 (one-or-more (any "0-9" ".")) "/"
-                 (one-or-more (any "0-9" ".")) "/"
-                 (one-or-more (any "0-9" "."))))
-       (0 (colorful-colorize-itself)))
-      (,(rx (seq (or (seq (any "Cc") (any "Ii") (any "Ee")
-                          (or (seq (any "Xx") (any "Yy") (any "Zz"))
-                              (seq (any "Uu") (any "Vv") (any "Yy"))
-                              (seq (any "Xx") (any "Yy") (any "Yy"))
-                              (seq (any "Ll") (any "Aa") (any "Bb"))
-                              (seq (any "Ll") (any "Uu") (any "Vv"))))
-                     (seq (any "Tt") (any "Ee") (any "Kk") (any "Hh")
-                          (any "Vv") (any "Cc")))
-                 ":"
-                 (opt (any "+-"))
-                 (one-or-more (any "0-9" "."))
-                 (opt (any "Ee")
-                      (opt (any "+-"))
-                      (one-or-more (any "0-9")))
-                 "/"
-                 (opt (any "+-"))
-                 (one-or-more (any "0-9" "."))
-                 (opt (any "Ee")
-                      (opt (any "+-"))
-                      (one-or-more (any "0-9")))
-                 "/"
-                 (opt (any "+-"))
-                 (one-or-more (any "0-9" "."))
-                 (opt (any "Ee")
-                      (opt (any "+-"))
-                      (one-or-more (any "0-9")))))
-       (0 (colorful-colorize-itself))))
-  "Font-lock keywords to add for hexadecimal colors.
-Must be a list containing regex strings.")
+(defvar-local colorful-color-keywords nil
+  "Font-lock colors keyword to highlight.")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -105,7 +59,8 @@ Must be a list containing regex strings.")
   "Preview hex colors values in current buffer.."
   :tag "Colorful mode"
   :group 'faces
-  :group 'display)
+  :group 'tools
+  :group 'matching)
 
 (defface colorful-base
   '((t (:box (:line-width -1 :color "grey75" :style flat-button))))
@@ -113,8 +68,9 @@ Must be a list containing regex strings.")
 
 (defcustom colorful-extra-color-keyword-functions
   '((emacs-lisp-mode . colorful-add-color-names)
-    ((css-mode css-ts-mode) . (colorful-add-rgb-colors
-                               colorful-add-hsl-colors)))
+    ((mhtml-mode html-ts-mode css-mode css-ts-mode)
+     . (colorful-add-rgb-colors colorful-add-hsl-colors colorful-add-color-names))
+    colorful-add-hex-colors)
   "List of functions to add extra color keywords to `colorful-color-keywords'.
 It can be a cons cell specifing the mode (or a list of modes)
 e.g:
@@ -129,6 +85,7 @@ Or a simple list of functions for executing wherever colorful is active:
   `colorful-add-rgb-colors')
 
 Available functions are:
+ - `colorful-add-hex-colors'
  - `colorful-add-color-names'.
  - `colorful-add-rgb-colors'.
  - `colorful-add-hsl-colors'"
@@ -225,8 +182,8 @@ mode is derived from `prog-mode'."
 
 ;;;;;;;;;; Base Convertion functions ;;;;;;;;;;
 
-;; TEMP: Since CSS derived modes allow converting hexs to rgb
-;;       this may be deleted when release colorful 1.0.0
+;; TEMP: Since CSS derived modes allow converting hexs to rgb/hsl
+;;       this may be deleted when colorful 1.0.0 is released.
 ;; (defun colorful--hex-to-rgb (hex)
 ;;   "Return HEX color as CSS rgb format."
 ;;   (let* ((rgb (color-name-to-rgb hex))
@@ -237,13 +194,12 @@ mode is derived from `prog-mode'."
 
 (defun colorful--percentage-to-absolute (percentage)
   "Convert PERCENTAGE to a absolute number.
-If NUMBER is absolute, return NUMBER.
+If PERCENTAGE is absolute, return PERCENTAGE.
 This will convert \"80 %\" to 204, \"100 %\" to 255 but \"123\" to \"123\".
-If the percentage value is above 100, it's converted to 100."
-  (let ((string-length (- (length percentage) 1)))
-    ;; Is this a number with %?
-    (if (eq (elt percentage string-length) ?%)
-        (/ (* (min (string-to-number (substring percentage 0 string-length)) 100) 255) 100)
+If PERCENTAGE is above 100%, it's converted to 100."
+  (let ((percentage (string-remove-suffix ")" percentage)))
+    (if (string-suffix-p "%" percentage)
+        (/ (* (min (string-to-number percentage) 100) 255) 100)
       (string-to-number percentage))))
 
 (defun colorful--rgb-to-hex (rgb &optional digit)
@@ -251,9 +207,8 @@ If the percentage value is above 100, it's converted to 100."
 DIGIT specifies which how much digits per component must have return value.
 RGB must be a string."
   (let* ((rgb (string-split
-               (if (string-prefix-p "rgba(" rgb)
-                   (string-remove-prefix "rgba(" rgb)
-                 (string-remove-prefix "rgb(" rgb))
+               (string-remove-prefix "rgba("
+                                     (string-remove-prefix "rgb(" rgb))
                ","))
          (r (/ (colorful--percentage-to-absolute (nth 0 rgb)) 255.0))
          (g (/ (colorful--percentage-to-absolute (nth 1 rgb)) 255.0))
@@ -265,9 +220,8 @@ RGB must be a string."
 DIGIT specifies which how much digits per component must have return value.
 HSL must be a string."
   (let* ((hsl (string-split
-               (if (string-prefix-p "hsl(" hsl)
-                   (string-remove-prefix "hsl(" hsl)
-                 (string-remove-prefix "hsla(" hsl))
+               (string-remove-prefix "hsla("
+                                     (string-remove-prefix "hsl(" hsl))
                ","))
          (h (/ (string-to-number (nth 0 hsl)) 360.0))
          (s (/ (string-to-number (nth 1 hsl)) 100.0))
@@ -449,11 +403,9 @@ it can be white or black."
                                    'keymap map)
                      (propertize colorful-prefix-string
                                  'face `(:foreground ,color))))
-      ;; NOTE: This fixs an error for invalid face when using prefix
+      ;; Use no face for matched color
       (overlay-put ov 'face nil))
      (t
-      ;; NOTE: Using colorful prefix bugs background color,
-      ;;      this is the way i found for fix this.
       (when colorful-allow-mouse-clicks
         (overlay-put ov 'mouse-face 'highlight)
         (overlay-put ov 'keymap map))
@@ -491,13 +443,92 @@ it can be white or black."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                        Functions for Extra Coloring                        ;
+;;                         Extra coloring definitions                         ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defvar colorful-hex-font-lock-keywords
+  `((,(rx (seq (not (any "&"))
+               (group "#" (repeat 1 4 (= 3 (any "0-9A-Fa-f"))))
+               word-boundary))
+     (1 (colorful-colorize-itself 1)))
+    (,(rx (seq bol
+               (group "#" (repeat 1 4 (= 3 (any "0-9A-Fa-f"))))
+               word-boundary))
+     (0 (colorful-colorize-itself)))
+    (,(rx (seq (any "Rr") (any "Gg") (any "Bb") ":"
+               (repeat 1 4 (any "0-9A-Fa-f")) "/"
+               (repeat 1 4 (any "0-9A-Fa-f")) "/"
+               (repeat 1 4 (any "0-9A-Fa-f"))))
+     (0 (colorful-colorize-itself)))
+    (,(rx (seq (any "Rr") (any "Gg") (any "Bb") (any "Ii") ":"
+               (one-or-more (any "0-9" ".")) "/"
+               (one-or-more (any "0-9" ".")) "/"
+               (one-or-more (any "0-9" "."))))
+     (0 (colorful-colorize-itself)))
+    (,(rx (seq (or (seq (any "Cc") (any "Ii") (any "Ee")
+                        (or (seq (any "Xx") (any "Yy") (any "Zz"))
+                            (seq (any "Uu") (any "Vv") (any "Yy"))
+                            (seq (any "Xx") (any "Yy") (any "Yy"))
+                            (seq (any "Ll") (any "Aa") (any "Bb"))
+                            (seq (any "Ll") (any "Uu") (any "Vv"))))
+                   (seq (any "Tt") (any "Ee") (any "Kk") (any "Hh")
+                        (any "Vv") (any "Cc")))
+               ":"
+               (opt (any "+-"))
+               (one-or-more (any "0-9" "."))
+               (opt (any "Ee")
+                    (opt (any "+-"))
+                    (one-or-more (any "0-9")))
+               "/"
+               (opt (any "+-"))
+               (one-or-more (any "0-9" "."))
+               (opt (any "Ee")
+                    (opt (any "+-"))
+                    (one-or-more (any "0-9")))
+               "/"
+               (opt (any "+-"))
+               (one-or-more (any "0-9" "."))
+               (opt (any "Ee")
+                    (opt (any "+-"))
+                    (one-or-more (any "0-9")))))
+     (0 (colorful-colorize-itself)))))
+
+(defun colorful-add-hex-colors ()
+  "Function for add hex colors to `colorful-color-keywords'.
+This is intended to be used with `colorful-extra-color-keyword-functions'."
+  (dolist (colors colorful-hex-font-lock-keywords)
+    (add-to-list 'colorful-color-keywords colors t)))
+
 (defvar colorful-color-name-font-lock-keywords
-  `((,(regexp-opt (defined-colors) 'words)
+  `((,(regexp-opt (append ; TEMP: ?
+                   (defined-colors)
+                   '("Aquamarine" ;; "Aqua" ("Aqua" . "#00FFFF")
+                     "Azure" "Beige" "Bisque" "Black" "Blue"
+                     "Brown" "BurlyWood" "Chartreuse" "Chocolate"
+                     "Coral" "Cornsilk" ;; "Crimson" ("Crimson" . "#DC143C")
+                     "Cyan" "Darkorange" "FireBrick"
+                     ;; "Fuchsia" ("Fuchsia" . "#FF00FF")
+                     "Gainsboro" "Gold" "GoldenRod"
+                     "Gray" "Grey" ;; "Green" ("Green" . "#008000")
+                     "HoneyDew" ;; "Indigo" ()
+                     "Ivory" "Khaki" "Lavender" ;; "Lime"
+                     "Linen" "Magenta" "Maroon" "MediumAquaMarine"
+                     "Moccasin" "Navy" ;; "Olive"
+                     "Orange" "Orchid" "PaleGoldenRod" "Peru" "Pink"
+                     "Plum" "Purple" "Red" "Salmon" "SeaShell"
+                     "Sienna" ;; "Silver"
+                     "Snow" "Tan" ;; "Teal"
+                     "Thistle" "Tomato" "Turquoise" "Violet" "Wheat"
+                     "White" "Yellow"))
+                  'words)
      (0 (colorful-colorize-itself))))
   "Font-lock keywords to add for `colorful-color-keywords'.")
+
+(defun colorful-add-color-names ()
+  "Function for add Color names to `colorful-color-keywords'.
+This is intended to be used with `colorful-extra-color-keyword-functions'."
+  (dolist (colors colorful-color-name-font-lock-keywords)
+    (add-to-list 'colorful-color-keywords colors t)))
 
 (defvar colorful-rgb-font-lock-keywords
   `((,(rx (seq "rgb" (opt "a") "(" (zero-or-more " ")
@@ -522,6 +553,12 @@ it can be white or black."
      (0 (colorful-colorize-itself))))
   "Font-lock keywords for add RGB colors.")
 
+(defun colorful-add-rgb-colors ()
+  "Function for add CSS RGB colors to `colorful-color-keywords'.
+This is intended to be used with `colorful-extra-color-keyword-functions'."
+  (dolist (colors colorful-rgb-font-lock-keywords)
+    (add-to-list 'colorful-color-keywords colors t)))
+
 (defvar colorful-hsl-font-lock-keywords
   `((,(rx (seq "hsl" (opt "a") "(" (zero-or-more " ")
                (group (repeat 1 3 (any "0-9")))
@@ -538,18 +575,6 @@ it can be white or black."
                (zero-or-more " ") ")"))
      (0 (colorful-colorize-itself))))
   "Font-lock keywords for add HSL colors.")
-
-(defun colorful-add-color-names ()
-  "Function for add Emacs color names to `colorful-color-keywords'.
-This is intended to be used with `colorful-extra-color-keyword-functions'."
-  (dolist (colors colorful-color-name-font-lock-keywords)
-    (add-to-list 'colorful-color-keywords colors t)))
-
-(defun colorful-add-rgb-colors ()
-  "Function for add CSS RGB colors to `colorful-color-keywords'.
-This is intended to be used with `colorful-extra-color-keyword-functions'."
-  (dolist (colors colorful-rgb-font-lock-keywords)
-    (add-to-list 'colorful-color-keywords colors t)))
 
 (defun colorful-add-hsl-colors ()
   "Function for add CSS HSL colors to `colorful-color-keywords'.
@@ -584,8 +609,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 
 (defun colorful--turn-off ()
   "Helper function for clear colorful overlays."
-  (font-lock-remove-keywords
-   nil `(,@colorful-color-keywords))
+  (font-lock-remove-keywords nil `(,@colorful-color-keywords))
   (remove-overlays nil nil 'colorful--overlay t)
   ;; Refresh font-lock
   (font-lock-flush))
@@ -599,7 +623,7 @@ This will fontify colors strings like \"#aabbcc\" or \"blue\"."
       (colorful--turn-on)
     (colorful--turn-off)))
 
-;; Silcense a bye-compile warning about global-colorful-modes not
+;; Silence a byte-compile warning about global-colorful-modes not
 ;; being defined, if anyone knows why this happens please open an
 ;; issue.
 (defvar global-colorful-modes)

@@ -54,8 +54,10 @@ in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/pack
   Only relevant if `colorful-use-prefix' is non-nil.
 - =colorful-extra-color-keyword-functions=
   default:
-  '((emacs-lisp-mode . (colorful-add-color-names colorful-add-rgb-colors))
-    ((css-mode css-ts-mode) . colorful-add-rgb-colors))
+  '((emacs-lisp-mode . colorful-add-color-names)
+    ((mhtml-mode html-ts-mode css-mode css-ts-mode)
+    . (colorful-add-rgb-colors colorful-add-hsl-colors colorful-add-color-names))
+    colorful-add-hex-colors)
   List of functions to add extra color keywords to colorful-color-keywords.
 
   It can be a cons cell specifing the mode (or a list of modes)
@@ -73,6 +75,7 @@ in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/pack
     colorful-add-rgb-colors)
 
   Available functions are:
+   + colorful-add-hex-colors.
    + colorful-add-color-names.
    + colorful-add-rgb-colors.
    + colorful-add-hsl-colors.
@@ -108,9 +111,10 @@ These key bindings are defined by: =colorful-mode-map=
 Colorful by default provides extra functions that highlight additional
 colors:
 
-- =colorful-add-color-names= Add emacs color names to colorful-color-keywords.
-- =colorful-add-rgb-colors= Add CSS RGB colors to colorful-color-keywords.
-- =colorful-add-hsl-colors= Add CSS HSL colors to ‘colorful-color-keywords’.
+- =colorful-add-hex-colors= Add Hexadecimal Colors.
+- =colorful-add-color-names= Add color names.
+- =colorful-add-rgb-colors= Add CSS RGB colors.
+- =colorful-add-hsl-colors= Add CSS HSL colors.
 
 For use them add it to:
 #+begin_src emacs-lisp
@@ -190,5 +194,5 @@ this package, However I would like if someone would be able to be the
 mantainer (if you are interested please email me
 <eg642616@gmail.com>).
 
-#+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/powered_by_emacs.svg" align="left" width="10%">
-#+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/powered_by_org_mode.svg" align="center" width="10%">
+#+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/powered_by_emacs.svg" align="left" width="10%" alt="Powered by GNU Emacs">
+#+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/powered_by_org_mode.svg" align="right" width="10%" alt="Powered by Org Mode">
