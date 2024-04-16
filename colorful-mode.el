@@ -8,7 +8,7 @@
 ;; Package-Requires: ((emacs "28.1") (compat "29.1.4.5"))
 ;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
 ;; Keywords: faces
-;; Version: 0.2.0
+;; Version: 0.3.0
 
 ;; This file is not part of GNU Emacs.
 
@@ -36,7 +36,7 @@
 ;;                                  Libraries                                 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'compat) ; This should add compatibility for emacs-28.2 and higher.
+(require 'compat) ; This should add compatibility for emacs-28.X and higher.
 
 (require 'color)
 (require 'subr-x)
@@ -112,9 +112,9 @@ Must be a list containing regex strings.")
   "Face used as base for highlight color names.")
 
 (defcustom colorful-extra-color-keyword-functions
-  '((emacs-lisp-mode . (colorful-add-color-names
-                        colorful-add-rgb-colors))
-    ((css-mode css-ts-mode) . colorful-add-rgb-colors))
+  '((emacs-lisp-mode . colorful-add-color-names)
+    ((css-mode css-ts-mode) . (colorful-add-rgb-colors
+                               colorful-add-hsl-colors)))
   "List of functions to add extra color keywords to `colorful-color-keywords'.
 It can be a cons cell specifing the mode (or a list of modes)
 e.g:
@@ -130,7 +130,8 @@ Or a simple list of functions for executing wherever colorful is active:
 
 Available functions are:
  - `colorful-add-color-names'.
- - `colorful-add-rgb-colors'."
+ - `colorful-add-rgb-colors'.
+ - `colorful-add-hsl-colors'"
   :type '(repeat
           (choice
            (cons (choice :tag "Mode(s)"
@@ -157,12 +158,14 @@ Available functions are: `colorful-add-color-names'.")
   :type 'boolean)
 
 (defcustom colorful-prefix-string "●"
-  "Prefix symbol to be used according `colorful-use-prefix'."
+  "String to be used in highlights.
+Only relevant if `colorful-use-prefix' is non-nil."
   :type 'string)
 
 (defcustom colorful-prefix-alignment 'left
   "The position to put prefix string.
-The value can be left or right."
+The value can be left or right.
+Only relevant if `colorful-use-prefix' is non-nil."
   :type '(choice (const :tag "Left" left)
                  (const :tag "Right" right)))
 
@@ -219,11 +222,17 @@ mode is derived from `prog-mode'."
 ;;        ,(macroexp-progn then)
 ;;      (user-error "No color found")))
 
-;; Base Convertion functions.
+;;;;;;;;;; Base Convertion functions ;;;;;;;;;;
+
+;; TEMP: Since CSS derived modes allow converting hexs to rgb
+;;       this may be deleted when release colorful 1.0.0
 ;; (defun colorful--hex-to-rgb (hex)
 ;;   "Return HEX color as CSS rgb format."
-;;   ;; (query-replace)
-;;   )
+;;   (let* ((rgb (color-name-to-rgb hex))
+;;        (r (* 255 (nth 0 rgb)))
+;;        (g (* 255 (nth 1 rgb)))
+;;        (b (* 255 (nth 2 rgb))))
+;;   (format "rgb(%d, %d, %d)" r g b)))
 
 (defun colorful--percentage-to-absolute (percentage)
   "Convert PERCENTAGE to a absolute number.
@@ -244,10 +253,25 @@ RGB must be a string."
                    (string-remove-prefix "rgba(" rgb)
                  (string-remove-prefix "rgb(" rgb))
                ","))
-         (r (colorful--percentage-to-absolute (nth 0 rgb)))
-         (g (colorful--percentage-to-absolute (nth 1 rgb)))
-         (b (colorful--percentage-to-absolute (nth 2 rgb))))
-    (color-rgb-to-hex (/ r 255.0) (/ g 255.0) (/ b 255.0) (if colorful-short-hex-convertions 2))))
+         (r (/ (colorful--percentage-to-absolute (nth 0 rgb)) 255.0))
+         (g (/ (colorful--percentage-to-absolute (nth 1 rgb)) 255.0))
+         (b (/ (colorful--percentage-to-absolute (nth 2 rgb)) 255.0)))
+    (color-rgb-to-hex r g b (if colorful-short-hex-convertions 2))))
+
+(defun colorful--hsl-to-hex (hsl)
+  "Return HSL RGB as hexadecimal format.
+HSL must be a string."
+  (let* ((hsl (string-split
+               (if (string-prefix-p "hsl(" hsl)
+                   (string-remove-prefix "hsl(" hsl)
+                 (string-remove-prefix "hsla(" hsl))
+               ","))
+         (h (/ (string-to-number (nth 0 hsl)) 360.0))
+         (s (/ (string-to-number (nth 1 hsl)) 100.0))
+         (l (/ (string-to-number (nth 2 hsl)) 100.0))
+         (rgb (append (color-hsl-to-rgb h s l)
+                      `(,(if colorful-short-hex-convertions 2)))))
+    (apply #'color-rgb-to-hex rgb)))
 
 (defun colorful--hex-to-name (hex)
   "Return HEX as Emacs color name."
@@ -330,8 +354,7 @@ PROMPT must be a string with 1 format control (generally a string argument)."
          (end (or end (overlay-end ov)))
          (color (or color (buffer-substring-no-properties beg end)))
          (prompt (format prompt color))
-         (choices '(("Hex value" . hex)
-                    ;; ("RGB (CSS)" . rgb)
+         (choices '(("Hexadecimal color format" . hex)
                     ("Emacs color name" . name)))
          (choice (alist-get
                   (completing-read prompt choices nil t nil nil)
@@ -340,32 +363,35 @@ PROMPT must be a string with 1 format control (generally a string argument)."
       ('hex
        (if (not (string-prefix-p "#" color)) ; Ensure is not already a hex
            (cond
-            ;; Is a Name?
+            ;; Is Name?
             ((member color (defined-colors))
              (list (colorful--name-to-hex color) beg end))
-            ;; Is a CSS rgb?
-            ((or (string-prefix-p "rgb(" color)
-                 (string-prefix-p "rgba(" color))
-             (list (colorful--rgb-to-hex color) beg end)))
+            ;; Is CSS rgb?
+            ((string-match-p (rx (one-or-more "rgb" (opt "a") "(")) color)
+             (list (colorful--rgb-to-hex color) beg end))
+            ;; Is HSL?
+            ((string-match-p (rx (one-or-more "hsl" (opt "a") "(")) color)
+             (list (colorful--hsl-to-hex color) beg end)))
 
          (colorful--change-color ov "%s is already a Hex color. Try again: "
                                  color beg end)))
-
-      ;; ('rgb (unless (string-prefix-p "rgb" color)))
-
       ('name
        (if (not (assoc color color-name-rgb-alist))
            (cond
-            ;; Is a Hex?
+            ;; Is Hex?
             ((string-prefix-p "#" color)
              (if-let ((rep (colorful--hex-to-name color)))
                  (list rep beg end)
                (user-error "No color name available")
                nil))
-            ;; Is a CSS rgb?
-            ((string-prefix-p "rgb(" color)
-             (if-let ((rep (colorful--rgb-to-hex color))
-                      (rep (colorful--hex-to-name rep)))
+            ;; Is CSS rgb?
+            ((string-match-p (rx (one-or-more "rgb" (opt "a") "(")) color)
+             (if-let ((rep (colorful--hex-to-name (colorful--rgb-to-hex color))))
+                 (list rep beg end)
+               (user-error "No color name available")))
+            ;; Is HSL?
+            ((string-match-p (rx (one-or-more "hsl" (opt "a") "(")) color)
+             (if-let ((rep (colorful--hex-to-name (colorful--hsl-to-hex color))))
                  (list rep beg end)
                (user-error "No color name available"))))
 
@@ -435,14 +461,16 @@ it can be white or black."
               ((and (not (member string colorful-exclude-colors))
                     (or (and colorful-only-strings (nth 3 (syntax-ppss)))
                         (and (eq colorful-only-strings 'only-prog)
-                             (not (derived-mode-p 'prog-mode)))
+                             (or (derived-mode-p 'css-mode) ; Apparently CSS is prog-mode derived
+                                 (not (derived-mode-p 'prog-mode))))
                         (not colorful-only-strings))))
               (beg (match-beginning match))
               (end (match-end match)))
     (cond
-     ((or (string-prefix-p "rgb(" string)
-          (string-prefix-p "rgba(" string))
-      (setq string (colorful--rgb-to-hex string))))
+     ((string-match-p (rx (one-or-more "rgb" (opt "a") "(")) string)
+      (setq string (colorful--rgb-to-hex string)))
+     ((string-match-p (rx (one-or-more "hsl" (opt "a") "(")) string)
+      (setq string (colorful--hsl-to-hex string))))
 
     ;; Delete duplicates overlays found
     (dolist (ov (overlays-in beg end))
@@ -482,7 +510,24 @@ it can be white or black."
                 (opt "%"))
                (zero-or-more " ") ")"))
      (0 (colorful-colorize-itself))))
-  "Font-lock keywords to add for RGB colors.")
+  "Font-lock keywords for add RGB colors.")
+
+(defvar colorful-hsl-font-lock-keywords
+  `((,(rx (seq "hsl" (opt "a") "(" (zero-or-more " ")
+               (group (repeat 1 3 (any "0-9")))
+               (zero-or-more " ") "," (zero-or-more " ")
+               (group (repeat 1 3 (any "0-9")) "%")
+               (zero-or-more " ") "," (zero-or-more " ")
+               (group (repeat 1 3 (any "0-9")) "%")
+               (opt
+                (zero-or-more " ") "," (zero-or-more " ")
+                (zero-or-more (any "0-9")) (opt nonl)
+                (one-or-more (any "0-9"))
+                (zero-or-more " ")
+                (opt "%"))
+               (zero-or-more " ") ")"))
+     (0 (colorful-colorize-itself))))
+  "Font-lock keywords for add HSL colors.")
 
 (defun colorful-add-color-names ()
   "Function for add Emacs color names to `colorful-color-keywords'.
@@ -491,9 +536,15 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
     (add-to-list 'colorful-color-keywords colors t)))
 
 (defun colorful-add-rgb-colors ()
-  "Function for add CSS RGB colors keywords to `colorful-color-keywords'.
+  "Function for add CSS RGB colors to `colorful-color-keywords'.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-rgb-font-lock-keywords)
+    (add-to-list 'colorful-color-keywords colors t)))
+
+(defun colorful-add-hsl-colors ()
+  "Function for add CSS HSL colors to `colorful-color-keywords'.
+This is intended to be used with `colorful-extra-color-keyword-functions'."
+  (dolist (colors colorful-hsl-font-lock-keywords)
     (add-to-list 'colorful-color-keywords colors t)))
 
 
@@ -546,7 +597,7 @@ This will fontify colors strings like \"#aabbcc\" or \"blue\"."
 ;;;###autoload
 (define-globalized-minor-mode global-colorful-mode
   colorful-mode colorful--turn-on
-  :predicate '(mhtml-mode html-ts-mode css-mode css-ts-mode prog-mode))
+  :predicate '(mhtml-mode html-ts-mode scss-mode css-mode css-ts-mode prog-mode))
 
 
 (provide 'colorful-mode)
