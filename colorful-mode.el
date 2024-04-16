@@ -173,11 +173,12 @@ Only relevant if `colorful-use-prefix' is non-nil."
   "List of keyword to don't highlight."
   :type '(repeat string))
 
-(defcustom colorful-short-hex-convertions t
-  "If non-nil, hex values converted by coloful should be as short as possible.
-Setting this to t will make hex values follow a 24-bit specification
+(defcustom colorful-short-hex-convertions 2
+  "If set to 2, hex values converted by colorful should be as short as possible.
+Setting this to 2 will make hex values follow a 24-bit specification
 and can make them inaccurate."
-  :type 'boolean)
+  :type '(choice (const :tag "Short hexadecimals (24-bits)" 2)
+                 (const :tag "Large hexadecimals" nil)))
 
 (defcustom colorful-only-strings nil
   "If non-nil colorful will only highlight colors inside strings.
@@ -245,8 +246,9 @@ If the percentage value is above 100, it's converted to 100."
         (/ (* (min (string-to-number (substring percentage 0 string-length)) 100) 255) 100)
       (string-to-number percentage))))
 
-(defun colorful--rgb-to-hex (rgb)
+(defun colorful--rgb-to-hex (rgb &optional digit)
   "Return CSS RGB as hexadecimal format.
+DIGIT specifies which how much digits per component must have return value.
 RGB must be a string."
   (let* ((rgb (string-split
                (if (string-prefix-p "rgba(" rgb)
@@ -256,10 +258,11 @@ RGB must be a string."
          (r (/ (colorful--percentage-to-absolute (nth 0 rgb)) 255.0))
          (g (/ (colorful--percentage-to-absolute (nth 1 rgb)) 255.0))
          (b (/ (colorful--percentage-to-absolute (nth 2 rgb)) 255.0)))
-    (color-rgb-to-hex r g b (if colorful-short-hex-convertions 2))))
+    (color-rgb-to-hex r g b digit)))
 
-(defun colorful--hsl-to-hex (hsl)
+(defun colorful--hsl-to-hex (hsl &optional digit)
   "Return HSL RGB as hexadecimal format.
+DIGIT specifies which how much digits per component must have return value.
 HSL must be a string."
   (let* ((hsl (string-split
                (if (string-prefix-p "hsl(" hsl)
@@ -269,8 +272,7 @@ HSL must be a string."
          (h (/ (string-to-number (nth 0 hsl)) 360.0))
          (s (/ (string-to-number (nth 1 hsl)) 100.0))
          (l (/ (string-to-number (nth 2 hsl)) 100.0))
-         (rgb (append (color-hsl-to-rgb h s l)
-                      `(,(if colorful-short-hex-convertions 2)))))
+         (rgb (append (color-hsl-to-rgb h s l) `(,digit))))
     (apply #'color-rgb-to-hex rgb)))
 
 (defun colorful--hex-to-name (hex)
@@ -280,10 +282,10 @@ HSL must be a string."
       (if (equal (cdr color-list) (color-values hex))
           (throw 'name (car color-list))))))
 
-(defun colorful--name-to-hex (name)
-  "Return Emacs color NAME as hex color format."
-  (let* ((short (if colorful-short-hex-convertions 2))
-         (color (append (color-name-to-rgb name) `(,short))))
+(defun colorful--name-to-hex (name &optional digit)
+  "Return Emacs color NAME as hex color format.
+DIGIT specifies which how much digits per component must have return value."
+  (let ((color (append (color-name-to-rgb name) `(,digit))))
     (apply #'color-rgb-to-hex color)))
 
 ;;;;;;;;;; User Interactive Functions ;;;;;;;;;;
@@ -332,8 +334,8 @@ HSL must be a string."
   "Change or copy color to a converted format at current cursor position."
   (interactive)
   (let* ((prompt "Please type an option: ")
-         (choices '(("Convert and copy color." . copy)
-                    ("Convert and change color." . convert)))
+         (choices '(("Convert and change color." . convert)
+                    ("Convert and copy color." . copy)))
          (result (alist-get
                   (completing-read prompt choices nil t nil nil)
                   choices nil nil 'equal)))
@@ -365,13 +367,19 @@ PROMPT must be a string with 1 format control (generally a string argument)."
            (cond
             ;; Is Name?
             ((member color (defined-colors))
-             (list (colorful--name-to-hex color) beg end))
+             (list (colorful--name-to-hex
+                    color colorful-short-hex-convertions)
+                   beg end))
             ;; Is CSS rgb?
             ((string-match-p (rx (one-or-more "rgb" (opt "a") "(")) color)
-             (list (colorful--rgb-to-hex color) beg end))
+             (list (colorful--rgb-to-hex
+                    color colorful-short-hex-convertions)
+                   beg end))
             ;; Is HSL?
             ((string-match-p (rx (one-or-more "hsl" (opt "a") "(")) color)
-             (list (colorful--hsl-to-hex color) beg end)))
+             (list (colorful--hsl-to-hex
+                    color colorful-short-hex-convertions)
+                   beg end)))
 
          (colorful--change-color ov "%s is already a Hex color. Try again: "
                                  color beg end)))
@@ -386,12 +394,14 @@ PROMPT must be a string with 1 format control (generally a string argument)."
                nil))
             ;; Is CSS rgb?
             ((string-match-p (rx (one-or-more "rgb" (opt "a") "(")) color)
-             (if-let ((rep (colorful--hex-to-name (colorful--rgb-to-hex color))))
+             (if-let ((rep (colorful--hex-to-name (colorful--rgb-to-hex
+                                                   color colorful-short-hex-convertions))))
                  (list rep beg end)
                (user-error "No color name available")))
             ;; Is HSL?
             ((string-match-p (rx (one-or-more "hsl" (opt "a") "(")) color)
-             (if-let ((rep (colorful--hex-to-name (colorful--hsl-to-hex color))))
+             (if-let ((rep (colorful--hex-to-name (colorful--hsl-to-hex
+                                                   color colorful-short-hex-convertions))))
                  (list rep beg end)
                (user-error "No color name available"))))
 
