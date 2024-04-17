@@ -19,12 +19,12 @@ in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/pack
 *WARNING: THIS PACKAGE STILL IN A EXPERIMENTAL STATE, ABRUPT CHANGES SUCH AS DELETE USER FUNCTIONS, OPTIONS AND KEYBINDINGS OR UNEXPECTED BREAKS ARE USUALLY COMMON*
 
 * Features ✨
-- Preview emacs colors names, hexadecimal colors and CSS rgb functions
+- Preview colors such as colors names, hexadecimal colors and more
   in your current buffer in real time.
-- Replace or copy to other color formats such as hexadecimal or color names.
+- Replace or copy to other color formats such as hexadecimal or color names (only for some colors).
 - Preview using highlight or a prefix/suffix string.
-- Preview only colors in strings.
-- Exclude colors such as hex values and color names.
+- Alow preview colors only in strings.
+- Exclude colors from being highlighted such as hex values and color names.
 
 * Screenshots and animated GIFs 📷
 [[./assets/gif1.gif]]
@@ -57,6 +57,7 @@ in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/pack
   '((emacs-lisp-mode . colorful-add-color-names)
     ((mhtml-mode html-ts-mode css-mode css-ts-mode)
     . (colorful-add-rgb-colors colorful-add-hsl-colors colorful-add-color-names))
+    (latex-mode . colorful-add-latex-colors)
     colorful-add-hex-colors)
   List of functions to add extra color keywords to colorful-color-keywords.
 
@@ -79,6 +80,7 @@ in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/pack
    + colorful-add-color-names.
    + colorful-add-rgb-colors.
    + colorful-add-hsl-colors.
+   + colorful-add-latex-colors
 
 - =colorful-exclude-colors (default: '("#def"))= List of keyword to don't highlight.
 - =colorful-short-hex-convertions (default: 2)= If set to 2, hex values converted by colorful should be as short as possible.
@@ -115,13 +117,13 @@ colors:
 - =colorful-add-color-names= Add color names.
 - =colorful-add-rgb-colors= Add CSS RGB colors.
 - =colorful-add-hsl-colors= Add CSS HSL colors.
+- =colorful-add-latex-colors= Add LaTex rgb/RGB/HTML/Grey colors.
 
 For use them add it to:
 #+begin_src emacs-lisp
-;; In this example add emacs color names only for yaml-,mode and derived.
+;; In this example add emacs color names only for yaml-mode and derived.
   (add-to-list 'colorful-extra-color-keyword-functions '(yaml-mode . colorful-add-color-names))
 #+end_src
-NOTE: colorful-keyword is buffer-local variable.
 
 See: =colorful-extra-color-keyword-functions= for more details.
 
@@ -134,7 +136,7 @@ For install colorful run:
 Or if you prefer using =use-package= macro:
 #+begin_src emacs-lisp
   (use-package colorful-mode
-    :ensure t ; <-- Optional
+    :ensure t ; Optional
     :hook (prog-mode text-mode)
     ...)
 
@@ -178,15 +180,16 @@ expert in elisp)/.
 
 Due I have plans for submit it to *GNU ELPA* keep in mind if you want
 to contribute with a PR *you will need assign copyright to FSF*, this
-for make FSF can still maintaining or save the package if this repo
-gets deleted or something else happen.  If you don't want assign
-copyright please open an issue and send instructions for your
-feature/code, so i can implement it without requiring copyright
-paperwork.  Also if your contribution is less than 15 lines [see:
-[[https://www.gnu.org/software/emacs/manual/html_node/emacs/Copyright-Assignment.html][Copyright Assignment]]] you can open a PR and your contribution will be
-merged quickly.  However for people that are willing to doing
-paperwork you must wait until this package is ready for submit to
-ELPA, this is for ensure that you are ready for doing paperwork.
+will ensure FSF can still maintaining or save the package if this repo
+gets deleted or something else happens.  If you don't want assign
+copyright then open an issue and send instructions for your
+feature/code, so i can implement it (not in the same way) without
+requiring copyright paperwork.  Also if your contribution is less than
+15 lines [see: [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Copyright-Assignment.html][Copyright Assignment]]] you can open a PR and your
+contribution will be reviewed and maybe merged quickly.  However for
+people that are willing to doing paperwork you must wait until this
+package is ready for submit to ELPA, this is for ensure that you are
+ready for doing paperwork.
 
 Also i will try to make this package as stable as possible before
 submit it to ELPA, later that *I won't be able to be the mantainer* of

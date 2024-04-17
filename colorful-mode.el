@@ -8,7 +8,7 @@
 ;; Package-Requires: ((emacs "28.1") (compat "29.1.4.5"))
 ;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
 ;; Keywords: faces, tools, matching
-;; Version: 0.3.0
+;; Version: 0.5.0
 
 ;; This file is not part of GNU Emacs.
 
@@ -40,7 +40,6 @@
 
 (require 'color)
 (eval-when-compile (require 'subr-x))
-;; (require 'rx) ; Not sure if this should be added.
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -70,6 +69,7 @@
   '((emacs-lisp-mode . colorful-add-color-names)
     ((mhtml-mode html-ts-mode css-mode css-ts-mode)
      . (colorful-add-rgb-colors colorful-add-hsl-colors colorful-add-color-names))
+    (latex-mode . colorful-add-latex-colors)
     colorful-add-hex-colors)
   "List of functions to add extra color keywords to `colorful-color-keywords'.
 It can be a cons cell specifing the mode (or a list of modes)
@@ -88,7 +88,8 @@ Available functions are:
  - `colorful-add-hex-colors'
  - `colorful-add-color-names'.
  - `colorful-add-rgb-colors'.
- - `colorful-add-hsl-colors'"
+ - `colorful-add-hsl-colors'
+ - `colorful-add-latex-colors'"
   :type '(repeat
           (choice
            (cons (choice :tag "Mode(s)"
@@ -98,13 +99,6 @@ Available functions are:
                          (repeat function)
                          function))
            function)))
-
-(defvar colorful-extra-color-keywords-hook nil
-  "Hook used for add extra color keywords to `colorful-color-keywords'.
-Available functions are: `colorful-add-color-names'.")
-
-(make-obsolete-variable 'colorful-extra-color-keywords-hook
-                        'colorful-extra-color-keyword-functions "0.1.3")
 
 (defcustom colorful-allow-mouse-clicks t
   "If non-nil, allow using mouse buttons for change color."
@@ -162,7 +156,7 @@ mode is derived from `prog-mode'."
 ;; FIXME: THIS MACRO WORKS FINE, HOWEVER IT DOESN'T WORK WITH
 ;;       MOUSE CLICKS, IF ANYONE KNOWs WHY, PLEASE OPEN AN ISSUE.
 ;;       MAYBE THIS CAN BE DELETED.
-;;;; (defmacro colorful--check-ov (varlist &rest then)
+;; (defmacro colorful--check-ov (varlist &rest then)
 ;;   "Check if there is a colorful-ov at current position, execute THEN.
 ;; Otherwise throw a user error message.
 ;; Works as a let* macro using VARLIST for lexical values but only for
@@ -176,21 +170,10 @@ mode is derived from `prog-mode'."
 ;;                               (if (overlay-get ov 'colorful--overlay)
 ;;                                   (throw 'val ov))))))
 ;;           varlist))
-
 ;;        ,(macroexp-progn then)
 ;;      (user-error "No color found")))
 
 ;;;;;;;;;; Base Convertion functions ;;;;;;;;;;
-
-;; TEMP: Since CSS derived modes allow converting hexs to rgb/hsl
-;;       this may be deleted when colorful 1.0.0 is released.
-;; (defun colorful--hex-to-rgb (hex)
-;;   "Return HEX color as CSS rgb format."
-;;   (let* ((rgb (color-name-to-rgb hex))
-;;        (r (* 255 (nth 0 rgb)))
-;;        (g (* 255 (nth 1 rgb)))
-;;        (b (* 255 (nth 2 rgb))))
-;;   (format "rgb(%d, %d, %d)" r g b)))
 
 (defun colorful--percentage-to-absolute (percentage)
   "Convert PERCENTAGE to a absolute number.
@@ -202,13 +185,30 @@ If PERCENTAGE is above 100%, it's converted to 100."
         (/ (* (min (string-to-number percentage) 100) 255) 100)
       (string-to-number percentage))))
 
+(defun colorful--latex-rgb-to-hex (rgb)
+  "Return LaTex RGB as hexadecimal format.
+RGB must be a string."
+  (let* ((rgb (string-split (string-remove-prefix "{rgb}{" rgb) ","))
+         (r (string-to-number (nth 0 rgb)))
+         (g (string-to-number (nth 1 rgb)))
+         (b (string-to-number (nth 2 rgb))))
+    (color-rgb-to-hex r g b)))
+
+(defun colorful--latex-gray-to-hex (gray)
+  "Return LaTex GRAY as hexadecimal format.
+GRAY must be a string."
+  (let ((gray (string-to-number (string-remove-prefix "{gray}{" gray))))
+    (apply #'color-rgb-to-hex (color-hsl-to-rgb 0 1 gray))))
+
+
 (defun colorful--rgb-to-hex (rgb &optional digit)
   "Return CSS RGB as hexadecimal format.
 DIGIT specifies which how much digits per component must have return value.
 RGB must be a string."
   (let* ((rgb (string-split
-               (string-remove-prefix "rgba("
-                                     (string-remove-prefix "rgb(" rgb))
+               (if (string-prefix-p "rgb(" rgb)
+                   (string-remove-prefix "rgb(" rgb)
+                 (string-remove-prefix "rgb(" rgb))
                ","))
          (r (/ (colorful--percentage-to-absolute (nth 0 rgb)) 255.0))
          (g (/ (colorful--percentage-to-absolute (nth 1 rgb)) 255.0))
@@ -220,8 +220,9 @@ RGB must be a string."
 DIGIT specifies which how much digits per component must have return value.
 HSL must be a string."
   (let* ((hsl (string-split
-               (string-remove-prefix "hsla("
-                                     (string-remove-prefix "hsl(" hsl))
+               (if (string-prefix-p "hsl(" hsl)
+                   (string-remove-prefix "hsl(" hsl)
+                 (string-remove-prefix "hsla(" hsl))
                ","))
          (h (/ (string-to-number (nth 0 hsl)) 360.0))
          (s (/ (string-to-number (nth 1 hsl)) 100.0))
@@ -416,8 +417,12 @@ it can be white or black."
                      (:background ,color)
                      (:inherit colorful-base)))))))
 
+;; NOTE: I'm not sure if this function must be splitted into multiple
+;;       ones according to their color.
 (defun colorful-colorize-itself (&optional match)
-  "Helper function for Colorize MATCH with itself."
+  "Helper function for Colorize MATCH with itself.
+If MATCH is not any hex color or Emacs color name, it will be
+converted to a Hex color."
   (when-let* ((match (or match 0))
               (string (match-string-no-properties match))
               ((and (not (member string colorful-exclude-colors))
@@ -432,7 +437,17 @@ it can be white or black."
      ((string-match-p (rx (one-or-more "rgb" (opt "a") "(")) string)
       (setq string (colorful--rgb-to-hex string)))
      ((string-match-p (rx (one-or-more "hsl" (opt "a") "(")) string)
-      (setq string (colorful--hsl-to-hex string))))
+      (setq string (colorful--hsl-to-hex string)))
+     ((string-prefix-p "{rgb}{" string)
+      (setq string (colorful--latex-rgb-to-hex string)))
+     ((string-prefix-p "{RGB}{" string)
+      (setq string (colorful--rgb-to-hex
+                    (string-remove-prefix "{RGB}{" string))))
+     ((string-prefix-p "{HTML}{" string)
+      (setq string (concat "#" (string-remove-suffix
+                                "}" (string-remove-prefix "{HTML}{" string)))))
+     ((string-prefix-p "{gray}{" string)
+      (setq string (colorful--latex-gray-to-hex string))))
 
     ;; Delete duplicates overlays found
     (dolist (ov (overlays-in beg end))
@@ -491,7 +506,8 @@ it can be white or black."
                (opt (any "Ee")
                     (opt (any "+-"))
                     (one-or-more (any "0-9")))))
-     (0 (colorful-colorize-itself)))))
+     (0 (colorful-colorize-itself))))
+  "Font-lock keywords to add Hexadecimal color.")
 
 (defun colorful-add-hex-colors ()
   "Function for add hex colors to `colorful-color-keywords'.
@@ -522,7 +538,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                      "White" "Yellow"))
                   'words)
      (0 (colorful-colorize-itself))))
-  "Font-lock keywords to add for `colorful-color-keywords'.")
+  "Font-lock keywords to add color names.")
 
 (defun colorful-add-color-names ()
   "Function for add Color names to `colorful-color-keywords'.
@@ -577,9 +593,27 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   "Font-lock keywords for add HSL colors.")
 
 (defun colorful-add-hsl-colors ()
-  "Function for add CSS HSL colors to `colorful-color-keywords'.
+  "Function for add CSS HSL colors.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-hsl-font-lock-keywords)
+    (add-to-list 'colorful-color-keywords colors t)))
+
+(defvar colorful-latex-keywords
+  `((,(rx (seq "{" (or "rgb" "RGB") "}{"
+               (group (one-or-more (any "0-9" "."))) "," (zero-or-more " ")
+               (group (one-or-more (any "0-9" "."))) "," (zero-or-more " ")
+               (group (one-or-more (any "0-9" "."))) "}"))
+     (0 (colorful-colorize-itself)))
+    (,(rx (seq "{HTML}{" (group (= 6 (any "0-9A-Fa-f"))) "}"))
+     (0 (colorful-colorize-itself)))
+    (,(rx (seq "{gray}{" (group (one-or-more (any "0-9" "."))) "}"))
+     (0 (colorful-colorize-itself))))
+  "Font-lock keywords for add LaTex rgb/RGB/HTML/Grey colors.")
+
+(defun colorful-add-latex-colors ()
+  "Function for add LaTex rgb/RGB/HTML/Grey colors.
+This is intended to be used with `colorful-extra-color-keyword-functions'."
+  (dolist (colors colorful-latex-keywords)
     (add-to-list 'colorful-color-keywords colors t)))
 
 
@@ -616,8 +650,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 
 ;;;###autoload
 (define-minor-mode colorful-mode
-  "Preview color hexs in current buffer.
-This will fontify colors strings like \"#aabbcc\" or \"blue\"."
+  "Preview any color in your buffer such as hex, color names, CSS rgb in real time."
   :lighter nil :keymap colorful-mode-map
   (if colorful-mode
       (colorful--turn-on)
