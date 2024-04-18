@@ -1,0 +1,47 @@
+#+title: How to contribute
+
+If you would like contribute with a PR *you will need assign copyright to FSF*,
+this will ensure FSF can still maintaining, save the package if this
+repo gets deleted and protect the work from GNU GPL violations.
+Also if your contribution is less than 15 lines [see: [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Copyright-Assignment.html][Copyright Assignment]]]
+you can open a PR and your contribution will be reviewed and maybe merged
+quickly.  However for people that are willing to doing paperwork you must
+wait until this package is ready for submit to ELPA, this is for ensure that
+you are ready for doing paperwork.
+
+If you want to do paperwork please email the following information to
+\<assign@gnu.org\>, and they will send you the assignment form for
+your past and future changes, after doing this now you can send
+all the contributions that you want without assign copyright again.
+
+Please use *your full legal name (in ASCII characters) as the Subject*
+line of the message.
+#+begin_src text
+  REQUEST: SEND FORM FOR PAST AND FUTURE CHANGES
+
+  [What is the name of the program or package you're contributing to?]
+
+  GNU Emacs
+
+  [Did you copy any files or text written by someone else in these changes?
+  Even if that material is free software, we need to know about it.]
+
+  I Copied a few snippets from the same files I edited.  Their author,
+  Elias G. Perez, have already assigned copyright to the Free Software
+  Foundation.
+
+  [Do you have an employer who might have a basis to claim to own
+  your changes?  Do you attend a school which might make such a claim?]
+
+  [For the copyright registration, what country are you a citizen of?]
+
+  [What year were you born?]
+
+  [Please write your email address here.]
+
+  [Please write your postal address here.]
+
+  [Which files have you changed so far, and which new files have you written
+  so far?]
+
+#+end_src

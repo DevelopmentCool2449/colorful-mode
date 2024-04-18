@@ -1,11 +1,15 @@
 #+title: [[./assets/colorful-mode-logo.svg]]
 #+subtitle: Preview any color in your buffer in real time.
-#+author: Elias G.B. Perez
+#+author: Elias G. Perez
 #+language: en
 #+export_file_name: colorful-mode.texi
 #+texinfo_dir_category: Emacs misc features
 #+texinfo_dir_title: colorful-mode: (colorful-mode).
 #+texinfo_dir_desc: Preview color hexs in your buffer
+
+ #+BEGIN_QUOTE
+ Preview any color in your buffer in real time.
+ #+END_QUOTE
 
 Available in:
 #+html: <a href="https://jcs-emacs.github.io/jcs-elpa/"><img alt="JCS ELPA" src="https://raw.githubusercontent.com/jcs-emacs/badges/master/elpa/v/colorful-mode.svg">
@@ -16,14 +20,12 @@ Available in:
 format such as *color hex* and *color names*, in your current buffer
 in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/packages/rainbow-mode.html][rainbow-mode.el]].
 
-*WARNING: THIS PACKAGE STILL IN A EXPERIMENTAL STATE, ABRUPT CHANGES SUCH AS DELETE USER FUNCTIONS, OPTIONS AND KEYBINDINGS OR UNEXPECTED BREAKS ARE USUALLY COMMON*
-
 * Features ✨
 - Preview colors such as colors names, hexadecimal colors and more
   in your current buffer in real time.
 - Replace or copy to other color formats such as hexadecimal or color names (only for some colors).
 - Preview using highlight or a prefix/suffix string.
-- Alow preview colors only in strings.
+- Allow preview colors only in strings.
 - Exclude colors from being highlighted such as hex values and color names.
 
 * Screenshots and animated GIFs 📷
@@ -34,9 +36,8 @@ in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/pack
 [[./assets/gif3.gif]]
 [[./assets/screenshot1.png]]
 [[./assets/screenshot2.png]]
-[[./assets/screenshot3.png]]
 
-[[./assets/screenshot4.png]]
+[[./assets/screenshot3.png]]
 /With a custom prefix (in this example a non-ASCII/non-Unicode character)/.
 
 * User Options, Setups and Guides 📖
@@ -45,7 +46,7 @@ in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/pack
   for change color.
 - =colorful-use-prefix (default: nil)= If non-nil, use prefix for preview color
   instead highlight them.
-  *NOTE: css derived modes by default colorize rgb and hex colors, this may interfere with colorful prefix, you can disable this setting =css-fontify-colors= to nil*
+  *NOTE: css derived modes by default colorize rgb and hex colors, this may interfere with colorful prefix, you can disable this setting css-fontify-colors to nil*
 - =colorful-prefix-string (default: "●")= String to be used in highlights.
   Only relevant if `colorful-use-prefix' is non-nil.
   =colorful-use-prefix=.
@@ -92,6 +93,8 @@ in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/pack
 
 ** Faces
 - =colorful-base= Face used as base for highlight color names.
+Only used for draw box and change font &c., changing box color and/or
+background/foreground color face won't be applied.
 
 ** Interactive User Functions.
 - =colorful-change-or-copy-color= Change or copy color to a converted
@@ -105,8 +108,8 @@ in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/pack
 
 ** Key bindings
 These key bindings are defined by: =colorful-mode-map=
-- =C-c c c= → =colorful-change-or-copy-color=.
-- =C-c c k= → =colorful-convert-and-copy-color=.
+- =C-c c x= → =colorful-change-or-copy-color=.
+- =C-c c c= → =colorful-convert-and-copy-color=.
 - =C-c c r= → =colorful-convert-and-change-color=.
 
 ** Adding extra colors
@@ -128,7 +131,7 @@ For use them add it to:
 See: =colorful-extra-color-keyword-functions= for more details.
 
 * Usage and Installation 📦
-It's recommended that you must use emacs-28.X or higher.
+It's recommended that you must use emacs-29.X or higher.
 
 For install colorful run:
 - =M-x package-install colorful-mode=
@@ -150,7 +153,6 @@ and fixing some /(and old)/ bugs:
 |-------------------------------------------------------+------------------+-----------------|
 | Compatible with hl-line and other overlays?           | ✓                | ❌              |
 | Convert color to other formats?                       | ✓                | ❌              |
-| Insert open color hex?                                | Work in progress | ❌              |
 | Opcionally use string prefix/suffix instead highlight | ✓                | ❌              |
 | Exclude keywords/colors?                              | ✓                | ❌^{1}          |
 | Allow highlight specifics colors in specific modes    | ✓                | ✓^{2}           |
@@ -172,26 +174,9 @@ string indicator and/or anything else you can use =rainbow-mode.el=.
 
 On the other hand, if you want convert colors, overlays, optional
 prefix strings and more features you can use =colorful-mode.el=.
-
+* [[./CONTRIBUITING.org][How to Contribute]]
 * Plans for future
-Currently this repo will only be used for feature-request, send bug
-reports, and feedback /(i would greatly appreciate this since i'm not
-expert in elisp)/.
-
-Due I have plans for submit it to *GNU ELPA* keep in mind if you want
-to contribute with a PR *you will need assign copyright to FSF*, this
-will ensure FSF can still maintaining or save the package if this repo
-gets deleted or something else happens.  If you don't want assign
-copyright then open an issue and send instructions for your
-feature/code, so i can implement it (not in the same way) without
-requiring copyright paperwork.  Also if your contribution is less than
-15 lines [see: [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Copyright-Assignment.html][Copyright Assignment]]] you can open a PR and your
-contribution will be reviewed and maybe merged quickly.  However for
-people that are willing to doing paperwork you must wait until this
-package is ready for submit to ELPA, this is for ensure that you are
-ready for doing paperwork.
-
-Also i will try to make this package as stable as possible before
+I will try to make this package as stable as possible before
 submit it to ELPA, later that *I won't be able to be the mantainer* of
 this package, However I would like if someone would be able to be the
 mantainer (if you are interested please email me
