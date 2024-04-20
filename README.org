@@ -11,7 +11,6 @@
  Preview any color in your buffer in real time.
  #+END_QUOTE
 
-Available in:
 #+html: <a href="https://jcs-emacs.github.io/jcs-elpa/"><img alt="JCS ELPA" src="https://raw.githubusercontent.com/jcs-emacs/badges/master/elpa/v/colorful-mode.svg">
 
 #+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/elisp_logo_warning.svg" align="right" width="10%">
@@ -93,8 +92,8 @@ in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/pack
 
 ** Faces
 - =colorful-base= Face used as base for highlight color names.
-Only used for draw box and change font &c., changing box color and/or
-background/foreground color face won't be applied.
+  Only used for draw box and change font &c., changing box color and/or
+  background/foreground color face won't be applied.
 
 ** Interactive User Functions.
 - =colorful-change-or-copy-color= Change or copy color to a converted
@@ -131,10 +130,14 @@ For use them add it to:
 See: =colorful-extra-color-keyword-functions= for more details.
 
 * Usage and Installation 📦
-It's recommended that you must use emacs-29.X or higher.
+It's recommended that you must use emacs-28.x or higher.
 
 For install colorful run:
 - =M-x package-install colorful-mode=
+
+Once you have it installed you can run colorful locally in your buffer
+with =M-x colorful-mode=, if want enable it globally without using
+hooks then you can do =M-x global-colorful-mode=
 
 Or if you prefer using =use-package= macro:
 #+begin_src emacs-lisp
@@ -167,7 +170,7 @@ and fixing some /(and old)/ bugs:
    instead text properties it can be a slow.
 
 The intention is to provide a featured alternative to
-=rainbow-mode.el= with a user-friendy approach
+=rainbow-mode.el= with a user-friendly approach.
 
 If you prefer only highlights without color convertion, prefix/suffix
 string indicator and/or anything else you can use =rainbow-mode.el=.
@@ -175,12 +178,9 @@ string indicator and/or anything else you can use =rainbow-mode.el=.
 On the other hand, if you want convert colors, overlays, optional
 prefix strings and more features you can use =colorful-mode.el=.
 * [[./CONTRIBUITING.org][How to Contribute]]
-* Plans for future
-I will try to make this package as stable as possible before
-submit it to ELPA, later that *I won't be able to be the mantainer* of
-this package, However I would like if someone would be able to be the
-mantainer (if you are interested please email me
-<eg642616@gmail.com>).
+colorful-mode is part of GNU ELPA, if you want send patches you will
+need assign copyright to the Free Software Fundation.
+Please see the [[./CONTRIBUITING.org][CONTRIBUITING.org]] file for getting more information.
 
 #+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/powered_by_emacs.svg" align="left" width="10%" alt="Powered by GNU Emacs">
 #+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/powered_by_org_mode.svg" align="right" width="10%" alt="Powered by Org Mode">

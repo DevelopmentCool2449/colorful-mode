@@ -3,12 +3,11 @@
 ;; Copyright (C) 2024 Free Software Foundation, Inc
 
 ;; Author: Elias G. Perez <eg642616@gmail.com>
-;; Maintainer: Elias G. Perez
 ;; Created: 2024-04-10
 ;; Package-Requires: ((emacs "28.1") (compat "29.1.4.4"))
 ;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
 ;; Keywords: faces, tools, matching
-;; Version: 0.9.0
+;; Version: 1.0.0
 
 ;; This file is part of GNU Emacs.
 
@@ -27,7 +26,7 @@
 
 ;;; Commentary:
 ;;  Minor mode for coloring color names, hex values or rgb/hsl values
-;;  (CSS), and more found in your current buffer in real time in a
+;;  (CSS), and more in your current buffer in real time in a
 ;;  friendly and effective way based on rainbow-mode.
 
 ;;; Code:
@@ -775,7 +774,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 ;;;###autoload
 (define-globalized-minor-mode global-colorful-mode
   colorful-mode colorful--turn-on
-  :predicate '(mhtml-mode html-ts-mode scss-mode css-mode css-ts-mode prog-mode))
+  :predicate '(mhtml-mode html-ts-mode latex-mode prog-mode))
 
 
 (provide 'colorful-mode)
