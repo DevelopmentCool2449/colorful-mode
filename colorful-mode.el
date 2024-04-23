@@ -30,20 +30,18 @@
 ;;  friendly and effective way based on rainbow-mode.
 
 ;;; Code:
+
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                                  Libraries                                 ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Libraries
 
 (require 'compat)
 
 (require 'color)
 (eval-when-compile (require 'subr-x))
+(eval-when-compile (require 'rx))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                          Customizable User Options                         ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; User Options
 
 (defgroup colorful nil
   "Preview hex colors values in current buffer.."
@@ -279,9 +277,7 @@ mode is derived from `prog-mode'."
   :type '(choice boolean (const :tag "Only in prog-modes" only-prog)))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                                   Keymaps                                  ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Keymaps
 
 (defvar-keymap colorful-mode-map
   :doc "Keymap when `colorful-mode' is active."
@@ -290,19 +286,14 @@ mode is derived from `prog-mode'."
   "C-c c r" #'colorful-convert-and-change-color)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                             Internal variables                             ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Internal variables
 
 (defvar-local colorful-color-keywords nil
   "Font-lock colors keyword to highlight.")
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                             Internal Functions                             ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;;;;;;;;; Base Convertion functions ;;;;;;;;;;
+;;;; Internal Functions
+;;;;; Base Convertion functions
 
 (defun colorful--percentage-to-absolute (percentage)
   "Convert PERCENTAGE to a absolute number.
@@ -315,12 +306,17 @@ If PERCENTAGE is above 100%, it's converted to 100."
       (string-to-number percentage))))
 
 (defun colorful--latex-rgb-to-hex (rgb)
-  "Return LaTex RGB as hexadecimal format.  RGB must be a string."
-  (let* ((rgb (string-split (string-remove-prefix "{rgb}{" rgb) ","))
-         (r (string-to-number (nth 0 rgb)))
-         (g (string-to-number (nth 1 rgb)))
-         (b (string-to-number (nth 2 rgb))))
-    (color-rgb-to-hex r g b)))
+  "Return LaTeX RGB as hexadecimal format.  RGB must be a string."
+  (and (string-match
+        (rx (seq "{" (or "rgb" "RGB") "}{" (zero-or-more " ")
+                 (group (one-or-more (any digit "."))) (zero-or-more " ") "," (zero-or-more " ")
+                 (group (one-or-more (any digit "."))) (zero-or-more " ") "," (zero-or-more " ")
+                 (group (one-or-more (any digit "."))) (zero-or-more " ") "}"))
+        rgb)
+       (color-rgb-to-hex
+        (string-to-number (match-string 1 rgb))
+        (string-to-number (match-string 2 rgb))
+        (string-to-number (match-string 3 rgb)))))
 
 (defun colorful--latex-gray-to-hex (gray)
   "Return LaTex GRAY as hexadecimal format.  GRAY must be a string."
@@ -367,11 +363,11 @@ HSL must be a string."
   "Return color NAME as hex color format.
 DIGIT specifies which how much digits per component must have return value."
   (if-let* ((color-name (color-name-to-rgb name))
-            (color (append color-name `(,digit))))
+            (color (append color-name (list digit))))
       (apply #'color-rgb-to-hex color)
     (cdr (assoc-string name colorful-html-colors-alist))))
 
-;;;;;;;;;; User Interactive Functions ;;;;;;;;;;
+;;;;; User Interactive Functions
 
 ;;;###autoload
 (defun colorful-convert-and-change-color ()
@@ -419,12 +415,12 @@ DIGIT specifies which how much digits per component must have return value."
                     ("Convert and copy color." . copy)))
          (result (alist-get
                   (completing-read prompt choices nil t nil nil)
-                  choices nil nil 'equal)))
+                  choices nil nil #'equal)))
     (if (eq result 'copy)
         (colorful-convert-and-copy-color)
       (colorful-convert-and-change-color))))
 
-;;;;;;;;;; Coloring functions ;;;;;;;;;;
+;;;;; Coloring functions
 
 (defun colorful--change-color (ov &optional prompt color beg end)
   "Return COLOR as other color format.
@@ -582,9 +578,7 @@ converted to a Hex color."
     (colorful--colorize-match string beg end)))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                         Extra coloring definitions                         ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Extra coloring definitions
 
 (defvar colorful-hex-font-lock-keywords
   `((,(rx (seq (not (any "&"))
@@ -601,9 +595,9 @@ converted to a Hex color."
                (repeat 1 4 (any "0-9A-Fa-f"))))
      (0 (colorful--colorize)))
     (,(rx (seq (any "Rr") (any "Gg") (any "Bb") (any "Ii") ":"
-               (one-or-more (any "0-9" ".")) "/"
-               (one-or-more (any "0-9" ".")) "/"
-               (one-or-more (any "0-9" "."))))
+               (one-or-more (any digit ".")) "/"
+               (one-or-more (any digit ".")) "/"
+               (one-or-more (any digit "."))))
      (0 (colorful--colorize)))
     (,(rx (seq (or (seq (any "Cc") (any "Ii") (any "Ee")
                         (or (seq (any "Xx") (any "Yy") (any "Zz"))
@@ -615,22 +609,22 @@ converted to a Hex color."
                         (any "Vv") (any "Cc")))
                ":"
                (opt (any "+-"))
-               (one-or-more (any "0-9" "."))
+               (one-or-more (any digit "."))
                (opt (any "Ee")
                     (opt (any "+-"))
-                    (one-or-more (any "0-9")))
+                    (one-or-more (any digit)))
                "/"
                (opt (any "+-"))
-               (one-or-more (any "0-9" "."))
+               (one-or-more (any digit "."))
                (opt (any "Ee")
                     (opt (any "+-"))
-                    (one-or-more (any "0-9")))
+                    (one-or-more (any digit)))
                "/"
                (opt (any "+-"))
-               (one-or-more (any "0-9" "."))
+               (one-or-more (any digit "."))
                (opt (any "Ee")
                     (opt (any "+-"))
-                    (one-or-more (any "0-9")))))
+                    (one-or-more (any digit)))))
      (0 (colorful--colorize))))
   "Font-lock keywords to add Hexadecimal color.")
 
@@ -658,21 +652,21 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 
 (defvar colorful-rgb-font-lock-keywords
   `((,(rx (seq "rgb" (opt "a") "(" (zero-or-more " ")
-               (group (repeat 1 3 (any "0-9"))
-                      (opt "." (any "0-9")
+               (group (repeat 1 3 (any digit))
+                      (opt "." (any digit)
                            (zero-or-more " ") "%"))
                (zero-or-more " ") (opt ",") (zero-or-more " ")
-               (group (repeat 1 3 (any "0-9"))
-                      (opt "." (any "0-9")
+               (group (repeat 1 3 (any digit))
+                      (opt "." (any digit)
                            (zero-or-more " ") "%"))
                (zero-or-more " ") (opt ",") (zero-or-more " ")
-               (group (repeat 1 3 (any "0-9"))
-                      (opt "." (any "0-9")
+               (group (repeat 1 3 (any digit))
+                      (opt "." (any digit)
                            (zero-or-more " ") "%"))
                (opt
                 (zero-or-more " ") (opt ",") (zero-or-more " ")
-                (zero-or-more (any "0-9")) (opt nonl)
-                (one-or-more (any "0-9"))
+                (zero-or-more (any digit)) (opt nonl)
+                (one-or-more (any digit))
                 (zero-or-more " ")
                 (opt "%"))
                (zero-or-more " ") ")"))
@@ -688,15 +682,15 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 
 (defvar colorful-hsl-font-lock-keywords
   `((,(rx (seq "hsl" (opt "a") "(" (zero-or-more " ")
-               (group (repeat 1 3 (any "0-9"))) (opt "deg")
+               (group (repeat 1 3 (any digit))) (opt "deg")
                (zero-or-more " ") (opt ",") (zero-or-more " ")
-               (group (repeat 1 3 (any "0-9")) "%") (opt "deg")
+               (group (repeat 1 3 (any digit)) "%") (opt "deg")
                (zero-or-more " ") (opt ",") (zero-or-more " ")
-               (group (repeat 1 3 (any "0-9")) "%") (opt "deg")
+               (group (repeat 1 3 (any digit)) "%") (opt "deg")
                (opt
                 (zero-or-more " ") (opt ",") (zero-or-more " ")
-                (zero-or-more (any "0-9")) (opt nonl)
-                (one-or-more (any "0-9"))
+                (zero-or-more (any digit)) (opt nonl)
+                (one-or-more (any digit))
                 (zero-or-more " ")
                 (opt "%"))
                (zero-or-more " ") ")"))
@@ -711,14 +705,14 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
     (add-to-list 'colorful-color-keywords colors t)))
 
 (defvar colorful-latex-keywords
-  `((,(rx (seq "{" (or "rgb" "RGB") "}{"
-               (group (one-or-more (any "0-9" "."))) "," (zero-or-more " ")
-               (group (one-or-more (any "0-9" "."))) "," (zero-or-more " ")
-               (group (one-or-more (any "0-9" "."))) "}"))
+  `((,(rx (seq "{" (or "rgb" "RGB") "}{" (zero-or-more " ")
+               (group (one-or-more (any digit "."))) (zero-or-more " ") "," (zero-or-more " ")
+               (group (one-or-more (any digit "."))) (zero-or-more " ") "," (zero-or-more " ")
+               (group (one-or-more (any digit "."))) (zero-or-more " ") "}"))
      (0 (colorful--colorize)))
     (,(rx (seq "{HTML}{" (group (= 6 (any "0-9A-Fa-f"))) "}"))
      (0 (colorful--colorize)))
-    (,(rx (seq "{gray}{" (group (one-or-more (any "0-9" "."))) "}"))
+    (,(rx (seq "{gray}{" (group (one-or-more (any digit "."))) "}"))
      (0 (colorful--colorize))))
   "Font-lock keywords for add LaTex rgb/RGB/HTML/Grey colors.")
 
@@ -730,9 +724,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
     (add-to-list 'colorful-color-keywords colors t)))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                           Minor mode defintinions                          ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Minor mode defintinions
 
 (defun colorful--turn-on ()
   "Helper function for turn on `colorful-mode'."
@@ -759,7 +751,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 ;;;###autoload
 (define-minor-mode colorful-mode
   "Preview any color in your buffer such as hex, color names, CSS rgb in real time."
-  :lighter nil :keymap colorful-mode-map
+  :global nil
   (if colorful-mode
       (colorful--turn-on)
     (colorful--turn-off))
