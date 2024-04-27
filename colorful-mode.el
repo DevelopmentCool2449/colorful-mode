@@ -35,10 +35,11 @@
 ;;;; Libraries
 
 (require 'compat)
-
 (require 'color)
-(eval-when-compile (require 'subr-x))
-(eval-when-compile (require 'rx))
+(eval-when-compile
+  (require 'subr-x)
+  (require 'rx)
+  (require 'cl-lib))
 
 
 ;;;; User Options
@@ -332,9 +333,9 @@ RGB must be a string."
                       (string-remove-prefix "rgb(" rgb)
                     (string-remove-prefix "rgba(" rgb))
                   (rx (one-or-more (any "," " " "\t" "\n" "\r" "\v" "\f")))))
-            (r (ignore-errors (/ (colorful--percentage-to-absolute (nth 0 rgb)) 255.0)))
-            (g (ignore-errors (/ (colorful--percentage-to-absolute (nth 1 rgb)) 255.0)))
-            (b (ignore-errors (/ (colorful--percentage-to-absolute (nth 2 rgb)) 255.0))))
+            (r (and (nth 0 rgb) (/ (colorful--percentage-to-absolute (nth 0 rgb)) 255.0)))
+            (g (and (nth 1 rgb) (/ (colorful--percentage-to-absolute (nth 1 rgb)) 255.0)))
+            (b (and (nth 2 rgb) (/ (colorful--percentage-to-absolute (nth 2 rgb)) 255.0))))
       (color-rgb-to-hex r g b digit)))
 
 (defun colorful--hsl-to-hex (hsl &optional digit)
@@ -346,9 +347,9 @@ HSL must be a string."
                       (string-remove-prefix "hsl(" hsl)
                     (string-remove-prefix "hsla(" hsl))
                   (rx (one-or-more (any "," " " "\t" "\n""\r" "\v" "\f")))))
-            (h (ignore-errors (/ (string-to-number (nth 0 hsl)) 360.0)))
-            (s (ignore-errors (/ (string-to-number (nth 1 hsl)) 100.0)))
-            (l (ignore-errors (/ (string-to-number (nth 2 hsl)) 100.0)))
+            (h (and (nth 0 hsl) (/ (string-to-number (nth 0 hsl)) 360.0)))
+            (s (and (nth 1 hsl) (/ (string-to-number (nth 1 hsl)) 100.0)))
+            (l (and (nth 2 hsl) (/ (string-to-number (nth 2 hsl)) 100.0)))
             (rgb (append (color-hsl-to-rgb h s l) `(,digit))))
       (apply #'color-rgb-to-hex rgb)))
 
@@ -633,7 +634,7 @@ converted to a Hex color."
   "Function for add hex colors to `colorful-color-keywords'.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-hex-font-lock-keywords)
-    (add-to-list 'colorful-color-keywords colors t)))
+    (cl-pushnew colors colorful-color-keywords)))
 
 (defvar colorful-color-name-font-lock-keywords
   `((,(regexp-opt (append
@@ -648,7 +649,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   "Function for add Color names to `colorful-color-keywords'.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-color-name-font-lock-keywords)
-    (add-to-list 'colorful-color-keywords colors t)))
+    (cl-pushnew colors colorful-color-keywords)))
 
 (defvar colorful-rgb-font-lock-keywords
   `((,(rx (seq "rgb" (opt "a") "(" (zero-or-more " ")
@@ -678,7 +679,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   "Function for add CSS RGB colors to `colorful-color-keywords'.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-rgb-font-lock-keywords)
-    (add-to-list 'colorful-color-keywords colors t)))
+    (cl-pushnew colors colorful-color-keywords)))
 
 (defvar colorful-hsl-font-lock-keywords
   `((,(rx (seq "hsl" (opt "a") "(" (zero-or-more " ")
@@ -702,7 +703,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   "Function for add CSS HSL colors.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-hsl-font-lock-keywords)
-    (add-to-list 'colorful-color-keywords colors t)))
+    (cl-pushnew colors colorful-color-keywords)))
 
 (defvar colorful-latex-keywords
   `((,(rx (seq "{" (or "rgb" "RGB") "}{" (zero-or-more " ")
@@ -721,7 +722,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   "Function for add LaTex rgb/RGB/HTML/Grey colors.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-latex-keywords)
-    (add-to-list 'colorful-color-keywords colors t)))
+    (cl-pushnew colors colorful-color-keywords)))
 
 
 ;;;; Minor mode defintinions
