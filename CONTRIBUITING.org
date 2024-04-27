@@ -1,8 +1,8 @@
 #+title: How to contribute
 
 If your contribution is less than 15 lines [see: [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Copyright-Assignment.html][Copyright Assignment]]]
-you can open a PR and your contribution will be reviewed and maybe merged
-quickly.
+you can send a patch and your contribution will be reviewed and maybe
+merged quickly.
 
 If you want send a patch *you will need assign copyright to FSF*,
 for this then please email the following information to

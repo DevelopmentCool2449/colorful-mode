@@ -1,4 +1,4 @@
-#+title: [[./assets/colorful-mode-logo.svg]]
+#+title: colorful-mode
 #+subtitle: Preview any color in your buffer in real time.
 #+author: Elias G. Perez
 #+language: en
@@ -7,10 +7,13 @@
 #+texinfo_dir_title: colorful-mode: (colorful-mode).
 #+texinfo_dir_desc: Preview color hexs in your buffer
 
+[[./assets/colorful-mode-logo.svg]]
+
  #+BEGIN_QUOTE
  Preview any color in your buffer in real time.
  #+END_QUOTE
 
+#+html: <a href="https://elpa.gnu.org/packages/colorful-mode.html"><img alt="GNU ELPA" src="https://elpa.gnu.org/packages/colorful-mode.svg"/></a>
 #+html: <a href="https://jcs-emacs.github.io/jcs-elpa/"><img alt="JCS ELPA" src="https://raw.githubusercontent.com/jcs-emacs/badges/master/elpa/v/colorful-mode.svg">
 
 #+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/elisp_logo_warning.svg" align="right" width="10%">
