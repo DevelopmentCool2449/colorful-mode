@@ -6,7 +6,7 @@
 ;; Created: 2024-04-10
 ;; Package-Requires: ((emacs "28.1") (compat "29.1.4.4"))
 ;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
-;; Keywords: faces, tools, matching
+;; Keywords: faces, tools, matching, convenience
 ;; Version: 1.0.2
 
 ;; This file is part of GNU Emacs.
@@ -26,8 +26,8 @@
 
 ;;; Commentary:
 ;;  Minor mode for coloring color names, hex values or rgb/hsl values
-;;  (CSS), and more in your current buffer in real time in a
-;;  friendly and effective way based on rainbow-mode.
+;;  (CSS), and more inside your buffer in real time,
+;;  developer-friendly and effective based on `rainbow-mode.el'
 
 ;;; Code:
 
@@ -294,6 +294,7 @@ mode is derived from `prog-mode'."
 
 
 ;;;; Internal Functions
+
 ;;;;; Base Convertion functions
 
 (defun colorful--percentage-to-absolute (percentage)
@@ -760,8 +761,8 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   (font-lock-flush))
 
 ;; Silence a byte-compile warning about global-colorful-modes not
-;; being defined, if anyone knows why this happens please open an
-;; issue.
+;; being defined, if anyone knows why this happens please send a
+;; patch.
 (defvar global-colorful-modes)
 
 ;;;###autoload
