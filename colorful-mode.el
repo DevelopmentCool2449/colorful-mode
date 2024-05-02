@@ -7,7 +7,7 @@
 ;; Package-Requires: ((emacs "28.1") (compat "29.1.4.4"))
 ;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
 ;; Keywords: faces, tools, matching, convenience
-;; Version: 1.0.2
+;; Version: 1.0.3
 
 ;; This file is part of GNU Emacs.
 
@@ -281,10 +281,10 @@ mode is derived from `prog-mode'."
 ;;;; Keymaps
 
 (defvar-keymap colorful-mode-map
-  :doc "Keymap when `colorful-mode' is active."
-  "C-c c x" #'colorful-change-or-copy-color
-  "C-c c c" #'colorful-convert-and-copy-color
-  "C-c c r" #'colorful-convert-and-change-color)
+  :doc "Keymap for `colorful-mode'."
+  "C-x c x" #'colorful-change-or-copy-color
+  "C-x c c" #'colorful-convert-and-copy-color
+  "C-x c r" #'colorful-convert-and-change-color)
 
 
 ;;;; Internal variables
