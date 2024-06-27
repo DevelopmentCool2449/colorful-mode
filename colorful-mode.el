@@ -7,7 +7,7 @@
 ;; Package-Requires: ((emacs "28.1") (compat "29.1.4.4"))
 ;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
 ;; Keywords: faces, tools, matching, convenience
-;; Version: 1.0.3
+;; Version: 1.0.4
 
 ;; This file is part of GNU Emacs.
 
