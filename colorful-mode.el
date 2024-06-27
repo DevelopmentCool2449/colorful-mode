@@ -278,15 +278,6 @@ mode is derived from `prog-mode'."
   :type '(choice boolean (const :tag "Only in prog-modes" only-prog)))
 
 
-;;;; Keymaps
-
-(defvar-keymap colorful-mode-map
-  :doc "Keymap for `colorful-mode'."
-  "C-x c x" #'colorful-change-or-copy-color
-  "C-x c c" #'colorful-convert-and-copy-color
-  "C-x c r" #'colorful-convert-and-change-color)
-
-
 ;;;; Internal variables
 
 (defvar-local colorful-color-keywords nil
@@ -750,6 +741,14 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   (font-lock-remove-keywords nil `(,@colorful-color-keywords))
   (remove-overlays nil nil 'colorful--overlay t))
 
+;;;; Keymap
+
+(defvar-keymap colorful-mode-map
+  :doc "Keymap for `colorful-mode'."
+  "C-x c x" #'colorful-change-or-copy-color
+  "C-x c c" #'colorful-convert-and-copy-color
+  "C-x c r" #'colorful-convert-and-change-color)
+
 ;;;###autoload
 (define-minor-mode colorful-mode
   "Preview any color in your buffer such as hex, color names, CSS rgb in real time."
@@ -766,8 +765,14 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 (defvar global-colorful-modes)
 
 ;;;###autoload
+(defun turn-on-colorful-mode ()
+  "Turn on `colorful-mode' mode if the current buffer."
+  (unless colorful-mode
+    (colorful-mode t)))
+
+;;;###autoload
 (define-globalized-minor-mode global-colorful-mode
-  colorful-mode colorful--turn-on
+  colorful-mode turn-on-colorful-mode
   :predicate '(mhtml-mode html-ts-mode latex-mode prog-mode))
 
 
