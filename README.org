@@ -167,14 +167,14 @@ and fixing some /(and old)/ bugs:
 | Allow highlight specifics colors in specific modes    | ✓                | ✓^{2}           |
 | Opcionally highlight only in strings                  | ✓                | ❌              |
 | No performance issues?^{3}                            | ❌               | ✓               |
-#+BEGIN_QUOTE
+#+begin_src text
 [1] rainbow-mode (like colorful) uses regex for highlight some
-   keywords, however it cannot exclude specifics colors keywords
-   (such as "#def" that overrides C "#define" keyword).
+    keywords, however it cannot exclude specifics colors keywords
+    (such as "#def" that overrides C "#define" keyword).
 [2] Only for some colors.
 [3] I didn't a benchmark however due colorful-mode uses overlays
-   instead text properties it can be a bit slow.
-#+END_QUOTE
+    instead text properties it can be a bit slow.
+#+end_src
 
 The intention is to provide a featured alternative to
 =rainbow-mode.el= with a user-friendly approach.
