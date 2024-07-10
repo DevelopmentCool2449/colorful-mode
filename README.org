@@ -7,7 +7,7 @@
 #+texinfo_dir_title: colorful-mode: (colorful-mode).
 #+texinfo_dir_desc: Preview color hexs in your buffer
 
-[[./assets/colorful-mode-logo.svg]]
+[[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/colorful-mode-logo.svg]]
 
  #+BEGIN_QUOTE
  Preview any color in your buffer in real time.
@@ -18,29 +18,29 @@
 
 #+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/elisp_logo_warning.svg" align="right" width="10%">
 
-🟢colorful-mode is a minor mode that allow you preview any color
+🎨 =colorful-mode= is a minor mode that allow you highlight/preview any color
 format such as *color hex* and *color names*, in your current buffer
-in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/packages/rainbow-mode.html][rainbow-mode.el]].
+in real time and in a user friendly way based/inspired on 🌈[[https://elpa.gnu.org/packages/rainbow-mode.html][rainbow-mode.el]].
 
 * Features ✨
-- Preview colors such as colors names, hexadecimal colors and more
-  in your current buffer in real time.
-- Replace or copy to other color formats such as hexadecimal or color names (only for some colors).
-- Preview using highlight or a prefix/suffix string.
-- Allow preview colors only in strings.
-- Exclude colors from being highlighted such as hex values and color names.
+- Real time color highlight.
+- Supports hexadecimals colors, color names, rgb[a]/hsl[a] and LaTex colors (gray, rbg, RGB, HTML)
+- Convert current color at point to other formats such as hexadecimal or color names (only available for some colors).
+- Optionally use a prefix/suffix string instead highlight.
+- Optionally highlight colors only inside in strings.
+- Omitting color keywords from being highlighted.
 
 * Screenshots and animated GIFs 📷
-[[./assets/gif1.gif]]
+[[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/gif1.gif]]
 /With prefix instead highliht/.
 
-[[./assets/gif2.gif]]
-[[./assets/gif3.gif]]
-[[./assets/screenshot1.png]]
-[[./assets/screenshot2.png]]
+[[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/gif2.gif]]
+[[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/gif3.gif]]
+[[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/screenshot1.png]]
+[[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/screenshot2.png]]
 
-[[./assets/screenshot3.png]]
-/With a custom prefix (in this example a non-ASCII/non-Unicode character)/.
+[[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/screenshot3.png]]
+/With a custom prefix (in this example a custom character)/.
 
 * User Options, Setups and Guides 📖
 ** Customizable User options
@@ -51,7 +51,6 @@ in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/pack
   *NOTE: css derived modes by default colorize rgb and hex colors, this may interfere with colorful prefix, you can disable this setting css-fontify-colors to nil*
 - =colorful-prefix-string (default: "●")= String to be used in highlights.
   Only relevant if `colorful-use-prefix' is non-nil.
-  =colorful-use-prefix=.
 - =colorful-prefix-alignment (default: 'left)= The position to put prefix string.
   The value can be left or right.
   Only relevant if `colorful-use-prefix' is non-nil.
@@ -96,7 +95,7 @@ in real time and in a user friendly way based on 🌈[[https://elpa.gnu.org/pack
 ** Faces
 - =colorful-base= Face used as base for highlight color names.
   Only used for draw box and change font &c., changing box color and/or
-  background/foreground color face won't be applied.
+  background/foreground color face doesn't have effect.
 
 ** Interactive User Functions.
 - =colorful-change-or-copy-color= Change or copy color to a converted
@@ -151,6 +150,10 @@ Or if you prefer using =use-package= macro:
 
 #+end_src
 
+#+BEGIN_COMMENT
+Author note: Please add a comparation table with colorful-mode alternatives such as
+rainbow-mode, built-in css-mode color preview ...
+#+END_COMMENT
 * How does it compare to =rainbow-mode=?
 =colorful-mode= improves =rainbow-mode= in adding more features
 and fixing some /(and old)/ bugs:
@@ -164,13 +167,14 @@ and fixing some /(and old)/ bugs:
 | Allow highlight specifics colors in specific modes    | ✓                | ✓^{2}           |
 | Opcionally highlight only in strings                  | ✓                | ❌              |
 | No performance issues?^{3}                            | ❌               | ✓               |
-
-1. rainbow-mode (like colorful) uses regex for highlight some
+#+BEGIN_QUOTE
+[1] rainbow-mode (like colorful) uses regex for highlight some
    keywords, however it cannot exclude specifics colors keywords
    (such as "#def" that overrides C "#define" keyword).
-2. Only for some colors.
-3. I didn't a benchmark however due colorful-mode uses overlays
-   instead text properties it can be a slow.
+[2] Only for some colors.
+[3] I didn't a benchmark however due colorful-mode uses overlays
+   instead text properties it can be a bit slow.
+#+END_QUOTE
 
 The intention is to provide a featured alternative to
 =rainbow-mode.el= with a user-friendly approach.
@@ -180,10 +184,10 @@ string indicator and/or anything else you can use =rainbow-mode.el=.
 
 On the other hand, if you want convert colors, overlays, optional
 prefix strings and more features you can use =colorful-mode.el=.
-* [[./CONTRIBUITING.org][How to Contribute]]
+* [[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/CONTRIBUITING.org][How to Contribute]]
 colorful-mode is part of GNU ELPA, if you want send patches you will
 need assign copyright to the Free Software Fundation.
-Please see the [[./CONTRIBUITING.org][CONTRIBUITING.org]] file for getting more information.
+Please see the [[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/CONTRIBUITING.org][CONTRIBUITING.org]] file for getting more information.
 
 #+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/powered_by_emacs.svg" align="left" width="10%" alt="Powered by GNU Emacs">
 #+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/powered_by_org_mode.svg" align="right" width="10%" alt="Powered by Org Mode">
