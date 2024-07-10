@@ -21,7 +21,7 @@ line of the message.
   [Did you copy any files or text written by someone else in these changes?
   Even if that material is free software, we need to know about it.]
 
-  I Copied a few snippets from the same files I edited.  Their author,
+  I Copied a few snippets from the same files I edited.  Their current maintainer,
   Elias G. Perez, have already assigned copyright to the Free Software
   Foundation.
 
