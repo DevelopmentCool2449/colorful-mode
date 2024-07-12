@@ -5,3 +5,8 @@ test
 CONTRIBUITING.org
 COPYING
 README.org
+
+.eask/
+dist/
+
+/.github
