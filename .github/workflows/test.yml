@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
   workflow_dispatch:
 
@@ -46,7 +46,7 @@ jobs:
         version: 'snapshot'
 
     - name: Run tests
-      run:
+      run: |
         eask install-deps
         eask compile
         eask lint checkodc
