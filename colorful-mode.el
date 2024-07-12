@@ -3,6 +3,7 @@
 ;; Copyright (C) 2024 Free Software Foundation, Inc
 
 ;; Author: Elias G. Perez <eg642616@gmail.com>
+;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Created: 2024-04-10
 ;; Package-Requires: ((emacs "28.1") (compat "29.1.4.4"))
 ;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
