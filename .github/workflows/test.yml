@@ -49,4 +49,4 @@ jobs:
       run: |
         eask install-deps
         eask compile
-        eask lint checkodc
+        eask lint checkdoc
