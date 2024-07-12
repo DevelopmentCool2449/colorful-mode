@@ -47,4 +47,6 @@ jobs:
 
     - name: Run tests
       run:
-        make ci
+        eask install-deps
+        eask compile
+        eask lint checkodc
