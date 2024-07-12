@@ -14,7 +14,8 @@
  #+END_QUOTE
 
 #+html: <a href="https://elpa.gnu.org/packages/colorful-mode.html"><img alt="GNU ELPA" src="https://elpa.gnu.org/packages/colorful-mode.svg"/></a>
-#+html: <a href="https://jcs-emacs.github.io/jcs-elpa/"><img alt="JCS ELPA" src="https://raw.githubusercontent.com/jcs-emacs/badges/master/elpa/v/colorful-mode.svg">
+#+html: <a href="https://jcs-emacs.github.io/jcs-elpa/"><img alt="JCS ELPA" src="https://raw.githubusercontent.com/jcs-emacs/badges/master/elpa/v/colorful-mode.svg"></a>
+#+html: <a href="https://github.com/DevelopmentCool2449/colorful-mode/actions/workflows/test.yml"><img alt="CI" src="https://github.com/DevelopmentCool2449/colorful-mode/actions/workflows/test.yml/badge.svg"></a>
 
 #+html: <img src="https://raw.githubusercontent.com/DevelopmentCool2449/emacs-svg-badges/main/elisp_logo_warning.svg" align="right" width="10%">
 
