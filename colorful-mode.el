@@ -217,7 +217,7 @@ Each entry should have the form (COLOR-NAME . HEXADECIMAL-COLOR)."
     (latex-mode . colorful-add-latex-colors)
     colorful-add-hex-colors)
   "List of functions to add extra color keywords to `colorful-color-keywords'.
-It can be a cons cell specifing the mode (or a list of modes)
+It can be a cons cell specifying the mode (or a list of modes)
 e.g:
 \(((`css-mode' `css-ts-mode') . `colorful-add-rgb-colors')
   (`emacs-lisp-mode' . (`colorful-add-color-names'
@@ -265,7 +265,7 @@ Only relevant if `colorful-use-prefix' is non-nil."
   "List of keyword to don't highlight."
   :type '(repeat string))
 
-(defcustom colorful-short-hex-convertions 2
+(defcustom colorful-short-hex-conversions 2
   "If set to 2, hex values converted by colorful should be as short as possible.
 Setting this to 2 will make hex values follow a 24-bit specification
 and can make them inaccurate."
@@ -287,7 +287,7 @@ mode is derived from `prog-mode'."
 
 ;;;; Internal Functions
 
-;;;;; Base Convertion functions
+;;;;; Base Conversion functions
 
 (defun colorful--percentage-to-absolute (percentage)
   "Convert PERCENTAGE to a absolute number.
@@ -440,17 +440,17 @@ PROMPT must be a string with 1 format control (generally a string argument)."
             ((or (member color (defined-colors))
                  (assoc-string color colorful-html-colors-alist))
              (list (colorful--name-to-hex
-                    color colorful-short-hex-convertions)
+                    color colorful-short-hex-conversions)
                    beg end))
             ;; Is CSS rgb?
             ((string-match-p (rx (one-or-more "rgb" (opt "a") "(")) color)
              (list (colorful--rgb-to-hex
-                    color colorful-short-hex-convertions)
+                    color colorful-short-hex-conversions)
                    beg end))
             ;; Is HSL?
             ((string-match-p (rx (one-or-more "hsl" (opt "a") "(")) color)
              (list (colorful--hsl-to-hex
-                    color colorful-short-hex-convertions)
+                    color colorful-short-hex-conversions)
                    beg end)))
 
          (colorful--change-color ov "%s is already a Hex color. Try again: "
@@ -467,13 +467,13 @@ PROMPT must be a string with 1 format control (generally a string argument)."
             ;; Is CSS rgb?
             ((string-match-p (rx (one-or-more "rgb" (opt "a") "(")) color)
              (if-let ((rep (colorful--hex-to-name (colorful--rgb-to-hex
-                                                   color colorful-short-hex-convertions))))
+                                                   color colorful-short-hex-conversions))))
                  (list rep beg end)
                (user-error "No color name available")))
             ;; Is HSL?
             ((string-match-p (rx (one-or-more "hsl" (opt "a") "(")) color)
              (if-let ((rep (colorful--hex-to-name (colorful--hsl-to-hex
-                                                   color colorful-short-hex-convertions))))
+                                                   color colorful-short-hex-conversions))))
                  (list rep beg end)
                (user-error "No color name available"))))
 
@@ -718,7 +718,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
     (cl-pushnew colors colorful-color-keywords)))
 
 
-;;;; Minor mode defintinions
+;;;; Minor mode definitions
 
 (defun colorful--turn-on ()
   "Helper function for turn on `colorful-mode'."
