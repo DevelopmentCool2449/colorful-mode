@@ -772,12 +772,9 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   (font-lock-flush))
 
 ;; Silence a byte-compile warning about global-colorful-modes not
-;; being defined, if anyone knows why this happens please send a
-;; patch.
-
+;; being defined
 ;; NOTE: This bug is already fixed in emacs-30
-(if (< emacs-major-version 30)
-    (defvar global-colorful-modes))
+(defvar global-colorful-modes)
 
 ;;;###autoload
 (defun turn-on-colorful-mode ()
