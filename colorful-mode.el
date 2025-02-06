@@ -434,7 +434,8 @@ PROMPT must be a string with 1 format control (generally a string argument)."
                   choices nil nil 'equal)))
     (pcase choice ; Convert to...
       ('hex
-       (if (not (string-prefix-p "#" color)) ; Ensure is not already a hex
+       (if (not (or (string-prefix-p "#" color)
+                    (string-prefix-p "0x" color))) ; Ensure is not already a hex
            (cond
             ;; Is Name?
             ((or (member color (defined-colors))
@@ -459,21 +460,22 @@ PROMPT must be a string with 1 format control (generally a string argument)."
        (if (not (assoc-string color color-name-rgb-alist))
            (cond
             ;; Is Hex?
-            ((string-prefix-p "#" color)
-             (if-let ((rep (colorful--hex-to-name color)))
+            ((or (string-prefix-p "#" color)
+                 (string-prefix-p "0x" color))
+             (if-let* ((rep (colorful--hex-to-name color)))
                  (list rep beg end)
                (user-error "No color name available")
                nil))
             ;; Is CSS rgb?
             ((string-match-p (rx (one-or-more "rgb" (opt "a") "(")) color)
-             (if-let ((rep (colorful--hex-to-name (colorful--rgb-to-hex
-                                                   color colorful-short-hex-conversions))))
+             (if-let* ((rep (colorful--hex-to-name (colorful--rgb-to-hex
+                                                    color colorful-short-hex-conversions))))
                  (list rep beg end)
                (user-error "No color name available")))
             ;; Is HSL?
             ((string-match-p (rx (one-or-more "hsl" (opt "a") "(")) color)
-             (if-let ((rep (colorful--hex-to-name (colorful--hsl-to-hex
-                                                   color colorful-short-hex-conversions))))
+             (if-let* ((rep (colorful--hex-to-name (colorful--hsl-to-hex
+                                                    color colorful-short-hex-conversions))))
                  (list rep beg end)
                (user-error "No color name available"))))
 
@@ -551,23 +553,32 @@ converted to a Hex color."
                         (not colorful-only-strings))))
               (beg (match-beginning match))
               (end (match-end match)))
+
     (cond
      ((assoc-string string colorful-html-colors-alist)
       (setq string (cdr (assoc-string string colorful-html-colors-alist))))
+
      ((string-match-p (rx (one-or-more "rgb" (opt "a") "(")) string)
       (setq string (colorful--rgb-to-hex string)))
+
      ((string-match-p (rx (one-or-more "hsl" (opt "a") "(")) string)
       (setq string (colorful--hsl-to-hex string)))
+
      ((string-prefix-p "{rgb}{" string)
       (setq string (colorful--latex-rgb-to-hex string)))
+
      ((string-prefix-p "{RGB}{" string)
       (setq string (colorful--rgb-to-hex
                     (string-remove-prefix "{RGB}{" string))))
+
      ((string-prefix-p "{HTML}{" string)
       (setq string (concat "#" (string-remove-suffix
                                 "}" (string-remove-prefix "{HTML}{" string)))))
+
      ((string-prefix-p "{gray}{" string)
-      (setq string (colorful--latex-gray-to-hex string))))
+      (setq string (colorful--latex-gray-to-hex string)))
+
+     (t (setq string (string-replace "0x" "#" string))))
 
     (colorful--colorize-match string beg end)))
 
@@ -576,11 +587,11 @@ converted to a Hex color."
 
 (defvar colorful-hex-font-lock-keywords
   `((,(rx (seq (not (any "&"))
-               (group "#" (repeat 1 4 (= 3 (any "0-9A-Fa-f"))))
+               (group (or "#" "0x") (repeat 1 4 (= 3 (any "0-9A-Fa-f"))))
                word-boundary))
      (1 (colorful--colorize 1)))
     (,(rx (seq bol
-               (group "#" (repeat 1 4 (= 3 (any "0-9A-Fa-f"))))
+               (group (or "#" "0x") (repeat 1 4 (= 3 (any "0-9A-Fa-f"))))
                word-boundary))
      (0 (colorful--colorize)))
     (,(rx (seq (any "Rr") (any "Gg") (any "Bb") ":"
