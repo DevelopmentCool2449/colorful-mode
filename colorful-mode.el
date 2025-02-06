@@ -777,7 +777,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 ;;;###autoload
 (define-globalized-minor-mode global-colorful-mode
   colorful-mode turn-on-colorful-mode
-  :predicate '(prog-mode help-mode))
+  :predicate '(mhtml-mode html-ts-mode latex-mode prog-mode help-mode))
 
 
 (provide 'colorful-mode)
