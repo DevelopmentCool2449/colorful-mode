@@ -763,7 +763,10 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 ;; Silence a byte-compile warning about global-colorful-modes not
 ;; being defined, if anyone knows why this happens please send a
 ;; patch.
-(defvar global-colorful-modes)
+
+;; NOTE: This bug is already fixed in emacs-30
+(if (< emacs-major-version 30)
+    (defvar global-colorful-modes))
 
 ;;;###autoload
 (defun turn-on-colorful-mode ()
@@ -774,7 +777,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 ;;;###autoload
 (define-globalized-minor-mode global-colorful-mode
   colorful-mode turn-on-colorful-mode
-  :predicate '(mhtml-mode html-ts-mode latex-mode prog-mode))
+  :predicate '(prog-mode help-mode))
 
 
 (provide 'colorful-mode)
