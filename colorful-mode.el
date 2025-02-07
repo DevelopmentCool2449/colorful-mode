@@ -489,15 +489,14 @@ PROMPT must be a string with 1 format control (generally a string argument)."
 (defun colorful--colorize-match (color beg end)
   "Overlay match with a face from BEG to END.
 The background uses COLOR color value.  The foreground is obtained
-bu `readable-foreground-color' and it can be white or black."
+from `readable-foreground-color' and it can be white or black."
   ;; Delete duplicates overlays found
   (dolist (ov (overlays-in beg end))
     (if (overlay-get ov 'colorful--overlay)
         (colorful--delete-overlay ov)))
 
-  (when-let* (color
-              (ov (make-overlay beg end nil t t))
-              (map (make-sparse-keymap)))
+  (let* ((ov (make-overlay beg end nil t t))
+         (map (make-sparse-keymap)))
 
     (if colorful-allow-mouse-clicks
         (keymap-set map "<mouse-1>" (if buffer-read-only
@@ -578,20 +577,33 @@ converted to a Hex color."
      ((string-prefix-p "{gray}{" string)
       (setq string (colorful--latex-gray-to-hex string)))
 
+     ((string-prefix-p "#" string)
+      (setq string (cond
+                    ;; Check if hex is #RRGGBBAA or #RGBA and then
+                    ;; ignore their Alpha hex values.
+                    ((length= string 9) ; For #RRGGBBAA
+                     (substring string 0 7))
+                    ((length= string 5) ; For #RGBA
+                     (substring string 0 4))
+                    ;; Otherwise, just pass it.
+                    (t string))))
+
      (t (setq string (string-replace "0x" "#" string))))
 
-    (colorful--colorize-match string beg end)))
+    ;; Ensure that is a valid color and that string is non-nil
+    (if (and string (color-defined-p string))
+        (colorful--colorize-match string beg end))))
 
 
 ;;;; Extra coloring definitions
 
 (defvar colorful-hex-font-lock-keywords
   `((,(rx (seq (not (any "&"))
-               (group (or "#" "0x") (repeat 1 4 (= 3 (any "0-9A-Fa-f"))))
+               (group (or "#" "0x") (repeat 1 14 (any "0-9A-Fa-f")))
                word-boundary))
      (1 (colorful--colorize 1)))
     (,(rx (seq bol
-               (group (or "#" "0x") (repeat 1 4 (= 3 (any "0-9A-Fa-f"))))
+               (group (or "#" "0x") (repeat 1 14 (any "0-9A-Fa-f")))
                word-boundary))
      (0 (colorful--colorize)))
     (,(rx (seq (any "Rr") (any "Gg") (any "Bb") ":"

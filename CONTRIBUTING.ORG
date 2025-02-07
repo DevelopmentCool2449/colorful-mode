@@ -4,8 +4,8 @@ If your contribution is less than 15 lines [see: [[https://www.gnu.org/software/
 you can send a patch and your contribution will be reviewed and maybe
 merged quickly.
 
-If you want send a patch *you will need assign copyright to FSF*,
-for this then please email the following information to
+However if your contribution is longer *you will need assign copyright to FSF*,
+for this then please fill and email the following information to
 <assign@gnu.org>, and they will send you the assignment form for
 your *past and future changes*.
 

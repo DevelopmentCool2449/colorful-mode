@@ -4,17 +4,14 @@
 ;;                      Color name Test for colorful-mode                     ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-;;; `0x' Syntax
-
+;;; `0xRRGGBB' Syntax
 0x152364     "0x152364"
 0x1f1d2e     "0x1f1d2e"
 0x26233a     "0x26233a"
 0xdef124     "0xdef124"
 0xf00        "0xf00"
 
-;;; `#' Syntax
-
+;;; `#RRGGBB' Syntax
 #152364     "#152364"
 #1f1d2e     "#1f1d2e"
 #26233a     "#26233a"
@@ -22,8 +19,13 @@
 #f00        "#f00"
 #def        "#def" ; <- Should not be highlighted
 
-;;; Color names
+;;; `#RRGGBBAA' Syntax
+#152364CC "#152364CC"
 
+;;; `#RGBA' Syntax
+#f00C     "#f00C"
+
+;;; Color names
 red         "red"
 blue        "blue"
 orange      "orange"

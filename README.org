@@ -25,8 +25,11 @@ in real time and in a user friendly way based/inspired on 🌈[[https://elpa.gnu
 
 * Features ✨
 - Real time color highlight.
-- Supports hexadecimals colors, color names, rgb[a]/hsl[a] and LaTex colors (gray, rbg, RGB, HTML)
-- Convert current color at point to other formats such as hexadecimal or color names (only available for some colors).
+- Supports hexadecimal (#RRGGBB, #RGB, #RRGGBBAA, #RGBA), color names, rgb(a)/hsl(a)
+  and LaTex colors (gray, rbg, RGB, HTML)
+- Convert current color at point to other formats such as hexadecimal
+  or color names(only available for some colors)
+  with mouse click support.
 - Optionally use a prefix/suffix string instead highlight.
 - Optionally highlight colors only inside in strings.
 - Omitting color keywords from being highlighted.
@@ -43,7 +46,7 @@ in real time and in a user friendly way based/inspired on 🌈[[https://elpa.gnu
 [[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/screenshot3.png]]
 /With a custom prefix (in this example a custom character)/.
 
-* User Options, Setups and Guides 📖
+* User Options 🔧
 ** Customizable User options
 - =colorful-allow-mouse-clicks (default: t)= If non-nil, allow using mouse buttons
   for change color.
@@ -118,21 +121,29 @@ These key bindings are defined by: =colorful-mode-map=
 - =C-x c c= → =colorful-convert-and-copy-color=.
 - =C-x c r= → =colorful-convert-and-change-color=.
 
-** Adding extra colors
-Colorful by default provides extra functions that highlight additional
-colors:
+* Setups and Guides 📖
+
+** Enabling colors to specifics major-modes
+If you want to use css rgb colors outside css-derived modes, you
+can add them to `colorful-extra-color-keyword-functions' in your config.
+
+#+begin_src elisp
+  (add-to-list 'colorful-extra-color-keyword-functions '(insert-your-major-mode . colorful-add-rgb-colors))
+#+end_src
+
+If you want also use hsl and rgb together you can use this
+#+begin_src elisp
+  (add-to-list 'colorful-extra-color-keyword-functions '(insert-your-major-mode . (colorful-add-rgb-colors colorful-add-hsl-colors)))
+#+end_src
+
+colorful provides extra functions out-the-box that enable additional
+highlighting:
 
 - =colorful-add-hex-colors= Add Hexadecimal Colors.
 - =colorful-add-color-names= Add color names.
 - =colorful-add-rgb-colors= Add CSS RGB colors.
 - =colorful-add-hsl-colors= Add CSS HSL colors.
 - =colorful-add-latex-colors= Add LaTex rgb/RGB/HTML/Grey colors.
-
-For use them add it to:
-#+begin_src emacs-lisp
-;; In this example add emacs color names only for yaml-mode and derived.
-  (add-to-list 'colorful-extra-color-keyword-functions '(yaml-mode . colorful-add-color-names))
-#+end_src
 
 See: =colorful-extra-color-keyword-functions= for more details.
 
@@ -142,15 +153,17 @@ It's recommended that you must use emacs-28.x or higher.
 For install colorful run:
 - =M-x package-install colorful-mode=
 
-Once you have it installed you can run colorful locally in your buffer
-with =M-x colorful-mode=, if want enable it globally without using
-hooks then you can do =M-x global-colorful-mode=
+Once you have it installed you can activate colorful locally in your
+buffer with =M-x colorful-mode=, if want enable it globally without
+using hooks then you can do =M-x global-colorful-mode=
 
 Or if you prefer using =use-package= macro:
 #+begin_src emacs-lisp
+
   (use-package colorful-mode
     :ensure t ; Optional
     :hook (prog-mode text-mode)
+    ;; :config (global-colorful-mode) ; Enable it globally
     ...)
 
 #+end_src
@@ -159,19 +172,20 @@ Or if you prefer using =use-package= macro:
 Author note: Please add a comparation table with colorful-mode alternatives such as
 rainbow-mode, built-in css-mode color preview ...
 #+END_COMMENT
-* How does it compare to =rainbow-mode=?
-=colorful-mode= improves =rainbow-mode= in adding more features
-and fixing some /(and old)/ bugs:
 
-| Comparation                                           | colorful-mode.el | rainbow-mode.el |
-|-------------------------------------------------------+------------------+-----------------|
-| Compatible with hl-line and other overlays?           | ✓                | ❌              |
-| Convert color to other formats?                       | ✓                | ❌              |
-| Optionally use string prefix/suffix instead highlight | ✓                | ❌              |
-| Exclude keywords/colors?                              | ✓                | ❌^{1}          |
-| Allow highlight specifics colors in specific modes    | ✓                | ✓^{2}           |
-| Optionally highlight only in strings                  | ✓                | ❌              |
-| No performance issues?^{3}                            | ❌               | ✓               |
+* How does it compare to =rainbow-mode= or built-in =css fontify colors=?
+=colorful-mode= improves =rainbow-mode= and =css-fontify-colors= in adding more features:
+
+| Comparation                                           | colorful-mode.el | rainbow-mode.el | built-in css-fontify-colors |
+|-------------------------------------------------------+------------------+-----------------+-----------------------------|
+| Compatible with hl-line and other overlays?           | ✓                | ❌             | ❌                         |
+| Convert color to other formats?                       | ✓                | ❌             | ❌                         |
+| Optionally use string prefix/suffix instead highlight | ✓                | ❌             | ❌                         |
+| Exclude keywords/colors?                              | ✓                | ❌^{1}            | ❌                         |
+| Allow highlight specifics colors in specific modes    | ✓                | ✓^{2}              | ❌                         |
+| Optionally highlight only in strings                  | ✓                | ❌             | ❌                         |
+| No performance issues?^{3}                               | ❌              | ✓               | ✓                           |
+|                                                       |                  |                 |                             |
 #+begin_src text
 [1] rainbow-mode (like colorful) uses regex for highlight some
     keywords, however it cannot exclude specifics colors keywords
@@ -182,10 +196,13 @@ and fixing some /(and old)/ bugs:
 #+end_src
 
 The intention is to provide a featured alternative to
-=rainbow-mode.el= with a user-friendly approach.
+=rainbow-mode.el= and =css-fontify-colors= with a user-friendly approach.
 
 If you prefer only highlights without color conversion, prefix/suffix
 string indicator and/or anything else you can use =rainbow-mode.el=.
+
+or something built-in and just for css then use built-in
+css-fontify-colors which is activated by default
 
 On the other hand, if you want convert colors, overlays, optional
 prefix strings and more features you can use =colorful-mode.el=.
