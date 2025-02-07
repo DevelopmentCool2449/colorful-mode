@@ -361,43 +361,56 @@ DIGIT specifies which how much digits per component must have return value."
       (apply #'color-rgb-to-hex color)
     (cdr (assoc-string name colorful-html-colors-alist))))
 
-;;;;; User Interactive Functions
+;;;;; Overlay functions
+
+(defun colorful--find-overlay ()
+  "Return non-nil if colorful overlay is found at point."
+  (catch 'val
+    (dolist (ov (overlays-at (point)))
+      (if (overlay-get ov 'colorful--overlay)
+          (throw 'val ov)))))
+
+(defun colorful--delete-overlay (overlay &rest _)
+  "Helper function for delete OVERLAY."
+  (delete-overlay overlay))
+
+
+;;;; User Interactive Functions
 
 ;;;###autoload
 (defun colorful-convert-and-change-color ()
   "Convert color to a valid format and replace color at current cursor position."
   (interactive "*")
-  (if-let* ((colorful-ov (catch 'val
-                           (dolist (ov (overlays-at (point)))
-                             (if (overlay-get ov 'colorful--overlay)
-                                 (throw 'val ov)))))
+  (if-let* ((colorful-ov (colorful--find-overlay)) ; Find colorful overlay tag at point/cursor.
+            ;; Start prompt for color change
             (result (colorful--change-color colorful-ov "Change '%s' to: "))
-            (range (cdr result))
-            (text (car result)))
+            (range (cdr result)) ; Get the positions where it should be replaced.
+            (new-color (car result)))
+      ;; Replace Color at point.
       (save-excursion
         (apply #'delete-region range)
-        (insert text))
+        (insert new-color))
+    ;; Otherwise throw error.
     (user-error "No color found")))
 
 ;;;###autoload
 (defun colorful-convert-and-copy-color ()
   "Convert color to a valid format and copy it at current cursor position."
   (interactive)
-  (if-let* ((colorful-ov (catch 'val
-                           (dolist (ov (overlays-at (point)))
-                             (if (overlay-get ov 'colorful--overlay)
-                                 (throw 'val ov)))))
+  (if-let* ((colorful-ov (colorful--find-overlay)) ; Find colorful overlay tag at point/cursor.
+            ;; Start prompt for color change, just get the color to replace from the list.
             (result (car (colorful--change-color colorful-ov "Copy '%s' as: ")))
-            (color (if (color-defined-p result)
-                       (propertize result 'face
-                                   `(:background
-                                     ,result
-                                     :foreground
-                                     ,(color-name-to-rgb result)))
-                     result))
-            (text (format "`%s' copied." color)))
+            ;; Propertize text for message.
+            (color (propertize result 'face
+                               `(:background
+                                 ,result
+                                 :foreground
+                                 ,(color-name-to-rgb result))))
+            (msg-text (format "`%s' copied." color)))
+      ;; Copy color and notify to user it's done
       (progn (kill-new color)
-             (message text))
+             (message msg-text))
+    ;; Otherwise throw error.
     (user-error "No color found")))
 
 ;;;###autoload
@@ -416,39 +429,44 @@ DIGIT specifies which how much digits per component must have return value."
 
 ;;;;; Coloring functions
 
-(defun colorful--change-color (ov &optional prompt color beg end)
+(defun colorful--change-color (ov prompt &optional color beg end)
   "Return COLOR as other color format.
-This return a list which contain the text to be replaced,
-beginning and end where should be inserted.
-COLOR, BEG, and END are only used as internal values, not intended to
-be used externally.  OV must be an overlay.
-PROMPT must be a string with 1 format control (generally a string argument)."
-  (let* ((beg (or beg (overlay-start ov)))
+Find color to change from colorful overlay OV at point and return a list
+which contain the color to replace, the beginning and end positions where
+should be inserted.
+
+PROMPT must be a string with 1 format control (generally a string argument).
+
+COLOR, BEG, and END are only used for recursive purposes, not intended to
+be used externally."
+  (let* ((beg (or beg (overlay-start ov))) ; Find positions.
          (end (or end (overlay-end ov)))
+         ;; If not COLOR string then get it from buffer.
          (color (or color (buffer-substring-no-properties beg end)))
          (prompt (format prompt color))
          (choices '(("Hexadecimal color format" . hex)
                     ("Emacs color name" . name)))
+         ;; Get choice.
          (choice (alist-get
                   (completing-read prompt choices nil t nil nil)
                   choices nil nil 'equal)))
-    (pcase choice ; Convert to...
-      ('hex
-       (if (not (or (string-prefix-p "#" color)
-                    (string-prefix-p "0x" color))) ; Ensure is not already a hex
+    (pcase choice ; Check and convert color to any of the options:
+      ('hex ; COLOR to HEX
+       (if (not (or (string-prefix-p "#" color) ; Ensure is not already a hex.
+                    (string-prefix-p "0x" color)))
            (cond
-            ;; Is Name?
+            ;; Is COLOR a Name?
             ((or (member color (defined-colors))
                  (assoc-string color colorful-html-colors-alist))
              (list (colorful--name-to-hex
                     color colorful-short-hex-conversions)
                    beg end))
-            ;; Is CSS rgb?
+            ;; Is COLOR a CSS rgb?
             ((string-match-p (rx (one-or-more "rgb" (opt "a") "(")) color)
              (list (colorful--rgb-to-hex
                     color colorful-short-hex-conversions)
                    beg end))
-            ;; Is HSL?
+            ;; Is COLOR a HSL?
             ((string-match-p (rx (one-or-more "hsl" (opt "a") "(")) color)
              (list (colorful--hsl-to-hex
                     color colorful-short-hex-conversions)
@@ -456,23 +474,22 @@ PROMPT must be a string with 1 format control (generally a string argument)."
 
          (colorful--change-color ov "%s is already a Hex color. Try again: "
                                  color beg end)))
-      ('name
+      ('name ; COLOR to NAME
        (if (not (assoc-string color color-name-rgb-alist))
            (cond
-            ;; Is Hex?
-            ((or (string-prefix-p "#" color)
-                 (string-prefix-p "0x" color))
+            ;; Is COLOR a Hex?
+            ((or (string-prefix-p "#" color))
              (if-let* ((rep (colorful--hex-to-name color)))
                  (list rep beg end)
                (user-error "No color name available")
                nil))
-            ;; Is CSS rgb?
+            ;; Is COLOR a CSS rgb?
             ((string-match-p (rx (one-or-more "rgb" (opt "a") "(")) color)
              (if-let* ((rep (colorful--hex-to-name (colorful--rgb-to-hex
                                                     color colorful-short-hex-conversions))))
                  (list rep beg end)
                (user-error "No color name available")))
-            ;; Is HSL?
+            ;; Is COLOR a HSL?
             ((string-match-p (rx (one-or-more "hsl" (opt "a") "(")) color)
              (if-let* ((rep (colorful--hex-to-name (colorful--hsl-to-hex
                                                     color colorful-short-hex-conversions))))
@@ -482,14 +499,10 @@ PROMPT must be a string with 1 format control (generally a string argument)."
          (colorful--change-color
           ov "%s is already a color name. Try again: " color beg end))))))
 
-(defun colorful--delete-overlay (overlay &rest _)
-  "Helper function for delete OVERLAY."
-  (delete-overlay overlay))
-
 (defun colorful--colorize-match (color beg end)
   "Overlay match with a face from BEG to END.
 The background uses COLOR color value.  The foreground is obtained
-from `readable-foreground-color' and it can be white or black."
+from `readable-foreground-color'."
   ;; Delete duplicates overlays found
   (dolist (ov (overlays-in beg end))
     (if (overlay-get ov 'colorful--overlay)
@@ -507,7 +520,7 @@ from `readable-foreground-color' and it can be white or black."
     (overlay-put ov 'colorful--overlay t)
 
     ;; Delete overlays when they are modified.
-    ;; This refresh them with without using `jit-lock-register' or
+    ;; This refresh them without using `jit-lock-register' or
     ;; any other hook.
     (overlay-put ov 'evaporate t)
     (overlay-put ov 'modification-hooks '(colorful--delete-overlay))
@@ -529,6 +542,7 @@ from `readable-foreground-color' and it can be white or black."
                                  'face `(:foreground ,color))))
       ;; Use no face for matched color
       (overlay-put ov 'face nil))
+
      (t
       (when colorful-allow-mouse-clicks
         (overlay-put ov 'mouse-face 'highlight)
@@ -544,39 +558,50 @@ If MATCH is not any hex color or Emacs color name, it will be
 converted to a Hex color."
   (when-let* ((match (or match 0))
               (string (match-string-no-properties match))
-              ((and (not (member string colorful-exclude-colors)) ; Check if color isn't excluded
+              ((and (not (member string colorful-exclude-colors)) ; Check if match isn't blacklisted
+                    ;; Check for colorful-only-strings
                     (or (and colorful-only-strings (nth 3 (syntax-ppss)))
                         (and (eq colorful-only-strings 'only-prog)
-                             (or (derived-mode-p 'css-mode) ; Apparently CSS is prog-mode derived
+                             ;; CSS is prog-mode derived so ignore only-strings
+                             ;; in CSS derived modes
+                             (or (derived-mode-p 'css-mode)
                                  (not (derived-mode-p 'prog-mode))))
                         (not colorful-only-strings))))
               (beg (match-beginning match))
               (end (match-end match)))
 
     (cond
+     ;; HTML color name
      ((assoc-string string colorful-html-colors-alist)
       (setq string (cdr (assoc-string string colorful-html-colors-alist))))
 
+     ;; CSS rgb/rgba
      ((string-match-p (rx (one-or-more "rgb" (opt "a") "(")) string)
       (setq string (colorful--rgb-to-hex string)))
 
+     ;; CSS hsl/hsla
      ((string-match-p (rx (one-or-more "hsl" (opt "a") "(")) string)
       (setq string (colorful--hsl-to-hex string)))
 
+     ;; Latex rgb
      ((string-prefix-p "{rgb}{" string)
       (setq string (colorful--latex-rgb-to-hex string)))
 
+     ;; Latex RGB
      ((string-prefix-p "{RGB}{" string)
       (setq string (colorful--rgb-to-hex
                     (string-remove-prefix "{RGB}{" string))))
 
+     ;; Latex HTML
      ((string-prefix-p "{HTML}{" string)
       (setq string (concat "#" (string-remove-suffix
                                 "}" (string-remove-prefix "{HTML}{" string)))))
 
+     ;; Latex gray
      ((string-prefix-p "{gray}{" string)
       (setq string (colorful--latex-gray-to-hex string)))
 
+     ;; Hex color
      ((string-prefix-p "#" string)
       (setq string (cond
                     ;; Check if hex is #RRGGBBAA or #RGBA and then
@@ -643,7 +668,7 @@ converted to a Hex color."
                     (opt (any "+-"))
                     (one-or-more (any digit)))))
      (0 (colorful--colorize))))
-  "Font-lock keywords to add Hexadecimal color.")
+  "Font-lock keywords to colorize.")
 
 ;;;###autoload
 (defun colorful-add-hex-colors ()
@@ -765,6 +790,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   (font-lock-remove-keywords nil `(,@colorful-color-keywords))
   (remove-overlays nil nil 'colorful--overlay t))
 
+
 ;;;; Keymap
 
 (defvar-keymap colorful-mode-map
