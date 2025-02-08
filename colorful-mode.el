@@ -1,9 +1,10 @@
 ;;; colorful-mode.el --- Preview any color in your buffer in real time -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024 Free Software Foundation, Inc
+;; Copyright (C) 2024-2025 Free Software Foundation, Inc
 
 ;; Author: Elias G. Perez <eg642616@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
+;;             Elias G. Perez <eg642616@gmail.com>
 ;; Created: 2024-04-10
 ;; Package-Requires: ((emacs "28.1") (compat "29.1.4.4"))
 ;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
@@ -212,7 +213,7 @@ Each entry should have the form (COLOR-NAME . HEXADECIMAL-COLOR)."
 
 (defcustom colorful-extra-color-keyword-functions
   '((emacs-lisp-mode . colorful-add-color-names)
-    ((mhtml-mode html-ts-mode css-mode css-ts-mode)
+    ((html-mode css-mode)
      . (colorful-add-rgb-colors colorful-add-hsl-colors colorful-add-color-names))
     (latex-mode . colorful-add-latex-colors)
     colorful-add-hex-colors)
@@ -370,14 +371,15 @@ DIGIT specifies which how much digits per component must have return value."
       (if (overlay-get ov 'colorful--overlay)
           (throw 'val ov)))))
 
-(defun colorful--delete-overlay (overlay &rest _)
-  "Helper function for delete OVERLAY."
-  (delete-overlay overlay))
+(defun colorful--delete-overlays (limit)
+  "Font-lock matcher that flushes our overlays before we install new ones."
+  (remove-overlays (point) limit 'colorful--overlay t)
+  ;; Tell font-lock we did not find any "match", so it doesn't call us back.
+  nil)
 
 
 ;;;; User Interactive Functions
 
-;;;###autoload
 (defun colorful-convert-and-change-color ()
   "Convert color to a valid format and replace color at current cursor position."
   (interactive "*")
@@ -393,7 +395,6 @@ DIGIT specifies which how much digits per component must have return value."
     ;; Otherwise throw error.
     (user-error "No color found")))
 
-;;;###autoload
 (defun colorful-convert-and-copy-color ()
   "Convert color to a valid format and copy it at current cursor position."
   (interactive)
@@ -413,7 +414,6 @@ DIGIT specifies which how much digits per component must have return value."
     ;; Otherwise throw error.
     (user-error "No color found")))
 
-;;;###autoload
 (defun colorful-change-or-copy-color ()
   "Change or copy color to a converted format at current cursor position."
   (interactive)
@@ -441,6 +441,7 @@ COLOR, BEG, and END are only used for recursive purposes, not intended to
 be used externally."
   (let* ((beg (or beg (overlay-start ov))) ; Find positions.
          (end (or end (overlay-end ov)))
+         (kind (overlay-get ov 'colorful--overlay-kind))
          ;; If not COLOR string then get it from buffer.
          (color (or color (buffer-substring-no-properties beg end)))
          (prompt (format prompt color))
@@ -450,65 +451,59 @@ be used externally."
          (choice (alist-get
                   (completing-read prompt choices nil t nil nil)
                   choices nil nil 'equal)))
+
     (pcase choice ; Check and convert color to any of the options:
       ('hex ; COLOR to HEX
-       (if (not (or (string-prefix-p "#" color) ; Ensure is not already a hex.
-                    (string-prefix-p "0x" color)))
-           (cond
-            ;; Is COLOR a Name?
-            ((or (member color (defined-colors))
-                 (assoc-string color colorful-html-colors-alist))
-             (list (colorful--name-to-hex
-                    color colorful-short-hex-conversions)
-                   beg end))
-            ;; Is COLOR a CSS rgb?
-            ((string-match-p (rx (one-or-more "rgb" (opt "a") "(")) color)
-             (list (colorful--rgb-to-hex
-                    color colorful-short-hex-conversions)
-                   beg end))
-            ;; Is COLOR a HSL?
-            ((string-match-p (rx (one-or-more "hsl" (opt "a") "(")) color)
-             (list (colorful--hsl-to-hex
-                    color colorful-short-hex-conversions)
-                   beg end)))
-
+       (if (not (eq kind 'hex)) ; Ensure is not already a hex.
+           (pcase kind
+             ;; Is COLOR a Name?
+             ('color-name
+              (list (colorful--name-to-hex
+                     color colorful-short-hex-conversions)
+                    beg end))
+             ;; Is COLOR a CSS rgb?
+             ('css-rgb
+              (list (colorful--rgb-to-hex
+                     color colorful-short-hex-conversions)
+                    beg end))
+             ;; Is COLOR a HSL?
+             ('css-hsl
+              (list (colorful--hsl-to-hex
+                     color colorful-short-hex-conversions)
+                    beg end)))
+         ;; Else
          (colorful--change-color ov "%s is already a Hex color. Try again: "
                                  color beg end)))
       ('name ; COLOR to NAME
        (if (not (assoc-string color color-name-rgb-alist))
-           (cond
-            ;; Is COLOR a Hex?
-            ((or (string-prefix-p "#" color))
-             (if-let* ((rep (colorful--hex-to-name color)))
-                 (list rep beg end)
-               (user-error "No color name available")
-               nil))
-            ;; Is COLOR a CSS rgb?
-            ((string-match-p (rx (one-or-more "rgb" (opt "a") "(")) color)
-             (if-let* ((rep (colorful--hex-to-name (colorful--rgb-to-hex
-                                                    color colorful-short-hex-conversions))))
-                 (list rep beg end)
-               (user-error "No color name available")))
-            ;; Is COLOR a HSL?
-            ((string-match-p (rx (one-or-more "hsl" (opt "a") "(")) color)
-             (if-let* ((rep (colorful--hex-to-name (colorful--hsl-to-hex
-                                                    color colorful-short-hex-conversions))))
-                 (list rep beg end)
-               (user-error "No color name available"))))
+           (pcase kind
+             ;; Is COLOR a Hex?
+             ('hex
+              (if-let* ((rep (colorful--hex-to-name (string-replace "0x" "#" color))))
+                  (list rep beg end)
+                (user-error "No color name available")
+                nil))
+             ;; Is COLOR a CSS rgb?
+             ('css-rgb
+              (if-let* ((rep (colorful--hex-to-name (colorful--rgb-to-hex
+                                                     color colorful-short-hex-conversions))))
+                  (list rep beg end)
+                (user-error "No color name available")))
+             ;; Is COLOR a HSL?
+             ('css-hsl
+              (if-let* ((rep (colorful--hex-to-name (colorful--hsl-to-hex
+                                                     color colorful-short-hex-conversions))))
+                  (list rep beg end)
+                (user-error "No color name available"))))
 
          (colorful--change-color
           ov "%s is already a color name. Try again: " color beg end))))))
 
-(defun colorful--colorize-match (color beg end)
+(defun colorful--colorize-match (color beg end kind)
   "Overlay match with a face from BEG to END.
 The background uses COLOR color value.  The foreground is obtained
 from `readable-foreground-color'."
-  ;; Delete duplicates overlays found
-  (dolist (ov (overlays-in beg end))
-    (if (overlay-get ov 'colorful--overlay)
-        (colorful--delete-overlay ov)))
-
-  (let* ((ov (make-overlay beg end nil t t))
+  (let* ((ov (make-overlay beg end))
          (map (make-sparse-keymap)))
 
     (if colorful-allow-mouse-clicks
@@ -518,14 +513,12 @@ from `readable-foreground-color'."
 
     ;; Define colorful overlay tag
     (overlay-put ov 'colorful--overlay t)
+    ;; Set which kind of
+    (overlay-put ov 'colorful--overlay-kind kind)
 
-    ;; Delete overlays when they are modified.
-    ;; This refresh them without using `jit-lock-register' or
-    ;; any other hook.
+    ;; Enable auto deletion.
     (overlay-put ov 'evaporate t)
-    (overlay-put ov 'modification-hooks '(colorful--delete-overlay))
-    (overlay-put ov 'insert-in-front-hooks '(colorful--delete-overlay))
-    (overlay-put ov 'insert-behind-hooks '(colorful--delete-overlay))
+
 
     (cond
      (colorful-use-prefix
@@ -552,10 +545,8 @@ from `readable-foreground-color'."
                      (:background ,color)
                      (:inherit colorful-base)))))))
 
-(defun colorful--colorize (&optional match)
-  "Helper function for Colorize MATCH with itself.
-If MATCH is not any hex color or Emacs color name, it will be
-converted to a Hex color."
+(defun colorful--colorize (&optional kind match)
+  "Helper function for Colorize each KIND of MATCH with itself."
   (when-let* ((match (or match 0))
               (string (match-string-no-properties match))
               ((and (not (member string colorful-exclude-colors)) ; Check if match isn't blacklisted
@@ -570,77 +561,67 @@ converted to a Hex color."
               (beg (match-beginning match))
               (end (match-end match)))
 
-    (cond
-     ;; HTML color name
-     ((assoc-string string colorful-html-colors-alist)
-      (setq string (cdr (assoc-string string colorful-html-colors-alist))))
+    (pcase kind
+      ('color-name
+       (setq string
+             (or
+              ;; Check if it's an html color name
+              (cdr (assoc-string string colorful-html-colors-alist))
+              ;; Otherwise it's then an emacs color name
+              string)))
 
-     ;; CSS rgb/rgba
-     ((string-match-p (rx (one-or-more "rgb" (opt "a") "(")) string)
-      (setq string (colorful--rgb-to-hex string)))
+      ('css-rgb
+       (setq string (colorful--rgb-to-hex string)))
 
-     ;; CSS hsl/hsla
-     ((string-match-p (rx (one-or-more "hsl" (opt "a") "(")) string)
-      (setq string (colorful--hsl-to-hex string)))
+      ('css-hsl
+       (setq string (colorful--hsl-to-hex string)))
 
-     ;; Latex rgb
-     ((string-prefix-p "{rgb}{" string)
-      (setq string (colorful--latex-rgb-to-hex string)))
+      ('latex-rgb
+       (setq string
+             (if (string-prefix-p "{RGB}{" string)
+                 (colorful--rgb-to-hex (string-remove-prefix "{RGB}{" string))
+               (colorful--latex-rgb-to-hex string))))
 
-     ;; Latex RGB
-     ((string-prefix-p "{RGB}{" string)
-      (setq string (colorful--rgb-to-hex
-                    (string-remove-prefix "{RGB}{" string))))
+      ('latex-HTML
+       (setq string
+             (concat "#" (string-remove-suffix
+                          "}" (string-remove-prefix "{HTML}{" string)))))
 
-     ;; Latex HTML
-     ((string-prefix-p "{HTML}{" string)
-      (setq string (concat "#" (string-remove-suffix
-                                "}" (string-remove-prefix "{HTML}{" string)))))
+      ('latex-gray
+       (setq string (colorful--latex-gray-to-hex string)))
 
-     ;; Latex gray
-     ((string-prefix-p "{gray}{" string)
-      (setq string (colorful--latex-gray-to-hex string)))
-
-     ;; Hex color
-     ((string-prefix-p "#" string)
-      (setq string (cond
-                    ;; Check if hex is #RRGGBBAA or #RGBA and then
-                    ;; ignore their Alpha hex values.
-                    ((length= string 9) ; For #RRGGBBAA
-                     (substring string 0 7))
-                    ((length= string 5) ; For #RGBA
-                     (substring string 0 4))
-                    ;; Otherwise, just pass it.
-                    (t string))))
-
-     (t (setq string (string-replace "0x" "#" string))))
+      ('hex
+       (setq string (cond
+                     ;; Check if hex is #RRGGBBAA or #RGBA and then
+                     ;; ignore their Alpha hex values.
+                     ((and (length= string 9)
+                           (not (string-prefix-p "0x" string))) ; For #RRGGBBAA
+                      (substring string 0 7))
+                     ((and (length= string 5)
+                           (not (string-prefix-p "0x" string))) ; For #RGBA
+                      (substring string 0 4))
+                     ;; Otherwise, just pass it.
+                     (t (string-replace "0x" "#" string))))))
 
     ;; Ensure that is a valid color and that string is non-nil
     (if (and string (color-defined-p string))
-        (colorful--colorize-match string beg end))))
+        (colorful--colorize-match string beg end kind))
+    ;; The return value is not ignored, so be mindful what we return.
+    nil))
 
 
 ;;;; Extra coloring definitions
 
 (defvar colorful-hex-font-lock-keywords
-  `((,(rx (seq (not (any "&"))
+  `((,(rx (seq (or bol (not (any "&")))
                (group (or "#" "0x") (repeat 1 14 (any "0-9A-Fa-f")))
                word-boundary))
-     (1 (colorful--colorize 1)))
-    (,(rx (seq bol
-               (group (or "#" "0x") (repeat 1 14 (any "0-9A-Fa-f")))
-               word-boundary))
-     (0 (colorful--colorize)))
-    (,(rx (seq (any "Rr") (any "Gg") (any "Bb") ":"
+     (1 (colorful--colorize 'hex 1)))
+    (,(rx (seq (any "Rr") (any "Gg") (any "Bb") (opt (any "Ii")) ":"
                (repeat 1 4 (any "0-9A-Fa-f")) "/"
                (repeat 1 4 (any "0-9A-Fa-f")) "/"
                (repeat 1 4 (any "0-9A-Fa-f"))))
-     (0 (colorful--colorize)))
-    (,(rx (seq (any "Rr") (any "Gg") (any "Bb") (any "Ii") ":"
-               (one-or-more (any digit ".")) "/"
-               (one-or-more (any digit ".")) "/"
-               (one-or-more (any digit "."))))
-     (0 (colorful--colorize)))
+     (0 (colorful--colorize 'hex)))
     (,(rx (seq (or (seq (any "Cc") (any "Ii") (any "Ee")
                         (or (seq (any "Xx") (any "Yy") (any "Zz"))
                             (seq (any "Uu") (any "Vv") (any "Yy"))
@@ -667,10 +648,9 @@ converted to a Hex color."
                (opt (any "Ee")
                     (opt (any "+-"))
                     (one-or-more (any digit)))))
-     (0 (colorful--colorize))))
+     (0 (colorful--colorize 'hex))))
   "Font-lock keywords to colorize.")
 
-;;;###autoload
 (defun colorful-add-hex-colors ()
   "Function for add hex colors to `colorful-color-keywords'.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
@@ -682,10 +662,9 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                    (defined-colors)
                    (mapcar #'car colorful-html-colors-alist))
                   'words)
-     (0 (colorful--colorize))))
+     (0 (colorful--colorize 'color-name))))
   "Font-lock keywords to add color names.")
 
-;;;###autoload
 (defun colorful-add-color-names ()
   "Function for add Color names to `colorful-color-keywords'.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
@@ -712,10 +691,9 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                 (zero-or-more " ")
                 (opt "%"))
                (zero-or-more " ") ")"))
-     (0 (colorful--colorize))))
+     (0 (colorful--colorize 'css-rgb))))
   "Font-lock keywords for add RGB colors.")
 
-;;;###autoload
 (defun colorful-add-rgb-colors ()
   "Function for add CSS RGB colors to `colorful-color-keywords'.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
@@ -736,10 +714,9 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                 (zero-or-more " ")
                 (opt "%"))
                (zero-or-more " ") ")"))
-     (0 (colorful--colorize))))
+     (0 (colorful--colorize 'css-hsl))))
   "Font-lock keywords for add HSL colors.")
 
-;;;###autoload
 (defun colorful-add-hsl-colors ()
   "Function for add CSS HSL colors.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
@@ -751,14 +728,13 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                (group (one-or-more (any digit "."))) (zero-or-more " ") "," (zero-or-more " ")
                (group (one-or-more (any digit "."))) (zero-or-more " ") "," (zero-or-more " ")
                (group (one-or-more (any digit "."))) (zero-or-more " ") "}"))
-     (0 (colorful--colorize)))
+     (0 (colorful--colorize 'latex-rgb)))
     (,(rx (seq "{HTML}{" (group (= 6 (any "0-9A-Fa-f"))) "}"))
-     (0 (colorful--colorize)))
+     (0 (colorful--colorize 'latex-HTML)))
     (,(rx (seq "{gray}{" (group (one-or-more (any digit "."))) "}"))
-     (0 (colorful--colorize))))
+     (0 (colorful--colorize 'latex-gray))))
   "Font-lock keywords for add LaTex rgb/RGB/HTML/Grey colors.")
 
-;;;###autoload
 (defun colorful-add-latex-colors ()
   "Function for add LaTex rgb/RGB/HTML/Grey colors.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
@@ -783,11 +759,12 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
      ((functionp fn)
       (funcall fn))))
 
+  (push '(colorful--delete-overlays) colorful-color-keywords)
   (font-lock-add-keywords nil colorful-color-keywords))
 
 (defun colorful--turn-off ()
   "Helper function for clear colorful overlays."
-  (font-lock-remove-keywords nil `(,@colorful-color-keywords))
+  (font-lock-remove-keywords nil colorful-color-keywords)
   (remove-overlays nil nil 'colorful--overlay t))
 
 
@@ -823,7 +800,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 ;;;###autoload
 (define-globalized-minor-mode global-colorful-mode
   colorful-mode turn-on-colorful-mode
-  :predicate '(mhtml-mode html-ts-mode latex-mode prog-mode help-mode))
+  :predicate '(prog-mode help-mode html-mode css-mode latex-mode))
 
 
 (provide 'colorful-mode)
