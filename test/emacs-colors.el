@@ -17,7 +17,8 @@
 #26233a     "#26233a"
 #def124     "#def124"
 #f00        "#f00"
-#def        "#def" ; <- Should not be highlighted
+#def        "#def"
+#define     "#define" ; <- #def Should not be highlighted here
 
 ;;; `#RRGGBBAA' Syntax
 #152364CC "#152364CC"

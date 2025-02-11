@@ -54,169 +54,270 @@
   :group 'matching)
 
 (defface colorful-base
-  '((t (:box (:line-width -1))))
+  '((t (:weight bold :box (:line-width -1))))
   "Face used as base for highlight color names.
-Only used for draw box and change font &c., changing box color and/or
-background/foreground color face won't be applied.")
+Changing background or foreground color will have no effect."
+  :group 'colorful)
 
 (defcustom colorful-html-colors-alist
-  '(("AliceBlue" . "#F0F8FF")
-    ("AntiqueWhite" . "#FAEBD7")
-    ("Aqua" . "#00FFFF")
-    ("Aquamarine" . "#7FFFD4")
-    ("Azure" . "#F0FFFF")
-    ("Beige" . "#F5F5DC")
-    ("Bisque" . "#FFE4C4")
-    ("Black" . "#000000")
-    ("BlanchedAlmond" . "#FFEBCD")
-    ("Blue" . "#0000FF")
-    ("BlueViolet" . "#8A2BE2")
-    ("Brown" . "#A52A2A")
-    ("BurlyWood" . "#DEB887")
-    ("CadetBlue" . "#5F9EA0")
-    ("Chartreuse" . "#7FFF00")
-    ("Chocolate" . "#D2691E")
-    ("Coral" . "#FF7F50")
-    ("CornflowerBlue" . "#6495ED")
-    ("Cornsilk" . "#FFF8DC")
-    ("Crimson" . "#DC143C")
-    ("Cyan" . "#00FFFF")
-    ("DarkBlue" . "#00008B")
-    ("DarkCyan" . "#008B8B")
-    ("DarkGoldenRod" . "#B8860B")
-    ("DarkGray" . "#A9A9A9")
-    ("DarkGrey" . "#A9A9A9")
-    ("DarkGreen" . "#006400")
-    ("DarkKhaki" . "#BDB76B")
-    ("DarkMagenta" . "#8B008B")
-    ("DarkOliveGreen" . "#556B2F")
-    ("Darkorange" . "#FF8C00")
-    ("DarkOrchid" . "#9932CC")
-    ("DarkRed" . "#8B0000")
-    ("DarkSalmon" . "#E9967A")
-    ("DarkSeaGreen" . "#8FBC8F")
-    ("DarkSlateBlue" . "#483D8B")
-    ("DarkSlateGray" . "#2F4F4F")
-    ("DarkSlateGrey" . "#2F4F4F")
-    ("DarkTurquoise" . "#00CED1")
-    ("DarkViolet" . "#9400D3")
-    ("DeepPink" . "#FF1493")
-    ("DeepSkyBlue" . "#00BFFF")
-    ("DimGray" . "#696969")
-    ("DimGrey" . "#696969")
-    ("DodgerBlue" . "#1E90FF")
-    ("FireBrick" . "#B22222")
-    ("FloralWhite" . "#FFFAF0")
-    ("ForestGreen" . "#228B22")
-    ("Fuchsia" . "#FF00FF")
-    ("Gainsboro" . "#DCDCDC")
-    ("GhostWhite" . "#F8F8FF")
-    ("Gold" . "#FFD700")
-    ("GoldenRod" . "#DAA520")
-    ("Gray" . "#808080")
-    ("Grey" . "#808080")
-    ("Green" . "#008000")
-    ("GreenYellow" . "#ADFF2F")
-    ("HoneyDew" . "#F0FFF0")
-    ("HotPink" . "#FF69B4")
-    ("IndianRed" . "#CD5C5C")
-    ("Indigo" . "#4B0082")
-    ("Ivory" . "#FFFFF0")
-    ("Khaki" . "#F0E68C")
-    ("Lavender" . "#E6E6FA")
-    ("LavenderBlush" . "#FFF0F5")
-    ("LawnGreen" . "#7CFC00")
-    ("LemonChiffon" . "#FFFACD")
-    ("LightBlue" . "#ADD8E6")
-    ("LightCoral" . "#F08080")
-    ("LightCyan" . "#E0FFFF")
-    ("LightGoldenRodYellow" . "#FAFAD2")
-    ("LightGray" . "#D3D3D3")
-    ("LightGrey" . "#D3D3D3")
-    ("LightGreen" . "#90EE90")
-    ("LightPink" . "#FFB6C1")
-    ("LightSalmon" . "#FFA07A")
-    ("LightSeaGreen" . "#20B2AA")
-    ("LightSkyBlue" . "#87CEFA")
-    ("LightSlateGray" . "#778899")
-    ("LightSlateGrey" . "#778899")
-    ("LightSteelBlue" . "#B0C4DE")
-    ("LightYellow" . "#FFFFE0")
-    ("Lime" . "#00FF00")
-    ("LimeGreen" . "#32CD32")
-    ("Linen" . "#FAF0E6")
-    ("Magenta" . "#FF00FF")
-    ("Maroon" . "#800000")
-    ("MediumAquaMarine" . "#66CDAA")
-    ("MediumBlue" . "#0000CD")
-    ("MediumOrchid" . "#BA55D3")
-    ("MediumPurple" . "#9370D8")
-    ("MediumSeaGreen" . "#3CB371")
-    ("MediumSlateBlue" . "#7B68EE")
-    ("MediumSpringGreen" . "#00FA9A")
-    ("MediumTurquoise" . "#48D1CC")
-    ("MediumVioletRed" . "#C71585")
-    ("MidnightBlue" . "#191970")
-    ("MintCream" . "#F5FFFA")
-    ("MistyRose" . "#FFE4E1")
-    ("Moccasin" . "#FFE4B5")
-    ("NavajoWhite" . "#FFDEAD")
-    ("Navy" . "#000080")
-    ("OldLace" . "#FDF5E6")
-    ("Olive" . "#808000")
-    ("OliveDrab" . "#6B8E23")
-    ("Orange" . "#FFA500")
-    ("OrangeRed" . "#FF4500")
-    ("Orchid" . "#DA70D6")
-    ("PaleGoldenRod" . "#EEE8AA")
-    ("PaleGreen" . "#98FB98")
-    ("PaleTurquoise" . "#AFEEEE")
-    ("PaleVioletRed" . "#D87093")
-    ("PapayaWhip" . "#FFEFD5")
-    ("PeachPuff" . "#FFDAB9")
-    ("Peru" . "#CD853F")
-    ("Pink" . "#FFC0CB")
-    ("Plum" . "#DDA0DD")
-    ("PowderBlue" . "#B0E0E6")
-    ("Purple" . "#800080")
-    ("Red" . "#FF0000")
-    ("RosyBrown" . "#BC8F8F")
-    ("RoyalBlue" . "#4169E1")
-    ("SaddleBrown" . "#8B4513")
-    ("Salmon" . "#FA8072")
-    ("SandyBrown" . "#F4A460")
-    ("SeaGreen" . "#2E8B57")
-    ("SeaShell" . "#FFF5EE")
-    ("Sienna" . "#A0522D")
-    ("Silver" . "#C0C0C0")
-    ("SkyBlue" . "#87CEEB")
-    ("SlateBlue" . "#6A5ACD")
-    ("SlateGray" . "#708090")
-    ("SlateGrey" . "#708090")
-    ("Snow" . "#FFFAFA")
-    ("SpringGreen" . "#00FF7F")
-    ("SteelBlue" . "#4682B4")
-    ("Tan" . "#D2B48C")
-    ("Teal" . "#008080")
-    ("Thistle" . "#D8BFD8")
-    ("Tomato" . "#FF6347")
-    ("Turquoise" . "#40E0D0")
-    ("Violet" . "#EE82EE")
-    ("Wheat" . "#F5DEB3")
-    ("White" . "#FFFFFF")
-    ("WhiteSmoke" . "#F5F5F5")
-    ("Yellow" . "#FFFF00")
-    ("YellowGreen" . "#9ACD32"))
+  '(("aliceblue" . "#f0f8ff")
+    ("antiquewhite" . "#faebd7")
+    ("aqua" . "#00ffff")
+    ("aquamarine" . "#7fffd4")
+    ("azure" . "#f0ffff")
+    ("beige" . "#f5f5dc")
+    ("bisque" . "#ffe4c4")
+    ("black" . "#000000")
+    ("blanchedalmond" . "#ffebcd")
+    ("blue" . "#0000ff")
+    ("blueviolet" . "#8a2be2")
+    ("brown" . "#a52a2a")
+    ("burlywood" . "#deb887")
+    ("cadetblue" . "#5f9ea0")
+    ("chartreuse" . "#7fff00")
+    ("chocolate" . "#d2691e")
+    ("coral" . "#ff7f50")
+    ("cornflowerblue" . "#6495ed")
+    ("cornsilk" . "#fff8dc")
+    ("cyan" . "#00ffff")
+    ("darkblue" . "#00008b")
+    ("darkcyan" . "#008b8b")
+    ("darkgoldenrod" . "#b8860b")
+    ("darkgray" . "#a9a9a9")
+    ("darkgrey" . "#a9a9a9")
+    ("darkgreen" . "#006400")
+    ("darkkhaki" . "#bdb76b")
+    ("darkmagenta" . "#8b008b")
+    ("darkolivegreen" . "#556b2f")
+    ("darkorange" . "#ff8c00")
+    ("darkorchid" . "#9932cc")
+    ("darkred" . "#8b0000")
+    ("darksalmon" . "#e9967a")
+    ("darkseagreen" . "#8fbc8f")
+    ("darkslateblue" . "#483d8b")
+    ("darkslategray" . "#2f4f4f")
+    ("darkslategrey" . "#2f4f4f")
+    ("darkturquoise" . "#00ced1")
+    ("darkviolet" . "#9400d3")
+    ("deeppink" . "#ff1493")
+    ("deepskyblue" . "#00bfff")
+    ("dimgray" . "#696969")
+    ("dimgrey" . "#696969")
+    ("dodgerblue" . "#1e90ff")
+    ("firebrick" . "#b22222")
+    ("floralwhite" . "#fffaf0")
+    ("forestgreen" . "#228b22")
+    ("fuchsia" . "#ff00ff")
+    ("gainsboro" . "#dcdcdc")
+    ("ghostwhite" . "#f8f8ff")
+    ("gold" . "#ffd700")
+    ("goldenrod" . "#daa520")
+    ("gray" . "#808080")
+    ("grey" . "#808080")
+    ("green" . "#008000")
+    ("greenyellow" . "#adff2f")
+    ("honeydew" . "#f0fff0")
+    ("hotpink" . "#ff69b4")
+    ("indianred" . "#cd5c5c")
+    ("indigo" . "#4b0082")
+    ("ivory" . "#fffff0")
+    ("khaki" . "#f0e68c")
+    ("lavender" . "#e6e6fa")
+    ("lavenderblush" . "#fff0f5")
+    ("lawngreen" . "#7cfc00")
+    ("lemonchiffon" . "#fffacd")
+    ("lightblue" . "#add8e6")
+    ("lightcoral" . "#f08080")
+    ("lightcyan" . "#e0ffff")
+    ("lightgoldenrodyellow" . "#fafad2")
+    ("lightgray" . "#d3d3d3")
+    ("lightgrey" . "#d3d3d3")
+    ("lightgreen" . "#90ee90")
+    ("lightpink" . "#ffb6c1")
+    ("lightsalmon" . "#ffa07a")
+    ("lightseagreen" . "#20b2aa")
+    ("lightskyblue" . "#87cefa")
+    ("lightslategray" . "#778899")
+    ("lightslategrey" . "#778899")
+    ("lightsteelblue" . "#b0c4de")
+    ("lightyellow" . "#ffffe0")
+    ("lime" . "#00ff00")
+    ("limegreen" . "#32cd32")
+    ("linen" . "#faf0e6")
+    ("magenta" . "#ff00ff")
+    ("maroon" . "#800000")
+    ("mediumaquamarine" . "#66cdaa")
+    ("mediumblue" . "#0000cd")
+    ("mediumorchid" . "#ba55d3")
+    ("mediumpurple" . "#9370d8")
+    ("mediumseagreen" . "#3cb371")
+    ("mediumslateblue" . "#7b68ee")
+    ("mediumspringgreen" . "#00fa9a")
+    ("mediumturquoise" . "#48d1cc")
+    ("mediumvioletred" . "#c71585")
+    ("midnightblue" . "#191970")
+    ("mintcream" . "#f5fffa")
+    ("mistyrose" . "#ffe4e1")
+    ("moccasin" . "#ffe4b5")
+    ("navajowhite" . "#ffdead")
+    ("navy" . "#000080")
+    ("oldlace" . "#fdf5e6")
+    ("olive" . "#808000")
+    ("olivedrab" . "#6b8e23")
+    ("orange" . "#ffa500")
+    ("orangered" . "#ff4500")
+    ("orchid" . "#da70d6")
+    ("palegoldenrod" . "#eee8aa")
+    ("palegreen" . "#98fb98")
+    ("paleturquoise" . "#afeeee")
+    ("palevioletred" . "#d87093")
+    ("papayawhip" . "#ffefd5")
+    ("peachpuff" . "#ffdab9")
+    ("peru" . "#cd853f")
+    ("pink" . "#ffc0cb")
+    ("plum" . "#dda0dd")
+    ("powderblue" . "#b0e0e6")
+    ("purple" . "#800080")
+    ("red" . "#ff0000")
+    ("rosybrown" . "#bc8f8f")
+    ("royalblue" . "#4169e1")
+    ("saddlebrown" . "#8b4513")
+    ("salmon" . "#fa8072")
+    ("sandybrown" . "#f4a460")
+    ("seagreen" . "#2e8b57")
+    ("seashell" . "#fff5ee")
+    ("sienna" . "#a0522d")
+    ("silver" . "#c0c0c0")
+    ("skyblue" . "#87ceeb")
+    ("slateblue" . "#6a5acd")
+    ("slategray" . "#708090")
+    ("slategrey" . "#708090")
+    ("snow" . "#fffafa")
+    ("springgreen" . "#00ff7f")
+    ("steelblue" . "#4682b4")
+    ("tan" . "#d2b48c")
+    ("teal" . "#008080")
+    ("thistle" . "#d8bfd8")
+    ("tomato" . "#ff6347")
+    ("turquoise" . "#40e0d0")
+    ("violet" . "#ee82ee")
+    ("wheat" . "#f5deb3")
+    ("white" . "#ffffff")
+    ("whitesmoke" . "#f5f5f5")
+    ("yellow" . "#ffff00")
+    ("yellowgreen" . "#9acd32")
+    ("lightsalmon" . "#ffa07a")
+    ("darksalmon" . "#e9967a")
+    ("lightcoral" . "#f08080")
+    ("indianred" . "#cd5c5c")
+    ("crimson" . "#dc143c")
+    ("darkred" . "#8b0000")
+    ("orangered" . "#ff4500")
+    ("darkorange" . "#ff8c00")
+    ("lightyellow" . "#ffffe0")
+    ("lemonchiffon" . "#fffacd")
+    ("lightgoldenrodyellow" . "#fafad2")
+    ("papayawhip" . "#ffefd5")
+    ("peachpuff" . "#ffdab9")
+    ("palegoldenrod" . "#eee8aa")
+    ("darkkhaki" . "#bdb76b")
+    ("lawngreen" . "#7cfc00")
+    ("limegreen" . "#32cd32")
+    ("lime" . "#00ff00")
+    ("forestgreen" . "#228b22")
+    ("darkgreen" . "#006400")
+    ("greenyellow" . "#adff2f")
+    ("yellowgreen" . "#9acd32")
+    ("springgreen" . "#00ff7f")
+    ("mediumspringgreen" . "#00fa9a")
+    ("lightgreen" . "#90ee90")
+    ("palegreen" . "#98fb98")
+    ("darkseagreen" . "#8fbc8f")
+    ("mediumseagreen" . "#3cb371")
+    ("seagreen" . "#2e8b57")
+    ("olive" . "#808000")
+    ("darkolivegreen" . "#556b2f")
+    ("olivedrab" . "#6b8e23")
+    ("lightcyan" . "#e0ffff")
+    ("aqua" . "#00ffff")
+    ("mediumaquamarine" . "#66cdaa")
+    ("paleturquoise" . "#afeeee")
+    ("mediumturquoise" . "#48d1cc")
+    ("darkturquoise" . "#00ced1")
+    ("lightseagreen" . "#20b2aa")
+    ("cadetblue" . "#5f9ea0")
+    ("darkcyan" . "#008b8b")
+    ("teal" . "#008080")
+    ("powderblue" . "#b0e0e6")
+    ("lightblue" . "#add8e6")
+    ("lightskyblue" . "#87cefa")
+    ("skyblue" . "#87ceeb")
+    ("deepskyblue" . "#00bfff")
+    ("lightsteelblue" . "#b0c4de")
+    ("dodgerblue" . "#1e90ff")
+    ("cornflowerblue" . "#6495ed")
+    ("steelblue" . "#4682b4")
+    ("royalblue" . "#4169e1")
+    ("mediumblue" . "#0000cd")
+    ("darkblue" . "#00008b")
+    ("midnightblue" . "#191970")
+    ("mediumslateblue" . "#7b68ee")
+    ("slateblue" . "#6a5acd")
+    ("darkslateblue" . "#483d8b")
+    ("fuchsia" . "#ff00ff")
+    ("mediumorchid" . "#ba55d3")
+    ("rebeccapurple" . "#663399")
+    ("mediumpurple" . "#9370db")
+    ("blueviolet" . "#8a2be2")
+    ("darkviolet" . "#9400d3")
+    ("darkorchid" . "#9932cc")
+    ("darkmagenta" . "#8b008b")
+    ("indigo" . "#4b0082")
+    ("lightpink" . "#ffb6c1")
+    ("hotpink" . "#ff69b4")
+    ("deeppink" . "#ff1493")
+    ("palevioletred" . "#db7093")
+    ("mediumvioletred" . "#c71585")
+    ("mintcream" . "#f5fffa")
+    ("aliceblue" . "#f0f8ff")
+    ("ghostwhite" . "#f8f8ff")
+    ("whitesmoke" . "#f5f5f5")
+    ("oldlace" . "#fdf5e6")
+    ("floralwhite" . "#fffaf0")
+    ("antiquewhite" . "#faebd7")
+    ("lavenderblush" . "#fff0f5")
+    ("mistyrose" . "#ffe4e1")
+    ("lightgray" . "#d3d3d3")
+    ("lightgrey" . "#d3d3d3")
+    ("silver" . "#c0c0c0")
+    ("darkgray" . "#a9a9a9")
+    ("darkgrey" . "#a9a9a9")
+    ("dimgray" . "#696969")
+    ("dimgrey" . "#696969")
+    ("lightslategray" . "#778899")
+    ("lightslategrey" . "#778899")
+    ("slategray" . "#708090")
+    ("slategrey" . "#708090")
+    ("darkslategray" . "#2f4f4f")
+    ("darkslategrey" . "#2f4f4f")
+    ("blanchedalmond" . "#ffebcd")
+    ("navajowhite" . "#ffdead")
+    ("rosybrown" . "#bc8f8f")
+    ("sandybrown" . "#f4a460")
+    ("saddlebrown" . "#8b4513"))
   "Alist of HTML colors.
 Each entry should have the form (COLOR-NAME . HEXADECIMAL-COLOR)."
   :type 'alist)
 
 (defcustom colorful-extra-color-keyword-functions
-  '((emacs-lisp-mode . colorful-add-color-names)
-    ((html-mode css-mode)
-     . (colorful-add-rgb-colors colorful-add-hsl-colors colorful-add-color-names))
-    (latex-mode . colorful-add-latex-colors)
-    colorful-add-hex-colors)
+  '(colorful-add-hex-colors
+    (emacs-lisp-mode . colorful-add-color-names)
+    ((html-mode css-mode) .
+     (colorful-add-css-variables-colors
+      colorful-add-rgb-colors
+      colorful-add-hsl-colors
+      colorful-add-color-names))
+    (latex-mode . colorful-add-latex-colors))
   "List of functions to add extra color keywords to `colorful-color-keywords'.
 It can be a cons cell specifying the mode (or a list of modes)
 e.g:
@@ -232,8 +333,9 @@ Or a simple list of functions for executing wherever colorful is active:
 
 Available functions are:
  - `colorful-add-hex-colors'
- - `colorful-add-color-names'.
- - `colorful-add-rgb-colors'.
+ - `colorful-add-color-names'
+ - `colorful-add-css-variables-colors'
+ - `colorful-add-rgb-colors'
  - `colorful-add-hsl-colors'
  - `colorful-add-latex-colors'"
   :type '(repeat
@@ -262,16 +364,15 @@ Only relevant if `colorful-use-prefix' is non-nil."
   :type '(choice (const :tag "Left" left)
                  (const :tag "Right" right)))
 
-(defcustom colorful-exclude-colors '("#def")
+(defcustom colorful-exclude-colors '("#define")
   "List of keyword to don't highlight."
   :type '(repeat string))
 
-(defcustom colorful-short-hex-conversions 2
-  "If set to 2, hex values converted by colorful should be as short as possible.
-Setting this to 2 will make hex values follow a 24-bit specification
-and can make them inaccurate."
-  :type '(choice (const :tag "Short hexadecimals (24-bits)" 2)
-                 (const :tag "Large hexadecimals" nil)))
+(defcustom colorful-short-hex-conversions t
+  "If non-nil, hex values converted by colorful should be as short as possible.
+Setting this to non-nil will make hex values follow a 24-bit
+specification (#RRGGBB[AA]) and can make them inaccurate."
+  :type 'boolean)
 
 (defcustom colorful-only-strings nil
   "If non-nil colorful will only highlight colors inside strings.
@@ -295,57 +396,43 @@ mode is derived from `prog-mode'."
 If PERCENTAGE is absolute, return PERCENTAGE.
 This will convert \"80 %\" to 204, \"100 %\" to 255 but \"123\" to \"123\".
 If PERCENTAGE is above 100%, it's converted to 100."
-  (let ((percentage (string-remove-suffix ")" percentage)))
-    (if (seq-contains-p percentage ?%)
-        (/ (* (min (string-to-number percentage) 100) 255) 100)
-      (string-to-number percentage))))
+  (if (seq-contains-p percentage ?%)
+      (/ (* (min (string-to-number percentage) 100) 255) 100)
+    (string-to-number percentage)))
 
-(defun colorful--latex-rgb-to-hex (rgb)
-  "Return LaTeX RGB as hexadecimal format.  RGB must be a string."
-  (and (string-match
-        (rx (seq "{" (or "rgb" "RGB") "}{" (zero-or-more " ")
-                 (group (one-or-more (any digit "."))) (zero-or-more " ") "," (zero-or-more " ")
-                 (group (one-or-more (any digit "."))) (zero-or-more " ") "," (zero-or-more " ")
-                 (group (one-or-more (any digit "."))) (zero-or-more " ") "}"))
-        rgb)
-       (color-rgb-to-hex
-        (string-to-number (match-string 1 rgb))
-        (string-to-number (match-string 2 rgb))
-        (string-to-number (match-string 3 rgb)))))
+(defun colorful--shorten-hex (hex &optional alpha)
+  "Convert a 4-digit hexadecimal color representation to a 2-digit representation.
+HEX should be a string in the format `#RRGGBB'.
+If ALPHA is non-nil then use `#RRGGBBAA' format"
+  (if colorful-short-hex-conversions
+      (let ((r (substring hex 1 5))
+            (g (substring hex 5 9))
+            (b (substring hex 9 13)))
+        (if alpha
+            (format "#%02x%02x%02x%02x"
+                    (/ (string-to-number r 16) 256)
+                    (/ (string-to-number g 16) 256)
+                    (/ (string-to-number b 16) 256)
+                    (round (* alpha 255)))
+          (format "#%02x%02x%02x"
+                  (/ (string-to-number r 16) 256)
+                  (/ (string-to-number g 16) 256)
+                  (/ (string-to-number b 16) 256))))
+    hex))
 
-(defun colorful--latex-gray-to-hex (gray)
-  "Return LaTex GRAY as hexadecimal format.  GRAY must be a string."
-  (let ((gray (string-to-number (string-remove-prefix "{gray}{" gray))))
-    (apply #'color-rgb-to-hex (color-hsl-to-rgb 0 1 gray))))
+(defun colorful--rgb-to-hex (r g b)
+  "Return CSS R G B as hexadecimal format."
+  (if-let* ((r (/ (string-to-number r) 255.0))
+            (g (/ (string-to-number g) 255.0))
+            (b (/ (string-to-number b) 255.0)))
+      (color-rgb-to-hex r g b)))
 
-(defun colorful--rgb-to-hex (rgb &optional digit)
-  "Return CSS RGB as hexadecimal format.
-DIGIT specifies which how much digits per component must have return value.
-RGB must be a string."
-  (if-let* ((rgb (string-split
-                  (if (string-prefix-p "rgb(" rgb)
-                      (string-remove-prefix "rgb(" rgb)
-                    (string-remove-prefix "rgba(" rgb))
-                  (rx (one-or-more (any "," " " "\t" "\n" "\r" "\v" "\f")))))
-            (r (and (nth 0 rgb) (/ (colorful--percentage-to-absolute (nth 0 rgb)) 255.0)))
-            (g (and (nth 1 rgb) (/ (colorful--percentage-to-absolute (nth 1 rgb)) 255.0)))
-            (b (and (nth 2 rgb) (/ (colorful--percentage-to-absolute (nth 2 rgb)) 255.0))))
-      (color-rgb-to-hex r g b digit)))
-
-(defun colorful--hsl-to-hex (hsl &optional digit)
-  "Return HSL RGB as hexadecimal format.
-DIGIT specifies which how much digits per component must have return value.
-HSL must be a string."
-  (if-let* ((hsl (string-split
-                  (if (string-prefix-p "hsl(" hsl)
-                      (string-remove-prefix "hsl(" hsl)
-                    (string-remove-prefix "hsla(" hsl))
-                  (rx (one-or-more (any "," " " "\t" "\n""\r" "\v" "\f")))))
-            (h (and (nth 0 hsl) (/ (string-to-number (nth 0 hsl)) 360.0)))
-            (s (and (nth 1 hsl) (/ (string-to-number (nth 1 hsl)) 100.0)))
-            (l (and (nth 2 hsl) (/ (string-to-number (nth 2 hsl)) 100.0)))
-            (rgb (append (color-hsl-to-rgb h s l) `(,digit))))
-      (apply #'color-rgb-to-hex rgb)))
+(defun colorful--hsl-to-hex (h s l)
+  "Return CSS H S L as hexadecimal format."
+  (if-let* ((h (/ (string-to-number h) 360.0))
+            (s (/ (string-to-number s) 100.0))
+            (l (/ (string-to-number l) 100.0)))
+      (apply #'color-rgb-to-hex (color-hsl-to-rgb h s l))))
 
 (defun colorful--hex-to-name (hex)
   "Return HEX as Emacs color name."
@@ -354,20 +441,19 @@ HSL must be a string."
       (if (equal (cdr color-list) (color-values hex))
           (throw 'name (car color-list))))))
 
-(defun colorful--name-to-hex (name &optional digit)
-  "Return color NAME as hex color format.
-DIGIT specifies which how much digits per component must have return value."
-  (if-let* ((color-name (color-name-to-rgb name))
-            (color (append color-name (list digit))))
-      (apply #'color-rgb-to-hex color)
-    (cdr (assoc-string name colorful-html-colors-alist))))
+(defun colorful--name-to-hex (name)
+  "Return color NAME as hex color format."
+  (if-let* ((color-name (color-name-to-rgb name)))
+      (apply #'color-rgb-to-hex color-name)
+    (cdr (assoc-string name colorful-html-colors-alist t))))
 
 ;;;;; Overlay functions
 
-(defun colorful--find-overlay ()
-  "Return non-nil if colorful overlay is found at point."
+(defun colorful--find-overlay (&optional beg)
+  "Return colorful overlay if found at current point.
+BEG is the position to check for the overlay."
   (catch 'val
-    (dolist (ov (overlays-at (point)))
+    (dolist (ov (overlays-at (or beg (point))))
       (if (overlay-get ov 'colorful--overlay)
           (throw 'val ov)))))
 
@@ -380,42 +466,73 @@ DIGIT specifies which how much digits per component must have return value."
 
 ;;;; User Interactive Functions
 
-(defun colorful-convert-and-change-color ()
-  "Convert color to a valid format and replace color at current cursor position."
-  (interactive "*")
-  (if-let* ((colorful-ov (colorful--find-overlay)) ; Find colorful overlay tag at point/cursor.
-            ;; Start prompt for color change
-            (result (colorful--change-color colorful-ov "Change '%s' to: "))
-            (range (cdr result)) ; Get the positions where it should be replaced.
-            (new-color (car result)))
-      ;; Replace Color at point.
-      (save-excursion
-        (apply #'delete-region range)
-        (insert new-color))
-    ;; Otherwise throw error.
-    (user-error "No color found")))
+(defun colorful-convert-and-change-color (&optional beg end)
+  "Convert color to other format and replace color at point or active mark.
+If mark is active, convert colors in mark."
+  (interactive "*r")
+  (if (and beg end)
+      (let* ((choices '(("Hexadecimal color format" . hex)
+                        ("Emacs color name" . name)))
+             ;; Start prompt.
+             (choice (alist-get
+                      (completing-read "Change colors in region: " choices nil t nil nil)
+                      choices nil nil 'equal))
+             (ignored-colors 0)
+             (changed-colors 0))
+
+        (dolist (ov (overlays-in beg end))
+          ;; Ensure we are in colorful--overlay
+          (when (overlay-get ov 'colorful--overlay)
+            (if-let* ((result (colorful--converter ov choice))
+                      ((consp result))
+                      (range (cdr result)) ; Get the positions where it should be replaced.
+                      (new-color (car result)))
+                (save-excursion
+                  (goto-char (car range))
+                  (apply #'delete-region range)
+                  (insert new-color)
+                  (setq changed-colors (1+ changed-colors)))
+              (setq ignored-colors (1+ ignored-colors)))))
+
+        (if (and (= changed-colors 0)
+                 (= ignored-colors 0))
+            (message "No color found in region.")
+          (message (concat (propertize "Changed colors: %d" 'face 'success)
+                           ", "
+                           (propertize "Ignored colors: %d" 'face 'error))
+                   changed-colors ignored-colors)))
+
+    (if-let* ((colorful-ov (colorful--find-overlay)) ; Find colorful overlay tag at point/cursor.
+              ;; Start prompt for color change and get new color.
+              (result (colorful--prompt-converter colorful-ov "Change '%s' to: "))
+              (new-color (car result))
+              ;; Get the positions where it should be replaced.
+              (range (cdr result)))
+        ;; Replace color at point.
+        (save-excursion
+          (apply #'delete-region range)
+          (insert new-color))
+      ;; Otherwise throw error.
+      (user-error "No color found"))))
 
 (defun colorful-convert-and-copy-color ()
-  "Convert color to a valid format and copy it at current cursor position."
+  "Convert color to an other and copy it at point."
   (interactive)
   (if-let* ((colorful-ov (colorful--find-overlay)) ; Find colorful overlay tag at point/cursor.
-            ;; Start prompt for color change, just get the color to replace from the list.
-            (result (car (colorful--change-color colorful-ov "Copy '%s' as: ")))
+            ;; Start prompt for color change and get new color.
+            (result (car (colorful--prompt-converter colorful-ov "Copy '%s' as: ")))
             ;; Propertize text for message.
-            (color (propertize result 'face
-                               `(:background
-                                 ,result
-                                 :foreground
-                                 ,(color-name-to-rgb result))))
-            (msg-text (format "`%s' copied." color)))
+            (color (propertize result 'face `(:foreground
+                                              ,(color-name-to-rgb result)
+                                              :background ,result))))
       ;; Copy color and notify to user it's done
       (progn (kill-new color)
-             (message msg-text))
+             (message "`%s' copied." color))
     ;; Otherwise throw error.
     (user-error "No color found")))
 
 (defun colorful-change-or-copy-color ()
-  "Change or copy color to a converted format at current cursor position."
+  "Change or copy color to a converted format at point."
   (interactive)
   (let* ((prompt "Please type an option: ")
          (choices '(("Convert and change color." . convert)
@@ -429,19 +546,10 @@ DIGIT specifies which how much digits per component must have return value."
 
 ;;;;; Coloring functions
 
-(defun colorful--change-color (ov prompt &optional color beg end)
-  "Return COLOR as other color format.
-Find color to change from colorful overlay OV at point and return a list
-which contain the color to replace, the beginning and end positions where
-should be inserted.
-
-PROMPT must be a string with 1 format control (generally a string argument).
-
-COLOR, BEG, and END are only used for recursive purposes, not intended to
-be used externally."
+(defun colorful--prompt-converter (ov prompt &optional beg end color)
+  "PROMPT user to convert color to other format."
   (let* ((beg (or beg (overlay-start ov))) ; Find positions.
          (end (or end (overlay-end ov)))
-         (kind (overlay-get ov 'colorful--overlay-kind))
          ;; If not COLOR string then get it from buffer.
          (color (or color (buffer-substring-no-properties beg end)))
          (prompt (format prompt color))
@@ -450,56 +558,62 @@ be used externally."
          ;; Get choice.
          (choice (alist-get
                   (completing-read prompt choices nil t nil nil)
-                  choices nil nil 'equal)))
+                  choices nil nil 'equal))
+         (converted-color (colorful--converter ov choice)))
+
+    (unless converted-color
+      (user-error "No color available"))
+
+    (if (stringp converted-color)
+        (colorful--prompt-converter ov converted-color beg end color)
+
+      converted-color)))
+
+(defun colorful--converter (ov choice)
+  "Convert color from OV to other format.
+Return a list which contains the new color and the positions to replace,
+otherwise return a formatted string for message error.
+
+CHOICE is used for get kind of color."
+
+  (let* ((beg (overlay-start ov)) ; Find positions.
+         (end (overlay-end ov))
+         (kind (overlay-get ov 'colorful--overlay-kind))
+         (color-value (overlay-get ov 'colorful--overlay-color))
+         (alpha-value (overlay-get ov 'colorful--overlay-alpha)))
 
     (pcase choice ; Check and convert color to any of the options:
       ('hex ; COLOR to HEX
-       (if (not (eq kind 'hex)) ; Ensure is not already a hex.
-           (pcase kind
-             ;; Is COLOR a Name?
-             ('color-name
-              (list (colorful--name-to-hex
-                     color colorful-short-hex-conversions)
-                    beg end))
-             ;; Is COLOR a CSS rgb?
-             ('css-rgb
-              (list (colorful--rgb-to-hex
-                     color colorful-short-hex-conversions)
-                    beg end))
-             ;; Is COLOR a HSL?
-             ('css-hsl
-              (list (colorful--hsl-to-hex
-                     color colorful-short-hex-conversions)
-                    beg end)))
-         ;; Else
-         (colorful--change-color ov "%s is already a Hex color. Try again: "
-                                 color beg end)))
+       (pcase kind
+         ('hex
+          "%s is already a Hex color. Try again: ")
+         ;; Is COLOR a Name?
+         ('color-name
+          (list (colorful--shorten-hex color-value) beg end))
+         ;; Is COLOR a CSS rgb?
+         ('css-rgb
+          (list (colorful--shorten-hex color-value alpha-value) beg end))
+         ;; Is COLOR a HSL?
+         ('css-hsl
+          (list (colorful--shorten-hex color-value alpha-value) beg end))))
       ('name ; COLOR to NAME
-       (if (not (assoc-string color color-name-rgb-alist))
-           (pcase kind
-             ;; Is COLOR a Hex?
-             ('hex
-              (if-let* ((rep (colorful--hex-to-name (string-replace "0x" "#" color))))
-                  (list rep beg end)
-                (user-error "No color name available")
-                nil))
-             ;; Is COLOR a CSS rgb?
-             ('css-rgb
-              (if-let* ((rep (colorful--hex-to-name (colorful--rgb-to-hex
-                                                     color colorful-short-hex-conversions))))
-                  (list rep beg end)
-                (user-error "No color name available")))
-             ;; Is COLOR a HSL?
-             ('css-hsl
-              (if-let* ((rep (colorful--hex-to-name (colorful--hsl-to-hex
-                                                     color colorful-short-hex-conversions))))
-                  (list rep beg end)
-                (user-error "No color name available"))))
+       (pcase kind
+         ('color-name
+          "%s is already a color name. Try again: ")
+         ;; Is COLOR a Hex?
+         ('hex
+          (if-let* ((rep (colorful--hex-to-name color-value)))
+              (list rep beg end)))
+         ;; Is COLOR a CSS rgb?
+         ('css-rgb
+          (if-let* ((rep (colorful--hex-to-name color-value)))
+              (list rep beg end)))
+         ;; Is COLOR a HSL?
+         ('css-hsl
+          (if-let* ((rep (colorful--hex-to-name color-value)))
+              (list rep beg end))))))))
 
-         (colorful--change-color
-          ov "%s is already a color name. Try again: " color beg end))))))
-
-(defun colorful--colorize-match (color beg end kind)
+(defun colorful--colorize-match (color beg end kind &optional alpha-value)
   "Overlay match with a face from BEG to END.
 The background uses COLOR color value.  The foreground is obtained
 from `readable-foreground-color'."
@@ -513,12 +627,23 @@ from `readable-foreground-color'."
 
     ;; Define colorful overlay tag
     (overlay-put ov 'colorful--overlay t)
-    ;; Set which kind of
+    ;; Set kind tag
     (overlay-put ov 'colorful--overlay-kind kind)
+    ;; Set color value as tag
+    (overlay-put ov 'colorful--overlay-color
+                 (if (eq 'color-name kind)
+                     (colorful--name-to-hex color)
+                   color))
+
+    ;; Set alpha value (if exists) as tag
+    (when alpha-value
+      (if (seq-contains-p alpha-value ?%)
+          (setq alpha-value (/ (string-to-number alpha-value) 100.0))
+        (setq alpha-value (string-to-number alpha-value)))
+      (overlay-put ov 'colorful--overlay-alpha alpha-value))
 
     ;; Enable auto deletion.
     (overlay-put ov 'evaporate t)
-
 
     (cond
      (colorful-use-prefix
@@ -545,69 +670,97 @@ from `readable-foreground-color'."
                      (:background ,color)
                      (:inherit colorful-base)))))))
 
-(defun colorful--colorize (&optional kind match)
+(defun colorful--colorize (kind &optional match)
   "Helper function for Colorize each KIND of MATCH with itself."
+
   (when-let* ((match (or match 0))
-              (string (match-string-no-properties match))
-              ((and (not (member string colorful-exclude-colors)) ; Check if match isn't blacklisted
-                    ;; Check for colorful-only-strings
+              (color (match-string-no-properties match))
+              ;; Check if match isn't blacklisted and isn't in a comment ...
+              ((and (not (member color colorful-exclude-colors))
+                    (not (nth 4 (syntax-ppss)))
+                    ;; ... or is in a string ...
                     (or (and colorful-only-strings (nth 3 (syntax-ppss)))
+                        ;; ... or current major-mode is not prog-mode derived.
                         (and (eq colorful-only-strings 'only-prog)
                              ;; CSS is prog-mode derived so ignore only-strings
-                             ;; in CSS derived modes
+                             ;; in CSS derived modes.
                              (or (derived-mode-p 'css-mode)
                                  (not (derived-mode-p 'prog-mode))))
-                        (not colorful-only-strings))))
-              (beg (match-beginning match))
-              (end (match-end match)))
+                        (not colorful-only-strings)))))
 
-    (pcase kind
-      ('color-name
-       (setq string
-             (or
-              ;; Check if it's an html color name
-              (cdr (assoc-string string colorful-html-colors-alist))
-              ;; Otherwise it's then an emacs color name
-              string)))
+    (let* ((match-1 (match-string-no-properties 1))
+           (match-2 (match-string-no-properties 2))
+           (match-3 (match-string-no-properties 3))
+           (match-alpha (match-string-no-properties 4))
+           (beg (match-beginning match))
+           (end (match-end match)))
+      (pcase kind
+        ('color-name
+         (setq color (colorful--name-to-hex color)))
 
-      ('css-rgb
-       (setq string (colorful--rgb-to-hex string)))
+        ('css-rgb
+         (setq color (colorful--rgb-to-hex match-1 match-2 match-3))) ; r g b
 
-      ('css-hsl
-       (setq string (colorful--hsl-to-hex string)))
+        ((and 'css-hsl
+              (guard (<= (string-to-number match-1) 360))) ; Ensure Hue is not greater than 360.
+         (setq color (colorful--hsl-to-hex match-1 match-2 match-3))) ; h s l
 
-      ('latex-rgb
-       (setq string
-             (if (string-prefix-p "{RGB}{" string)
-                 (colorful--rgb-to-hex (string-remove-prefix "{RGB}{" string))
-               (colorful--latex-rgb-to-hex string))))
+        ('latex-rgb
+         (setq color
+               (if (string-prefix-p "{R" color)  ; Check if it's RGB (shorted as "{R")
+                   (colorful--rgb-to-hex match-1 match-2 match-3) ; r g b
+                 (color-rgb-to-hex (string-to-number match-1) ; r
+                                   (string-to-number match-2) ; g
+                                   (string-to-number match-3)))))  ; b
 
-      ('latex-HTML
-       (setq string
-             (concat "#" (string-remove-suffix
-                          "}" (string-remove-prefix "{HTML}{" string)))))
+        ('latex-HTML
+         (setq color (concat "#" (match-string-no-properties 1))))
 
-      ('latex-gray
-       (setq string (colorful--latex-gray-to-hex string)))
+        ('latex-gray
+         (setq color (apply #'color-rgb-to-hex
+                            (color-hsl-to-rgb 0 0 (string-to-number match-1)))))
 
-      ('hex
-       (setq string (cond
-                     ;; Check if hex is #RRGGBBAA or #RGBA and then
-                     ;; ignore their Alpha hex values.
-                     ((and (length= string 9)
-                           (not (string-prefix-p "0x" string))) ; For #RRGGBBAA
-                      (substring string 0 7))
-                     ((and (length= string 5)
-                           (not (string-prefix-p "0x" string))) ; For #RGBA
-                      (substring string 0 4))
-                     ;; Otherwise, just pass it.
-                     (t (string-replace "0x" "#" string))))))
+        ('hex
+         (setq color (cond
+                      ;; Check if hex is #RRGGBBAA or #RGBA and then
+                      ;; ignore their Alpha hex values.
+                      ((and (length= color 9)
+                            (not (string-prefix-p "0x" color))) ; For #RRGGBBAA
+                       (substring color 0 7))
+                      ((and (length= color 5)
+                            (not (string-prefix-p "0x" color))) ; For #RGBA
+                       (substring color 0 4))
+                      ;; Otherwise, just pass it.
+                      (t (string-replace "0x" "#" color)))))
 
-    ;; Ensure that is a valid color and that string is non-nil
-    (if (and string (color-defined-p string))
-        (colorful--colorize-match string beg end kind))
-    ;; The return value is not ignored, so be mindful what we return.
-    nil))
+        ((and 'css-color-variable
+              (guard (not (string= match-1 "define_color"))))
+         ;; Find whole buffer for last @define-color match-1 found
+         ;; and get its color value.
+         (save-excursion
+           (goto-char (point-max))
+           (when (re-search-backward
+                  (rx (seq "@define_color"
+                           (one-or-more space)
+                           (literal match-1)
+                           (one-or-more space)
+                           (group (opt "#") (one-or-more (any "0-9A-Za-z")))))
+                  nil t)
+             ;; Get color value from colorful overlay.
+             (setq color (ignore-errors ; nil if no overlay found
+                           (overlay-get (colorful--find-overlay
+                                         (match-beginning 1))
+                                        'colorful--overlay-color)))))))
+
+      ;; Ensure that string is a valid color and that string is non-nil
+      (if (and color (color-defined-p color))
+          (colorful--colorize-match color beg end kind match-alpha))))
+
+  ;; The return value is not ignored, so be mindful what we return.
+  nil)
+
+(defvar-local colorful-mode-color-definitions nil
+  "List of color definitions in the current buffer.")
 
 
 ;;;; Extra coloring definitions
@@ -617,11 +770,13 @@ from `readable-foreground-color'."
                (group (or "#" "0x") (repeat 1 14 (any "0-9A-Fa-f")))
                word-boundary))
      (1 (colorful--colorize 'hex 1)))
+
     (,(rx (seq (any "Rr") (any "Gg") (any "Bb") (opt (any "Ii")) ":"
                (repeat 1 4 (any "0-9A-Fa-f")) "/"
                (repeat 1 4 (any "0-9A-Fa-f")) "/"
                (repeat 1 4 (any "0-9A-Fa-f"))))
      (0 (colorful--colorize 'hex)))
+
     (,(rx (seq (or (seq (any "Cc") (any "Ii") (any "Ee")
                         (or (seq (any "Xx") (any "Yy") (any "Zz"))
                             (seq (any "Uu") (any "Vv") (any "Yy"))
@@ -652,7 +807,7 @@ from `readable-foreground-color'."
   "Font-lock keywords to colorize.")
 
 (defun colorful-add-hex-colors ()
-  "Function for add hex colors to `colorful-color-keywords'.
+  "Add hex colors to `colorful-color-keywords'.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-hex-font-lock-keywords)
     (cl-pushnew colors colorful-color-keywords)))
@@ -666,9 +821,21 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   "Font-lock keywords to add color names.")
 
 (defun colorful-add-color-names ()
-  "Function for add Color names to `colorful-color-keywords'.
+  "Add Color names to `colorful-color-keywords'.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
+  ;; HTML/CSS/Emacs color names are case insensitive.
+  (setq-local font-lock-keywords-case-fold-search t)
   (dolist (colors colorful-color-name-font-lock-keywords)
+    (cl-pushnew colors colorful-color-keywords)))
+
+(defvar colorful-css-variables-keywords
+  `((,(rx "@" (group (one-or-more (any "A-Za-z_"))))
+     (1 (colorful--colorize 'css-color-variable)))))
+
+(defun colorful-add-css-variables-colors ()
+  "Add CSS user-defined color variables to `colorful-color-keywords'.
+This is intended to be used with `colorful-extra-color-keyword-functions'."
+  (dolist (colors colorful-css-variables-keywords)
     (cl-pushnew colors colorful-color-keywords)))
 
 (defvar colorful-rgb-font-lock-keywords
@@ -685,40 +852,40 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                       (opt "." (any digit)
                            (zero-or-more " ") "%"))
                (opt
-                (zero-or-more " ") (opt ",") (zero-or-more " ")
-                (zero-or-more (any digit)) (opt nonl)
-                (one-or-more (any digit))
-                (zero-or-more " ")
-                (opt "%"))
+                (zero-or-more " ") (opt (or "/" ",")) (zero-or-more " ")
+                (group (or (seq (zero-or-one (any digit)) (opt ".")
+                                (any digit))
+                           (any digit))
+                       (opt (or "%" (zero-or-more " ")))))
                (zero-or-more " ") ")"))
      (0 (colorful--colorize 'css-rgb))))
   "Font-lock keywords for add RGB colors.")
 
 (defun colorful-add-rgb-colors ()
-  "Function for add CSS RGB colors to `colorful-color-keywords'.
+  "Add CSS RGB colors to `colorful-color-keywords'.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-rgb-font-lock-keywords)
     (cl-pushnew colors colorful-color-keywords)))
 
 (defvar colorful-hsl-font-lock-keywords
   `((,(rx (seq "hsl" (opt "a") "(" (zero-or-more " ")
-               (group (repeat 1 3 (any digit))) (opt "deg")
+               (group (repeat 1 3 (any digit)) (opt "deg"))
                (zero-or-more " ") (opt ",") (zero-or-more " ")
-               (group (repeat 1 3 (any digit)) "%") (opt "deg")
+               (group (repeat 1 3 (any digit)) (opt "%"))
                (zero-or-more " ") (opt ",") (zero-or-more " ")
-               (group (repeat 1 3 (any digit)) "%") (opt "deg")
+               (group (repeat 1 3 (any digit)) (opt "%"))
                (opt
-                (zero-or-more " ") (opt ",") (zero-or-more " ")
-                (zero-or-more (any digit)) (opt nonl)
-                (one-or-more (any digit))
-                (zero-or-more " ")
-                (opt "%"))
+                (zero-or-more " ") (opt (or "/" ",")) (zero-or-more " ")
+                (group (or (seq (zero-or-one (any digit)) (opt ".")
+                                (any digit))
+                           (any digit))
+                       (opt (or "%" (zero-or-more " ")))))
                (zero-or-more " ") ")"))
      (0 (colorful--colorize 'css-hsl))))
   "Font-lock keywords for add HSL colors.")
 
 (defun colorful-add-hsl-colors ()
-  "Function for add CSS HSL colors.
+  "Add CSS HSL colors.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-hsl-font-lock-keywords)
     (cl-pushnew colors colorful-color-keywords)))
@@ -736,17 +903,18 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   "Font-lock keywords for add LaTex rgb/RGB/HTML/Grey colors.")
 
 (defun colorful-add-latex-colors ()
-  "Function for add LaTex rgb/RGB/HTML/Grey colors.
+  "Add LaTex rgb/RGB/HTML/Grey colors.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-latex-keywords)
     (cl-pushnew colors colorful-color-keywords)))
 
 
 ;;;; Minor mode definitions
+(defvar-local colorful--font-lock-case-old-value nil)
 
 (defun colorful--turn-on ()
   "Helper function for turn on `colorful-mode'."
-  ;; Execute keyword functions before add them to font-lock keywords.
+  ;; Run functions from list for add keywords to `colorful-color-keywords'.
   (dolist (fn colorful-extra-color-keyword-functions)
     (cond
      ((and (listp fn)
@@ -759,12 +927,15 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
      ((functionp fn)
       (funcall fn))))
 
+  (setq-local colorful--font-lock-case-old-value font-lock-keywords-case-fold-search)
   (push '(colorful--delete-overlays) colorful-color-keywords)
   (font-lock-add-keywords nil colorful-color-keywords))
 
 (defun colorful--turn-off ()
   "Helper function for clear colorful overlays."
   (font-lock-remove-keywords nil colorful-color-keywords)
+  (setq-local colorful-color-keywords nil ; Clear list
+              font-lock-keywords-case-fold-search colorful--font-lock-case-old-value)
   (remove-overlays nil nil 'colorful--overlay t))
 
 
