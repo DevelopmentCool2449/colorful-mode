@@ -470,7 +470,7 @@ BEG is the position to check for the overlay."
   "Convert color to other format and replace color at point or active mark.
 If mark is active, convert colors in mark."
   (interactive "*r")
-  (if (and beg end)
+  (if mark-active
       (let* ((choices '(("Hexadecimal color format" . hex)
                         ("Emacs color name" . name)))
              ;; Start prompt.
@@ -670,6 +670,21 @@ from `readable-foreground-color'."
                      (:background ,color)
                      (:inherit colorful-base)))))))
 
+(defmacro colorful--get-css-variable-color (regexp)
+  "Get color value from CSS variable REGEXP.
+REGEXP must have a group that contains the color value."
+  (declare (indent 0))
+  `(save-excursion
+     (goto-char (point-max))
+     (when (re-search-backward ,regexp nil t)
+       ;; Get color value from colorful overlay.
+       ;; if not color value found, use the one from REGEXP 1st group.
+       (setq color (or (ignore-errors
+                         (overlay-get (colorful--find-overlay
+                                       (match-beginning 1))
+                                      'colorful--overlay-color))
+                       (match-string-no-properties 1))))))
+
 (defun colorful--colorize (kind &optional match)
   "Helper function for Colorize each KIND of MATCH with itself."
 
@@ -733,24 +748,22 @@ from `readable-foreground-color'."
                       ;; Otherwise, just pass it.
                       (t (string-replace "0x" "#" color)))))
 
-        ((and 'css-color-variable
-              (guard (not (string= match-1 "define_color"))))
-         ;; Find whole buffer for last @define-color match-1 found
-         ;; and get its color value.
-         (save-excursion
-           (goto-char (point-max))
-           (when (re-search-backward
-                  (rx (seq "@define_color"
-                           (one-or-more space)
-                           (literal match-1)
-                           (one-or-more space)
-                           (group (opt "#") (one-or-more (any "0-9A-Za-z")))))
-                  nil t)
-             ;; Get color value from colorful overlay.
-             (setq color (ignore-errors ; nil if no overlay found
-                           (overlay-get (colorful--find-overlay
-                                         (match-beginning 1))
-                                        'colorful--overlay-color)))))))
+        ('css-color-variable
+         (cond
+          ((and (string= match-1 "@")
+                (not (string= match-2 "define_color")))
+           ;; Find whole buffer for last @define-color match-1 found
+           ;; and get its color value.
+           (colorful--get-css-variable-color
+            (rx (seq "@define_color"
+                     (one-or-more space)
+                     (literal match-2)
+                     (one-or-more space)
+                     (group (opt "#") (one-or-more (any "0-9A-Za-z")))))))
+          ((string= match-1 "var")
+           (colorful--get-css-variable-color
+            (rx (seq (literal match-2) ":" (zero-or-more space)
+                     (group (opt "#") (one-or-more (any "0-9A-Za-z"))))))))))
 
       ;; Ensure that string is a valid color and that string is non-nil
       (if (and color (color-defined-p color))
@@ -829,8 +842,12 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
     (cl-pushnew colors colorful-color-keywords)))
 
 (defvar colorful-css-variables-keywords
-  `((,(rx "@" (group (one-or-more (any "A-Za-z_"))))
-     (1 (colorful--colorize 'css-color-variable)))))
+  `((,(rx (group "@") (group (one-or-more (any "A-Za-z_"))))
+     (0 (colorful--colorize 'css-color-variable)))
+    (,(rx (group "var") "(" (zero-or-more space)
+          (group (one-or-more (any "A-Za-z" "-")))
+          (zero-or-more space) ")")
+     (0 (colorful--colorize 'css-color-variable)))))
 
 (defun colorful-add-css-variables-colors ()
   "Add CSS user-defined color variables to `colorful-color-keywords'.

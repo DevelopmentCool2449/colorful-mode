@@ -31,7 +31,7 @@ in real time and in a user friendly way based/inspired on 🌈[[https://elpa.gnu
   - Color names (Emacs, HTML, CSS).
   - CSS rgb/rgba, hsl/hsla and user-defined colors variables:
     - @define_color
-    - var() (WIP)
+    - var()
   - LaTex colors (gray, rbg, RGB, HTML)
 - Convert current color at point or in region to other formats
   such as hexadecimal or color names *(only available for some colors)*
