@@ -41,16 +41,20 @@ in real time and in a user friendly way based/inspired on 🌈[[https://elpa.gnu
 - Blacklist color keywords from being highlighted.
 
 * Screenshots and animated GIFs 📷
+
+[[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/screenshot1.png]]
+Supports for both GUI/TUI.
+
+[[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/screenshot2.png]]
+Support for custom color string indicator.
+
 [[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/gif1.gif]]
-/With prefix instead highlight/.
 
 [[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/gif2.gif]]
-[[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/gif3.gif]]
-[[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/screenshot1.png]]
-[[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/screenshot2.png]]
+Change color support in real time.
 
-[[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/screenshot3.png]]
-/With a custom prefix (in this example a custom character)/.
+[[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/gif3.gif]]
+Support for color changing at region.
 
 * User Options 🔧
 ** Customizable User options

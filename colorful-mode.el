@@ -435,7 +435,7 @@ If ALPHA is non-nil then use `#RRGGBBAA' format"
       (apply #'color-rgb-to-hex (color-hsl-to-rgb h s l))))
 
 (defun colorful--hex-to-name (hex)
-  "Return HEX as Emacs color name."
+  "Return HEX as color name."
   (catch 'name
     (dolist (color-list color-name-rgb-alist)
       (if (equal (cdr color-list) (color-values hex))
@@ -476,7 +476,7 @@ If region is active, convert colors in mark."
 
   (if (and beg end)
       (let* ((choices '(("Hexadecimal color format" . hex)
-                        ("Emacs color name" . name)))
+                        ("Color name" . name)))
              ;; Start prompt.
              (choice (alist-get
                       (completing-read "Change colors in region: " choices nil t nil nil)
@@ -558,7 +558,7 @@ If region is active, convert colors in mark."
          (color (or color (buffer-substring-no-properties beg end)))
          (prompt (format prompt color))
          (choices '(("Hexadecimal color format" . hex)
-                    ("Emacs color name" . name)))
+                    ("Color name" . name)))
          ;; Get choice.
          (choice (alist-get
                   (completing-read prompt choices nil t nil nil)
