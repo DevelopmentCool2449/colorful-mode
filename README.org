@@ -209,24 +209,6 @@ for you:
                 (save-excursion
                   (font-lock-fontify-region beg end)))))
           nil t)
-
-;; or with use-package syntax:
-
-:hook (post-command
-       . (lambda ()
-           "delete colorful overlay on active mark"
-           (when-let (colorful-mode
-                      (beg (region-beginning))
-                      (end (region-end)))
-             (if (use-region-p)
-                 (dolist (ov (overlays-in beg end))
-                   (when (overlay-get ov 'colorful--overlay)
-                     (remove-overlays (overlay-start ov) (overlay-end ov)
-                                      'colorful--overlay t)))
-               (save-excursion
-                 (font-lock-fontify-region beg end)))))
-       nil t)
-
 #+end_src
 
 * How does it compare to =rainbow-mode= or built-in =css fontify colors=?
