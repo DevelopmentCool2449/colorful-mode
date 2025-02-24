@@ -172,14 +172,60 @@ Once you have it installed you can activate colorful locally in your
 buffer with =M-x colorful-mode=, if want enable it globally without
 using hooks then you can do =M-x global-colorful-mode=
 
-Or if you prefer using =use-package= macro:
-#+begin_src emacs-lisp
+* Configuration ⚙️
 
-  (use-package colorful-mode
-    :ensure t ; Optional
-    :hook (prog-mode text-mode)
-    ;; :config (global-colorful-mode) ; Enable it globally
-    ...)
+Example /(Personal)/ configuration for your =init.el=:
+
+#+begin_src emacs-lisp
+(use-package colorful-mode
+  ;; :diminish
+  ;; :ensure t ; Optional
+  :custom
+  (colorful-use-prefix t)
+  (colorful-only-strings 'only-prog)
+  (css-fontify-colors nil)
+  :config
+  (global-colorful-mode t)
+  (add-to-list 'global-colorful-modes 'helpful-mode))
+#+end_src
+
+** Disable colorful in regions
+
+If you want to disable colorful at region this hack may be useful
+for you:
+
+#+begin_src emacs-lisp
+(add-hook 'post-command-hook
+          (lambda ()
+            "delete colorful overlay on active mark"
+            (when-let (colorful-mode
+                       (beg (region-beginning))
+                       (end (region-end)))
+              (if (use-region-p)
+                  (dolist (ov (overlays-in beg end))
+                    (when (overlay-get ov 'colorful--overlay)
+                      (remove-overlays (overlay-start ov) (overlay-end ov)
+                                       'colorful--overlay t)))
+                (save-excursion
+                  (font-lock-fontify-region beg end)))))
+          nil t)
+
+;; or with use-package syntax:
+
+:hook (post-command
+       . (lambda ()
+           "delete colorful overlay on active mark"
+           (when-let (colorful-mode
+                      (beg (region-beginning))
+                      (end (region-end)))
+             (if (use-region-p)
+                 (dolist (ov (overlays-in beg end))
+                   (when (overlay-get ov 'colorful--overlay)
+                     (remove-overlays (overlay-start ov) (overlay-end ov)
+                                      'colorful--overlay t)))
+               (save-excursion
+                 (font-lock-fontify-region beg end)))))
+       nil t)
 
 #+end_src
 
