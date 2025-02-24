@@ -972,11 +972,14 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 (define-minor-mode colorful-mode
   "Preview any color in your buffer such as hex, color names, CSS rgb in real time."
   :global nil
-  (if colorful-mode
-      (colorful--turn-on)
-    (colorful--turn-off))
-  ;; Refresh font-lock
-  (font-lock-flush))
+  ;; Do not activate it in these buffers.
+  (unless (or (string= (buffer-name) "*Faces*")
+              (string= (buffer-name) "*Colors*"))
+    (if colorful-mode
+        (colorful--turn-on)
+      (colorful--turn-off))
+    ;; Refresh font-lock
+    (font-lock-flush)))
 
 ;; Silence a byte-compile warning about global-colorful-modes not
 ;; being defined
