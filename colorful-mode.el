@@ -368,6 +368,12 @@ Only relevant if `colorful-use-prefix' is non-nil."
   "List of keyword to don't highlight."
   :type '(repeat string))
 
+(defcustom colorful-excluded-buffers '("*Faces*" "*Colors*")
+  "Do not activate colorful in these buffers.
+In case colorful breaks a buffer, such as a buffer
+derived from `help-mode', this option can be useful for you."
+  :type '(repeat string))
+
 (defcustom colorful-short-hex-conversions t
   "If non-nil, hex values converted by colorful should be as short as possible.
 Setting this to non-nil will make hex values follow a 24-bit
@@ -936,6 +942,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 (defun colorful--turn-on ()
   "Helper function for turn on `colorful-mode'."
   ;; Run functions from list for add keywords to `colorful-color-keywords'.
+  ;; TODO: Use cl-loop instead this weird dolist.
   (dolist (fn colorful-extra-color-keyword-functions)
     (cond
      ((and (listp fn)
@@ -973,8 +980,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   "Preview any color in your buffer such as hex, color names, CSS rgb in real time."
   :global nil
   ;; Do not activate it in these buffers.
-  (unless (or (string= (buffer-name) "*Faces*")
-              (string= (buffer-name) "*Colors*"))
+  (unless (member (buffer-name) colorful-excluded-buffers)
     (if colorful-mode
         (colorful--turn-on)
       (colorful--turn-off))
