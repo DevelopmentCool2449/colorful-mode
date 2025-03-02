@@ -29,9 +29,13 @@ in real time and in a user friendly way based/inspired on 🌈[[https://elpa.gnu
 - Supports:
   - Hexadecimal (#RRGGBB, #RGB, #RRGGBBAA, #RGBA).
   - Color names (Emacs, HTML, CSS).
-  - CSS rgb/rgba, hsl/hsla and user-defined colors variables:
-    - @define_color
-    - var()
+  - CSS
+    - rgb/rgba
+    - hsl/hsla
+    - oklab/oklch
+    - user-defined colors variables:
+      - @define_color
+      - var()
   - LaTex colors (gray, rbg, RGB, HTML)
 - Convert current color at point or in region to other formats
   such as hexadecimal or color names *(only available for some colors)*
@@ -80,6 +84,7 @@ THIS MAY INTERFERE WITH COLORFUL PREFIX, YOU CAN DISABLE THIS SETTING
      (colorful-add-css-variables-colors
       colorful-add-rgb-colors
       colorful-add-hsl-colors
+      colorful-add-oklab-oklch-colors
       colorful-add-color-names))
     (latex-mode . colorful-add-latex-colors))
   List of functions to add extra color keywords to colorful-color-keywords.
@@ -157,6 +162,7 @@ highlighting:
 - =colorful-add-color-names=: Add color names.
 - =colorful-add-css-variables-colors=: Add CSS user-defined color variables.
 - =colorful-add-rgb-colors=: Add CSS RGB colors.
+- =colorful-add-oklab-oklch-colors=: Add CSS OkLab and OkLch colors.
 - =colorful-add-hsl-colors=: Add CSS HSL colors.
 - =colorful-add-latex-colors=: Add LaTex rgb/RGB/HTML/Grey colors.
 
