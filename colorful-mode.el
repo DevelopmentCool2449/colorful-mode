@@ -831,9 +831,6 @@ REGEXP must have a group that contains the color value."
   ;; The return value is not ignored, so be mindful what we return.
   nil)
 
-(defvar-local colorful-mode-color-definitions nil
-  "List of color definitions in the current buffer.")
-
 
 ;;;; Extra coloring definitions
 ;;; Hex
@@ -887,10 +884,9 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 ;;; Color names
 
 (defvar colorful-color-name-font-lock-keywords
-  `((,(regexp-opt (append
-                   (defined-colors)
-                   (mapcar #'car colorful-html-colors-alist))
-                  'symbols)
+  `((,(rx symbol-start
+          (group (>= 3 alphabetic) (opt (repeat 1 3 digit)))
+          symbol-end)
      (0 (colorful--colorize 'color-name))))
   "Font-lock keywords to add color names.")
 
@@ -898,7 +894,6 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   "Add Color names to `colorful-color-keywords'.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   ;; HTML/CSS/Emacs color names are case insensitive.
-  (setq-local font-lock-keywords-case-fold-search t)
   (dolist (colors colorful-color-name-font-lock-keywords)
     (cl-pushnew colors colorful-color-keywords)))
 
@@ -923,15 +918,15 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 (defvar colorful-rgb-font-lock-keywords
   `((,(rx (seq "rgb" (opt "a") "(" (zero-or-more " ")
                (group (repeat 1 3 digit)
-                      (opt "." (>= 1 digit))
+                      (opt "." (1+ digit))
                       (opt "%"))
                (zero-or-more " ") (opt "," (zero-or-more " "))
                (group (repeat 1 3 digit)
-                      (opt "." (>= 1 digit))
+                      (opt "." (1+ digit))
                       (opt "%"))
                (zero-or-more " ") (opt "," (zero-or-more " "))
                (group (repeat 1 3 digit)
-                      (opt "." (>= 1 digit))
+                      (opt "." (1+ digit))
                       (opt "%"))
                (zero-or-more " ")
                (opt (or "/" ",") (zero-or-more " ")
@@ -955,16 +950,16 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 (defvar colorful-oklab-oklch-font-lock-keywords
   `((,(rx (seq "oklab(" (zero-or-more " ")
                (group (repeat 1 3 digit)
-                      (opt "." (>= 1 (any digit)))
+                      (opt "." (1+ (any digit)))
                       "%")
                (zero-or-more " ") (opt "," (zero-or-more " "))
                (group (opt "-")
                       digit
-                      (opt "." (>= 1 digit)))
+                      (opt "." (1+ digit)))
                (zero-or-more " ") (opt "," (zero-or-more " "))
                (group (opt "-")
                       digit
-                      (opt "." (>= 1 digit)))
+                      (opt "." (1+ digit)))
                (zero-or-more " ")
                (opt (or "/" ",") (zero-or-more " ")
                     (group (or (seq (zero-or-one digit)
@@ -976,14 +971,14 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
      (0 (colorful--colorize 'css-oklab)))
     (,(rx (seq "oklch" "(" (zero-or-more " ")
                (group (repeat 1 3 digit)
-                      (opt "." (>= 1 digit))
+                      (opt "." (1+ digit))
                       "%")
                (zero-or-more " ") (opt "," (zero-or-more " "))
                (group digit
-                      (opt "." (>= 1 digit)))
+                      (opt "." (1+ digit)))
                (zero-or-more " ") (opt "," (zero-or-more " "))
                (group (repeat 1 3 digit)
-                      (opt "." (>= 1 digit)))
+                      (opt "." (1+ digit)))
                (zero-or-more " ")
                (opt (or "/" ",") (zero-or-more " ")
                     (group (or (seq (zero-or-one digit)
@@ -1049,8 +1044,6 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 
 
 ;;;; Minor mode definitions
-(defvar-local colorful--font-lock-case-old-value nil)
-
 (defun colorful--turn-on ()
   "Helper function for turn on `colorful-mode'."
   ;; Run functions from list for add keywords to `colorful-color-keywords'.
@@ -1066,15 +1059,13 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
      ((functionp fn)
       (funcall fn))))
 
-  (setq-local colorful--font-lock-case-old-value font-lock-keywords-case-fold-search)
   (push '(colorful--delete-overlays) colorful-color-keywords)
   (font-lock-add-keywords nil colorful-color-keywords))
 
 (defun colorful--turn-off ()
   "Helper function for clear colorful overlays."
   (font-lock-remove-keywords nil colorful-color-keywords)
-  (setq-local colorful-color-keywords nil ; Clear list
-              font-lock-keywords-case-fold-search colorful--font-lock-case-old-value)
+  (setq-local colorful-color-keywords nil) ; Clear list
   (remove-overlays nil nil 'colorful--overlay t))
 
 
