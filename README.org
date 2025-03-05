@@ -36,7 +36,7 @@ in real time and in a user friendly way based/inspired on 🌈[[https://elpa.gnu
     - user-defined colors variables:
       - @define_color
       - var()
-  - LaTex colors (gray, rbg, RGB, HTML)
+  - LaTeX colors (gray, rbg, RGB, HTML)
 - Convert current color at point or in region to other formats
   such as hexadecimal or color names *(only available for some colors)*
   with mouse click support.
@@ -158,13 +158,13 @@ If you want also use hsl and rgb together you can use this
 colorful provides extra functions out-the-box that enable additional
 highlighting:
 
-- =colorful-add-hex-colors=: Add Hexadecimal Colors.
-- =colorful-add-color-names=: Add color names.
-- =colorful-add-css-variables-colors=: Add CSS user-defined color variables.
-- =colorful-add-rgb-colors=: Add CSS RGB colors.
-- =colorful-add-oklab-oklch-colors=: Add CSS OkLab and OkLch colors.
-- =colorful-add-hsl-colors=: Add CSS HSL colors.
-- =colorful-add-latex-colors=: Add LaTex rgb/RGB/HTML/Grey colors.
+- =colorful-add-hex-colors=: Add Hexadecimal colors highlighting.
+- =colorful-add-color-names=: Add color names highlighting.
+- =colorful-add-css-variables-colors=: Add CSS user-defined color variables highlighting.
+- =colorful-add-rgb-colors=: Add CSS RGB colors highlighting.
+- =colorful-add-oklab-oklch-colors=: Add CSS OkLab and OkLch colors highlighting.
+- =colorful-add-hsl-colors=: Add CSS HSL colors highlighting.
+- =colorful-add-latex-colors=: Add LaTeX rgb/RGB/HTML/Grey colors highlighting.
 
 See: =colorful-extra-color-keyword-functions= for more details.
 

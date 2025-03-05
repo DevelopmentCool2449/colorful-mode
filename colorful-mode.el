@@ -27,7 +27,7 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;;  Minor mode for coloring color names, hex values or rgb/hsl values
+;;  Minor mode for coloring color names, hex values, or rgb/hsl values
 ;;  (CSS), and more inside your buffer in real time,
 ;;  developer-friendly and effective based on `rainbow-mode.el'
 
@@ -47,7 +47,7 @@
 ;;;; User Options
 
 (defgroup colorful nil
-  "Preview hex colors values in current buffer.."
+  "Preview color values in current buffer.."
   :tag "Colorful mode"
   :group 'faces
   :group 'tools
@@ -56,7 +56,7 @@
 (defface colorful-base
   '((t (:weight bold :box (:line-width -1))))
   "Face used as base for highlight color names.
-Changing background or foreground color will have no effect."
+Changing the background or foreground color will have no effect."
   :group 'colorful)
 
 (defcustom colorful-html-colors-alist
@@ -320,8 +320,8 @@ Each entry should have the form (COLOR-NAME . HEXADECIMAL-COLOR)."
       colorful-add-color-names))
     (latex-mode . colorful-add-latex-colors))
   "List of functions to add extra color keywords to `colorful-color-keywords'.
-It can be a cons cell specifying the mode (or a list of modes)
-e.g:
+It can be a cons cell specifying the mode (or a list of modes),
+e.g.:
 \(((`css-mode' `css-ts-mode') . `colorful-add-rgb-colors')
   (`emacs-lisp-mode' . (`colorful-add-color-names'
                         `colorful-add-rgb-colors'))
@@ -347,11 +347,11 @@ Available functions are:
                   function)))
 
 (defcustom colorful-allow-mouse-clicks t
-  "If non-nil, allow using mouse buttons for change color."
+  "If non-nil, allow using mouse buttons to change color."
   :type 'boolean)
 
 (defcustom colorful-use-prefix nil
-  "If non-nil, use prefix for preview color instead highlight them."
+  "If non-nil, use a prefix to preview color instead of highlighting them."
   :type 'boolean)
 
 (defcustom colorful-prefix-string "●"
@@ -360,14 +360,14 @@ Only relevant if `colorful-use-prefix' is non-nil."
   :type 'string)
 
 (defcustom colorful-prefix-alignment 'left
-  "The position to put prefix string.
-The value can be left or right.
+  "The position to place the prefix string.
+The value can be 'left or 'right.
 Only relevant if `colorful-use-prefix' is non-nil."
   :type '(choice (const :tag "Left" left)
                  (const :tag "Right" right)))
 
 (defcustom colorful-exclude-colors '("#define")
-  "List of keyword to don't highlight."
+  "List of keywords not to highlight."
   :type '(repeat string))
 
 (defcustom colorful-excluded-buffers '("*Faces*" "*Colors*")
@@ -383,9 +383,9 @@ specification (#RRGGBB[AA]) and can make them inaccurate."
   :type 'boolean)
 
 (defcustom colorful-only-strings nil
-  "If non-nil colorful will only highlight colors inside strings.
-If set to only-prog, only highlight colors in strings if current major
-mode is derived from `prog-mode'."
+  "If non-nil, colorful will only highlight colors inside strings.
+If set to 'only-prog, only highlight colors in strings if the current
+major mode is derived from `prog-mode'."
   :type '(choice boolean (const :tag "Only in prog-modes" only-prog)))
 
 
@@ -400,18 +400,18 @@ mode is derived from `prog-mode'."
 ;;;;; Base Conversion functions
 
 (defun colorful--percentage-to-absolute (percentage)
-  "Return PERCENTAGE to a absolute number.
+  "Return PERCENTAGE as an absolute number.
 PERCENTAGE must be a string.
-If PERCENTAGE is absolute, return PERCENTAGE as number.
-This will convert \"80 %\" to 204, \"100 %\" to 255 but \"123\" to \"123\".
-If PERCENTAGE is above 100%, it's converted to 100."
+If PERCENTAGE is absolute, return PERCENTAGE as a number.
+This will convert \"80 %\" to 204, \"100 %\" to 255 but not \"123\".
+If PERCENTAGE is above 100%, it is converted to 100."
   (if (seq-contains-p percentage ?%)
       (/ (* (min (string-to-number percentage) 100) 255) 100)
     (string-to-number percentage)))
 
 (defun colorful--shorten-hex (hex &optional alpha)
-  "Convert a 4-digit hexadecimal color representation to a 2-digit representation.
-HEX should be a string in the format `#RRGGBB'.
+  "Convert a 6-digit hexadecimal color representation to a 3-digit representation.
+HEX should be a string in the format `#RRGGBB' (6-digit form).
 If ALPHA is non-nil then use `#RRGGBBAA' format"
   (if colorful-short-hex-conversions
       (let ((r (substring hex 1 5))
@@ -709,7 +709,7 @@ from `readable-foreground-color'."
                      (:inherit colorful-base)))))))
 
 (defmacro colorful--get-css-variable-color (regexp)
-  "Get color value from CSS variable REGEXP.
+  "Get color value from CSS variable matching REGEXP.
 REGEXP must have a group that contains the color value."
   (declare (indent 1) (debug t))
   `(save-excursion
@@ -724,16 +724,15 @@ REGEXP must have a group that contains the color value."
                        (match-string-no-properties 1))))))
 
 (defun colorful--colorize (kind &optional match)
-  "Helper function for Colorize each KIND of MATCH with itself."
-
+  "Helper function to colorize each KIND of MATCH with itself."
   (when-let* ((match (or match 0))
               (color (match-string-no-properties match))
-              ;; Check if match isn't blacklisted and isn't in a comment ...
+              ;; Check if match isn't blacklisted and is not in a comment ...
               ((and (not (member color colorful-exclude-colors))
                     (not (nth 4 (syntax-ppss)))
                     ;; ... or is in a string ...
                     (or (and colorful-only-strings (nth 3 (syntax-ppss)))
-                        ;; ... or current major-mode is not prog-mode derived.
+                        ;; ... or current major-mode is not derived from prog-mode.
                         (and (eq colorful-only-strings 'only-prog)
                              ;; CSS is prog-mode derived so ignore only-strings
                              ;; in CSS derived modes.
@@ -876,7 +875,7 @@ REGEXP must have a group that contains the color value."
   "Font-lock keywords to colorize.")
 
 (defun colorful-add-hex-colors ()
-  "Add hex colors to `colorful-color-keywords'.
+  "Add hex color highlighting.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-hex-font-lock-keywords)
     (cl-pushnew colors colorful-color-keywords)))
@@ -896,13 +895,13 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   "Font-lock keywords to add color names.")
 
 (defun colorful-add-color-names ()
-  "Add Color names to `colorful-color-keywords'.
+  "Add color name highlighting.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   ;; HTML/CSS/Emacs color names are case insensitive.
   (dolist (colors colorful-color-name-font-lock-keywords)
     (cl-pushnew colors colorful-color-keywords)))
 
-;;; CSS user defined colors
+;;; CSS user-defined colors
 
 (defvar colorful-css-variables-keywords
   `((,(rx (group "@") (group (one-or-more (any alphabetic "_"))))
@@ -910,10 +909,11 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
     (,(rx (group "var") "(" (zero-or-more space)
           (group (one-or-more (any alphanumeric "-")))
           (zero-or-more space) ")")
-     (0 (colorful--colorize 'css-color-variable)))))
+     (0 (colorful--colorize 'css-color-variable))))
+  "Font-lock keywords to add css user-defined colors.")
 
 (defun colorful-add-css-variables-colors ()
-  "Add CSS user-defined color variables to `colorful-color-keywords'.
+  "Add CSS user-defined color highlighting.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-css-variables-keywords)
     (cl-pushnew colors colorful-color-keywords)))
@@ -942,10 +942,10 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                            (opt (or "%" (zero-or-more " ")))))
                ")"))
      (0 (colorful--colorize 'css-rgb))))
-  "Font-lock keywords for add RGB colors.")
+  "Font-lock keywords to add RGB colors.")
 
 (defun colorful-add-rgb-colors ()
-  "Add CSS RGB colors to `colorful-color-keywords'.
+  "Add CSS RGB color highlighting.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-rgb-font-lock-keywords)
     (cl-pushnew colors colorful-color-keywords)))
@@ -993,10 +993,10 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                            (opt (or "%" (zero-or-more " ")))))
                ")"))
      (0 (colorful--colorize 'css-oklch))))
-  "Font-lock keywords for add OKLAB and OKLCH colors.")
+  "Font-lock keywords to add OKLAB and OKLCH colors.")
 
 (defun colorful-add-oklab-oklch-colors ()
-  "Add CSS OkLab and OkLch colors to `colorful-color-keywords'.
+  "Add CSS OKLAB and OKLCH color highlighting.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-oklab-oklch-font-lock-keywords)
     (cl-pushnew colors colorful-color-keywords)))
@@ -1019,10 +1019,10 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                            (opt (or "%" (zero-or-more " ")))))
                ")"))
      (0 (colorful--colorize 'css-hsl))))
-  "Font-lock keywords for add HSL colors.")
+  "Font-lock keywords to add HSL colors.")
 
 (defun colorful-add-hsl-colors ()
-  "Add CSS HSL colors.
+  "Add CSS HSL color highlighting.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-hsl-font-lock-keywords)
     (cl-pushnew colors colorful-color-keywords)))
@@ -1039,10 +1039,10 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
      (0 (colorful--colorize 'latex-HTML)))
     (,(rx (seq "{gray}{" (group (one-or-more (any digit "."))) "}"))
      (0 (colorful--colorize 'latex-gray))))
-  "Font-lock keywords for add LaTex rgb/RGB/HTML/Grey colors.")
+  "Font-lock keywords to add LaTeX rgb/RGB/HTML/Grey colors.")
 
 (defun colorful-add-latex-colors ()
-  "Add LaTex rgb/RGB/HTML/Grey colors.
+  "Add LaTeX rgb/RGB/HTML/Grey colors highlighting.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (colors colorful-latex-keywords)
     (cl-pushnew colors colorful-color-keywords)))
@@ -1050,7 +1050,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 
 ;;;; Minor mode definitions
 (defun colorful--turn-on ()
-  "Helper function for turn on `colorful-mode'."
+  "Helper function to turn on `colorful-mode'."
   ;; Run functions from list for add keywords to `colorful-color-keywords'.
   (dolist (fn colorful-extra-color-keyword-functions)
     (cond
@@ -1068,7 +1068,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   (font-lock-add-keywords nil colorful-color-keywords))
 
 (defun colorful--turn-off ()
-  "Helper function for clear colorful overlays."
+  "Helper function to clear colorful overlays."
   (font-lock-remove-keywords nil colorful-color-keywords)
   (setq-local colorful-color-keywords nil) ; Clear list
   (remove-overlays nil nil 'colorful--overlay t))
