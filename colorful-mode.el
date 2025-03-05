@@ -6,7 +6,7 @@
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;;             Elias G. Perez <eg642616@gmail.com>
 ;; Created: 2024-04-10
-;; Package-Requires: ((emacs "28.1") (compat "29.1.4.4"))
+;; Package-Requires: ((emacs "28.1") (compat "30.0.2.0"))
 ;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
 ;; Keywords: faces, tools, matching, convenience
 ;; Version: 1.2.0
@@ -556,7 +556,7 @@ If region is active, convert colors in mark."
       (user-error "No color found"))))
 
 (defun colorful-convert-and-copy-color ()
-  "Convert color to an other and copy it at point."
+  "Convert color and copy it at point."
   (interactive)
   (if-let* ((colorful-ov (colorful--find-overlay)) ; Find colorful overlay tag at point/cursor.
             ;; Start prompt for color change and get new color.
@@ -711,7 +711,7 @@ from `readable-foreground-color'."
 (defmacro colorful--get-css-variable-color (regexp)
   "Get color value from CSS variable REGEXP.
 REGEXP must have a group that contains the color value."
-  (declare (indent 0))
+  (declare (indent 1) (debug t))
   `(save-excursion
      (goto-char (point-max))
      (when (re-search-backward ,regexp nil t)
@@ -814,15 +814,15 @@ REGEXP must have a group that contains the color value."
            ;; Find whole buffer for last @define-color match-1 found
            ;; and get its color value.
            (colorful--get-css-variable-color
-             (rx (seq "@define_color"
-                      (one-or-more space)
-                      (literal match-2)
-                      (one-or-more space)
-                      (group (opt "#") (one-or-more alphanumeric))))))
+               (rx (seq "@define_color"
+                        (one-or-more space)
+                        (literal match-2)
+                        (one-or-more space)
+                        (group (opt "#") (one-or-more alphanumeric))))))
           ((string= match-1 "var")
            (colorful--get-css-variable-color
-             (rx (seq (literal match-2) ":" (zero-or-more space)
-                      (group (opt "#") (one-or-more alphanumeric)))))))))
+               (rx (seq (literal match-2) ":" (zero-or-more space)
+                        (group (opt "#") (one-or-more alphanumeric)))))))))
 
       ;; Ensure that string is a valid color and that string is non-nil
       (if (and color (color-defined-p color))
@@ -884,9 +884,14 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 ;;; Color names
 
 (defvar colorful-color-name-font-lock-keywords
-  `((,(rx symbol-start
-          (group (>= 3 alphabetic) (opt (repeat 1 3 digit)))
-          symbol-end)
+  `((,(lambda (limit)
+        (let ((case-fold-search t))
+          (re-search-forward
+           (regexp-opt (append
+                        (defined-colors)
+                        (mapcar #'car colorful-html-colors-alist))
+                       'symbols)
+           limit t)))
      (0 (colorful--colorize 'color-name))))
   "Font-lock keywords to add color names.")
 
@@ -1096,7 +1101,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 
 ;;;###autoload
 (defun turn-on-colorful-mode ()
-  "Turn on `colorful-mode' mode if the current buffer."
+  "Turn on `colorful-mode' mode in the current buffer."
   (unless colorful-mode
     (colorful-mode t)))
 
