@@ -361,7 +361,7 @@ Only relevant if `colorful-use-prefix' is non-nil."
 
 (defcustom colorful-prefix-alignment 'left
   "The position to place the prefix string.
-The value can be 'left or 'right.
+The value can be `left' or `right'.
 Only relevant if `colorful-use-prefix' is non-nil."
   :type '(choice (const :tag "Left" left)
                  (const :tag "Right" right)))
@@ -384,7 +384,7 @@ specification (#RRGGBB[AA]) and can make them inaccurate."
 
 (defcustom colorful-only-strings nil
   "If non-nil, colorful will only highlight colors inside strings.
-If set to 'only-prog, only highlight colors in strings if the current
+If set to `only-prog', only highlight colors in strings if the current
 major mode is derived from `prog-mode'."
   :type '(choice boolean (const :tag "Only in prog-modes" only-prog)))
 
@@ -883,14 +883,10 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 ;;; Color names
 
 (defvar colorful-color-name-font-lock-keywords
-  `((,(lambda (limit)
-        (let ((case-fold-search t))
-          (re-search-forward
-           (regexp-opt (append
-                        (defined-colors)
-                        (mapcar #'car colorful-html-colors-alist))
-                       'symbols)
-           limit t)))
+  `((,(regexp-opt (append
+                   (defined-colors)
+                   (mapcar #'car colorful-html-colors-alist))
+                  'symbols)
      (0 (colorful--colorize 'color-name))))
   "Font-lock keywords to add color names.")
 
