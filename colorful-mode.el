@@ -9,7 +9,7 @@
 ;; Package-Requires: ((emacs "28.1") (compat "30.0.2.0"))
 ;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
 ;; Keywords: faces, tools, matching, convenience
-;; Version: 1.2.2
+;; Version: 1.2.3
 
 ;; This file is part of GNU Emacs.
 
@@ -393,6 +393,12 @@ major mode is derived from `prog-mode'."
 
 (defvar-local colorful-color-keywords nil
   "Font-lock colors keyword to highlight.")
+
+(defvar colorful--color-names-regexp
+  (regexp-opt (append
+               (defined-colors)
+               (mapcar #'car colorful-html-colors-alist))
+              'symbols))
 
 
 ;;;; Internal Functions
@@ -883,10 +889,9 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 ;;; Color names
 
 (defvar colorful-color-name-font-lock-keywords
-  `((,(regexp-opt (append
-                   (defined-colors)
-                   (mapcar #'car colorful-html-colors-alist))
-                  'symbols)
+  `((,(lambda (limit)
+        (let ((case-fold-search t))
+          (re-search-forward colorful--color-names-regexp limit t)))
      (0 (colorful--colorize 'color-name))))
   "Font-lock keywords to add color names.")
 
