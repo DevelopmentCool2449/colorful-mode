@@ -464,7 +464,6 @@ L, A and B must be floats divided by 100."
            (srgb (color-xyz-to-srgb x y z))
            (rgb (mapcar #'color-clamp srgb)))
       (apply #'color-rgb-to-hex rgb))))
-;; (colorful--oklab-to-hex 0.5574 0.14 0) 55.74% 0.14 0 => #b31a4af270af
 
 (defun colorful--oklch-to-hex (l c h)
   "Convert OKLCH color (L, C, H) to HEX format.
@@ -474,7 +473,6 @@ H must be a float not divided."
          (a (* c (cos h-rad)))
          (b (* c (sin h-rad))))
     (colorful--oklab-to-hex l a b)))
-;; (colorful--oklch-to-hex 0.5574 0.1406 360) 55.74% 0.1406 360 => #b31a4af270af
 
 (defun colorful--hex-to-name (hex)
   "Return HEX as color name."
