@@ -204,18 +204,21 @@ for you:
 (add-hook 'post-command-hook
           (lambda ()
             "delete colorful overlay on active mark"
-            (when colorful-mode
-              (if-let* ((beg (use-region-beginning))
+            (when-let* (colorful-mode
+                        (beg (use-region-beginning))
                         (end (use-region-end)))
                   (dolist (ov (overlays-in beg end))
                     (when (overlay-get ov 'colorful--overlay)
                       (remove-overlays (overlay-start ov) (overlay-end ov)
-                                       'colorful--overlay t)))
-                (save-excursion
-                  (and (mark)
-                       (font-lock-fontify-region
-                        (region-beginning)
-                        (region-end))))))))
+                                       'colorful--overlay t))))))
+
+(add-hook 'deactivate-mark-hook
+          (lambda ()
+            "refontify deleted mark"
+            (when-let* (colorful-mode
+                        (beg (region-beginning))
+                        (end (region-end)))
+              (font-lock-flush beg end))))
 #+end_src
 
 * How does it compare to =rainbow-mode= or built-in =css fontify colors=?

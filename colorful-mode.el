@@ -476,10 +476,9 @@ H must be a float not divided."
 
 (defun colorful--hex-to-name (hex)
   "Return HEX as color name."
-  (catch 'name
-    (dolist (color-list color-name-rgb-alist)
-      (if (equal (cdr color-list) (color-values hex))
-          (throw 'name (car color-list))))))
+  (cl-dolist (color-list color-name-rgb-alist)
+    (if (equal (cdr color-list) (color-values hex))
+        (cl-return (car color-list)))))
 
 (defun colorful--name-to-hex (name)
   "Return color NAME as hex color format."
@@ -492,10 +491,9 @@ H must be a float not divided."
 (defun colorful--find-overlay (&optional beg)
   "Return colorful overlay if found at current point.
 BEG is the position to check for the overlay."
-  (catch 'val
-    (dolist (ov (overlays-at (or beg (point))))
-      (if (overlay-get ov 'colorful--overlay)
-          (throw 'val ov)))))
+  (cl-dolist (ov (overlays-at (or beg (point))))
+    (if (overlay-get ov 'colorful--overlay)
+        (cl-return ov))))
 
 (defun colorful--delete-overlays (limit)
   "Font-lock matcher that flushes our overlays before we install new ones."
