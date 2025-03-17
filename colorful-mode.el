@@ -476,9 +476,7 @@ H must be a float not divided."
 
 (defun colorful--hex-to-name (hex)
   "Return HEX as color name."
-  (cl-dolist (color-list color-name-rgb-alist)
-    (if (equal (cdr color-list) (color-values hex))
-        (cl-return (car color-list)))))
+  (car (rassoc (color-values hex) color-name-rgb-alist)))
 
 (defun colorful--name-to-hex (name)
   "Return color NAME as hex color format."

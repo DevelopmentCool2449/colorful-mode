@@ -209,8 +209,7 @@ for you:
                         (end (use-region-end)))
                   (dolist (ov (overlays-in beg end))
                     (when (overlay-get ov 'colorful--overlay)
-                      (remove-overlays (overlay-start ov) (overlay-end ov)
-                                       'colorful--overlay t))))))
+                      (remove-overlays beg end 'colorful--overlay t))))))
 
 (add-hook 'deactivate-mark-hook
           (lambda ()

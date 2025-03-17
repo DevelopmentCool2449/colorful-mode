@@ -13,12 +13,8 @@
 --function-color-2: var(--function-color-1); /* #b5e1ff */
 
 --color: #ffff00; /* yellow */
-
-@define_color  base_color  #ff0000; /* red */
-@define_color  highlight_color  blue;
-
 @define_color  base_color  rgb(255, 0, 0); /* red */
-@define_color  highlight_color  rgb(0, 0, 255); /* blue */
+@define_color  highlight_color  blue;
 
 vars
 {
