@@ -207,9 +207,11 @@ for you:
             (when-let* (colorful-mode
                         (beg (use-region-beginning))
                         (end (use-region-end)))
+              ;; Remove full colorful overlay instead only the part where
+              ;; the region is.
                   (dolist (ov (overlays-in beg end))
                     (when (overlay-get ov 'colorful--overlay)
-                      (remove-overlays beg end 'colorful--overlay t))))))
+                      (remove-overlays (overlay-start ov) (overlay-end ov) 'colorful--overlay t))))))
 
 (add-hook 'deactivate-mark-hook
           (lambda ()
