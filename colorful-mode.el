@@ -257,10 +257,18 @@ Available functions are:
   "If non-nil, use a prefix to preview color instead of highlighting them."
   :type 'boolean)
 
+;; (defcustom colorful-use-indicator nil
+;;   "If non-nil, use a string as indicator instead highlight.
+;;   :type 'boolean)
+
+;; (define-obsolete-variable-alias colorful-use-prefix colorful-use-indicator "1.3.0")
+
 (defcustom colorful-prefix-string "●"
   "String to be used in highlights.
 Only relevant if `colorful-use-prefix' is non-nil."
   :type 'string)
+
+;; (define-obsolete-variable-alias colorful-prefix-string colorful-indicator-string "1.3.0")
 
 (defcustom colorful-prefix-alignment 'left
   "The position to place the prefix string.
@@ -269,21 +277,30 @@ Only relevant if `colorful-use-prefix' is non-nil."
   :type '(choice (const :tag "Left" left)
                  (const :tag "Right" right)))
 
+;; (defcustom colorful-indicator-alignment 'left
+;;   "The position to place the indicator string.
+;; The value can be `left' or `right'.
+;; Only relevant if `colorful-use-prefix' is non-nil."
+;;   :type '(choice (const :tag "Left" left)
+;;                  (const :tag "Right" right)))
+
+;; (define-obsolete-variable-alias colorful-prefix-alignment colorful-indicator-alignment "1.3.0")
+
 (defcustom colorful-exclude-colors '("#define")
   "List of keywords not to highlight."
   :type '(repeat string))
 
-;; XXX: deprecate?
 (defcustom colorful-excluded-buffers nil
   "Do not activate colorful in these buffers.
 In case colorful breaks a buffer, such as a buffer
 derived from `help-mode', this option can be useful for you."
   :type '(repeat string))
 
+;; (make-obsolete-variable colorful-excluded-buffers nil "1.3.0")
+
 (defcustom colorful-short-hex-conversions t
-  "If non-nil, hex values converted by colorful should be as short as possible.
-Setting this to non-nil will make hex values follow a 24-bit
-specification (#RRGGBB[AA]) and can make them inaccurate."
+  "If non-nil, colorful will converted long hex colors to \"#RRGGBB\" format.
+Setting this to non-nil can make converted hex inaccurate."
   :type 'boolean)
 
 (defcustom colorful-only-strings nil
@@ -313,10 +330,9 @@ If PERCENTAGE is above 100%, it is converted to 100."
       (/ (* (min (string-to-number percentage) 100) 255) 100)
     (string-to-number percentage)))
 
-(defun colorful--shorten-hex (hex)
-  "Convert a 6-digit hexadecimal color representation to a 3-digit representation.
-HEX should be a string in the format `#RRGGBB' (6-digit form).
-If ALPHA is non-nil then use `#RRGGBBAA' format"
+(defun colorful--short-hex (hex)
+  "Convert a 12-digit hexadecimal color form to a 6-digit form.
+HEX should be a string in the format `#RRRRGGGGBBBB' (12-digit form)."
   (if colorful-short-hex-conversions
       (let ((r (substring hex 1 5))
             (g (substring hex 5 9))
@@ -372,8 +388,8 @@ H must be a float not divided."
 
 (defun colorful--name-to-hex (name)
   "Return color NAME as hex color format."
-  (if-let* ((color-name (color-name-to-rgb name)))
-      (apply #'color-rgb-to-hex color-name)
+  (if (color-defined-p name)
+      name
     (cdr (assoc-string name colorful-html-colors-alist t))))
 
 ;;;;; Overlay functions
@@ -513,11 +529,11 @@ CHOICE is used for get kind of color."
        (pcase kind
          ('hex "%s is already a Hex color. Try again: ")
          ;; Is COLOR a Name?
-         ('color-name (list (colorful--shorten-hex color-value) beg end))
+         ('color-name (list (colorful--short-hex color-value) beg end))
          ;; Is COLOR a CSS rgb?
-         ('css-rgb (list (colorful--shorten-hex color-value) beg end))
+         ('css-rgb (list (colorful--short-hex color-value) beg end))
          ;; Is COLOR a HSL?
-         ('css-hsl (list (colorful--shorten-hex color-value) beg end))))
+         ('css-hsl (list (colorful--short-hex color-value) beg end))))
       ('name ; COLOR to NAME
        (pcase kind
          ('color-name "%s is already a color name. Try again: ")
@@ -584,37 +600,41 @@ from `readable-foreground-color'."
                      (:background ,color)
                      (:inherit colorful-base)))))))
 
-;; FIXME: SLOW?
-(defmacro colorful--get-css-variable-color (regexp)
-  "Get CSS variable color value matching REGEXP from end to beginning.
-REGEXP must have a group that contains the color value."
-  (declare (indent 1) (debug t))
-  `(save-excursion
-     (goto-char (point-max))
-     (when (re-search-backward ,regexp nil t)
-       ;; Get color value from colorful overlay.
-       ;; if not color value found, use the one from REGEXP 1st group.
-       (setq color (or (and (colorful--find-overlay (match-beginning 1)) ; Ensure overlay exists.
-                            (overlay-get (colorful--find-overlay
-                                          (match-beginning 1))
-                                         'colorful--overlay-color))
-                       (match-string-no-properties 1))))))
+(defun colorful--get-css-variable-color (j-l-end regexp)
+  "Return CSS variable color value matching REGEXP from end to beginning.
+REGEXP must have a group that contains the color value.
+J-L-END is the position where jit-lock region ends."
+  (save-excursion
+    (goto-char j-l-end)
+    (when (re-search-backward regexp nil t)
+      ;; Get color value from colorful overlay.
+      ;; if not color value found, use the one from REGEXP 1st group.
+      (or (and (colorful--find-overlay (match-beginning 1)) ; Ensure overlay exists.
+               (overlay-get (colorful--find-overlay
+                             (match-beginning 1))
+                            'colorful--overlay-color))
+          (match-string-no-properties 1)))))
 
 ;; NOTE: Modify this functions for handle new colors added to this package.
-(defun colorful--colorize (kind color beg end)
-  "Helper function to colorize each KIND of MATCH with itself."
+(defun colorful--colorize (kind color beg end &optional j-l-end)
+  "Helper function to colorize each KIND of MATCH with itself.
+KIND is the color type.
+COLOR is the string which contains the color matched.
+BEG and END are color match positions.
+J-L-END is the position where jit-lock region ends."
   (when-let* (;; Check if match isn't blacklisted and is not in a comment ...
               ((and (not (member color colorful-exclude-colors))
                     (not (nth 4 (syntax-ppss)))
-                    ;; ... or is in a string ...
-                    (or (and colorful-only-strings (nth 3 (syntax-ppss)))
-                        ;; ... or current major-mode is not derived from prog-mode.
+                    ;; ... and wheter color is in a string according colorful-only-strings...
+                    (or (not colorful-only-strings)
                         (and (eq colorful-only-strings 'only-prog)
-                             ;; CSS is prog-mode derived so ignore only-strings
-                             ;; in CSS derived modes.
+                             (derived-mode-p 'prog-mode)
+                             (nth 3 (syntax-ppss)))
+                        ;; CSS is prog-mode derived so ignore only-strings
+                        ;; in CSS derived modes.
+                        (and colorful-only-strings
                              (or (derived-mode-p 'css-mode)
-                                 (not (derived-mode-p 'prog-mode))))
-                        (not colorful-only-strings)))))
+                                 (nth 3 (syntax-ppss))))))))
 
     (let* ((match-1 (match-string-no-properties 1))
            (match-2 (match-string-no-properties 2))
@@ -670,18 +690,20 @@ REGEXP must have a group that contains the color value."
          (cond
           ((and (string= match-1 "@")
                 (not (string= match-2 "define_color")))
-           (colorful--get-css-variable-color
-               (rx (seq "@define_color"
-                        (one-or-more space)
-                        (literal match-2)
-                        (one-or-more space)
-                        (group (opt "#") (one-or-more alphanumeric))))))
+           (setq color
+                 (colorful--get-css-variable-color j-l-end
+                   (rx (seq "@define_color"
+                            (one-or-more space)
+                            (literal match-2)
+                            (one-or-more space)
+                            (group (opt "#") (one-or-more alphanumeric)))))))
           ((string= match-1 "var")
-           (colorful--get-css-variable-color
-               (rx (seq (literal match-2) ":" (zero-or-more space)
-                        (group (opt "#") (one-or-more alphanumeric)))))))))
+           (setq color
+                 (colorful--get-css-variable-color j-l-end
+                   (rx (seq (literal match-2) ":" (zero-or-more space)
+                            (group (opt "#") (one-or-more alphanumeric))))))))))
 
-      ;; Ensure that string is a valid color and that string is non-nil
+      ;; Ensure that COLOR is a valid color
       (if (and color (color-defined-p color))
           (colorful--colorize-match color beg end kind)))))
 
@@ -692,28 +714,31 @@ REGEXP must have a group that contains the color value."
   (setq end (progn (goto-char end) (line-end-position)))
 
   (save-excursion
-    (remove-overlays (or start (point-min)) (or end (point-max)) 'colorful--overlay t)
+    (remove-overlays start end 'colorful--overlay t)
 
     (dolist (el colorful-color-keywords)
       (let* ((keywords (car el))
              (type (nth 1 el))
-             (match (or (nth 2 el) 0)))
+             (match (or (nth 2 el) 0))
+             (ignore-case (nth 3 el)))
         (goto-char start)
         (cond
          ((stringp keywords)
           (while (re-search-forward keywords end t)
-            (funcall #'colorful--colorize type (match-string-no-properties match)
-                     (match-beginning match) (match-end match))))
-         ((functionp keywords)
-          (while (funcall keywords end)
-            (funcall #'colorful--colorize type (match-string-no-properties match)
-                     (match-beginning match) (match-end match)))))))
+            (colorful--colorize type (match-string-no-properties match)
+                                (match-beginning match) (match-end match)
+                                end)))
+         (ignore-case
+          (let ((case-fold-search t))
+            (while (re-search-forward keywords end t)
+              (colorful--colorize type (match-string-no-properties match)
+                                  (match-beginning match) (match-end match))))))))
     `(jit-lock-bounds ,start . ,end)))
 
 
 ;;;; Extra coloring definitions
 ;; Each element of these lists must be in the form:
-;; (KEYWORDS TYPE MATCH)
+;; (KEYWORDS TYPE MATCH IGNORE-CASE)
 ;;
 ;; KEYWORDS must be a regexp string which contains the keywords
 ;; to highlight
@@ -722,6 +747,8 @@ REGEXP must have a group that contains the color value."
 ;;
 ;; MATCH is optional, must be a number which specifies the match to
 ;; use, if not set, it will use 0 instead.
+;;
+;; if IGNORE-CASE is non-nil, then match will be case-insensitive
 
 ;;; Hex
 (defvar colorful-hex-font-lock-keywords
@@ -751,10 +778,8 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
               'symbols))
 
 (defvar colorful-color-name-font-lock-keywords
-  `((,(lambda (limit)
-        (let ((case-fold-search t))
-          (re-search-forward colorful--color-names-regexp limit t)))
-     color-name))
+  `((,colorful--color-names-regexp
+     color-name 0 t))
   "Font-lock keywords to add color names.")
 
 (defun colorful-add-color-names ()
