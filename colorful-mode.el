@@ -306,8 +306,9 @@ Setting this to non-nil can make converted hex inaccurate."
 
 (defcustom colorful-only-strings nil
   "If non-nil, colorful will only highlight colors inside strings.
-If set to `only-prog', only highlight colors in strings if the current
-major mode is derived from `prog-mode'."
+If set to `only-prog', the colors in `prog-mode' will be highlighted
+only if they are inside a string.
+This doesn't include `css-mode' and derived."
   :type '(choice boolean (const :tag "Only in prog-modes" only-prog)))
 
 
@@ -626,15 +627,15 @@ J-L-END is the position where jit-lock region ends."
                     (not (nth 4 (syntax-ppss)))
                     ;; ... and wheter color is in a string according colorful-only-strings...
                     (or (not colorful-only-strings)
-                        (and (eq colorful-only-strings 'only-prog)
-                             (derived-mode-p 'prog-mode)
-                             (nth 3 (syntax-ppss)))
-                        ;; CSS is prog-mode derived so ignore only-strings
-                        ;; in CSS derived modes.
                         (and colorful-only-strings
-                             (or (derived-mode-p 'css-mode)
-                                 (derived-mode-p 'LaTeX-mode)
-                                 (nth 3 (syntax-ppss))))))))
+                             (nth 3 (syntax-ppss)))
+                        (and (eq colorful-only-strings 'only-prog)
+                             (or (not (derived-mode-p 'prog-mode))
+                                 ;; CSS is prog-mode derived so ignore only-strings
+                                 ;; in CSS derived modes.
+                                 (derived-mode-p 'css-mode)
+                                 (and (derived-mode-p 'prog-mode)
+                                      (nth 3 (syntax-ppss)))))))))
 
     (let* ((match-1 (match-string-no-properties 1))
            (match-2 (match-string-no-properties 2))
