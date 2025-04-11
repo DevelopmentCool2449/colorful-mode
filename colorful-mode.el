@@ -248,6 +248,7 @@ Available functions are:
                         (choice :tag "Function(s)" (repeat function)
                                 function))
                   function)))
+;; TODO: (define-obsolete-variable-alias colorful-extra-color-keyword-functions [INSERT NAME] "1.3.0")
 
 (defcustom colorful-allow-mouse-clicks t
   "If non-nil, allow using mouse buttons to change color."
@@ -324,10 +325,10 @@ major mode is derived from `prog-mode'."
   "Return PERCENTAGE as an absolute number.
 PERCENTAGE must be a string.
 If PERCENTAGE is absolute, return PERCENTAGE as a number.
-This will convert \"80 %\" to 204, \"100 %\" to 255 but not \"123\".
+This will convert \"80%\" to 204, \"100%\" to 255 but not \"123\".
 If PERCENTAGE is above 100%, it is converted to 100."
-  (if (seq-contains-p percentage ?%)
-      (/ (* (min (string-to-number percentage) 100) 255) 100)
+  (if (string-suffix-p "%" percentage)
+      (min (max 0 (* 255 (/ (string-to-number percentage) 100.0))) 255)
     (string-to-number percentage)))
 
 (defun colorful--short-hex (hex)
@@ -343,16 +344,14 @@ HEX should be a string in the format `#RRRRGGGGBBBB' (12-digit form)."
                 (/ (string-to-number b 16) 256)))
     hex))
 
-(defun colorful--rgb-to-hex (r g b)
-  "Return CSS R G B as hexadecimal format."
-  (if-let* ((r (/ r 255.0))
-            (g (/ g 255.0))
-            (b (/ b 255.0)))
-      (color-rgb-to-hex r g b)))
-
 (defun colorful--hsl-to-hex (h s l)
   "Return CSS H S L as hexadecimal format."
-  (if-let* ((h (/ (string-to-number h) 360.0))
+  (if-let* ((h (cond
+                ((string-suffix-p "grad" h)
+                 (/ (string-to-number h) 400.0))
+                ((string-suffix-p "rad" h)
+                 (/ (string-to-number h) (* 2 float-pi)))
+                (t (/ (string-to-number h) 360.0))))
             (s (/ (string-to-number s) 100.0))
             (l (/ (string-to-number l) 100.0)))
       (apply #'color-rgb-to-hex (color-hsl-to-rgb h s l))))
@@ -464,7 +463,7 @@ If region is active, convert colors in mark."
             (result (car (colorful--prompt-converter colorful-ov "Copy '%s' as: ")))
             ;; Propertize text for message.
             (color (propertize result 'face `(:foreground
-                                              ,(color-name-to-rgb result)
+                                              ,(readable-foreground-color result)
                                               :background ,result))))
       ;; Copy color and notify to user it's done
       (progn (kill-new color)
@@ -634,6 +633,7 @@ J-L-END is the position where jit-lock region ends."
                         ;; in CSS derived modes.
                         (and colorful-only-strings
                              (or (derived-mode-p 'css-mode)
+                                 (derived-mode-p 'LaTeX-mode)
                                  (nth 3 (syntax-ppss))))))))
 
     (let* ((match-1 (match-string-no-properties 1))
@@ -651,10 +651,10 @@ J-L-END is the position where jit-lock region ends."
         ('latex-rgb
          (setq color
                (if (string-prefix-p "{R" color)  ; Check if it's RGB (shorted as "{R")
-                   (colorful--rgb-to-hex
-                    (string-to-number match-1) ; r
-                    (string-to-number match-2) ; g
-                    (string-to-number match-3)) ; b
+                   (format "#%02x%02x%02x"
+                           (/ (string-to-number match-1) 250.0) ; r
+                           (/ (string-to-number match-2) 250.0) ; g
+                           (/ (string-to-number match-3) 250.0)) ; b
                  (color-rgb-to-hex
                   (string-to-number match-1) ; r
                   (string-to-number match-2) ; g
@@ -668,12 +668,13 @@ J-L-END is the position where jit-lock region ends."
                             (color-hsl-to-rgb 0 0 (string-to-number match-1)))))
 
         ('css-rgb
-         (setq color (colorful--rgb-to-hex (colorful--percentage-to-absolute match-1) ; r
-                                           (colorful--percentage-to-absolute match-2) ; g
-                                           (colorful--percentage-to-absolute match-3)))) ; b
+         (setq color (format "#%02x%02x%02x"
+                             (colorful--percentage-to-absolute match-1) ; r
+                             (colorful--percentage-to-absolute match-2) ; g
+                             (colorful--percentage-to-absolute match-3)))) ; b
 
         ((and 'css-hsl
-              (guard (<= (string-to-number match-1) 360))) ; Ensure Hue is not greater than 360.
+              (guard (< (string-to-number match-1) 360))) ; Ensure Hue is not greater than 360.
          (setq color (colorful--hsl-to-hex match-1 match-2 match-3))) ; h s l
 
         ('css-oklab
@@ -691,17 +692,19 @@ J-L-END is the position where jit-lock region ends."
           ((and (string= match-1 "@")
                 (not (string= match-2 "define_color")))
            (setq color
-                 (colorful--get-css-variable-color j-l-end
-                   (rx (seq "@define_color"
-                            (one-or-more space)
-                            (literal match-2)
-                            (one-or-more space)
-                            (group (opt "#") (one-or-more alphanumeric)))))))
+                 (colorful--get-css-variable-color
+                  j-l-end
+                  (rx (seq "@define_color"
+                           (one-or-more space)
+                           (literal match-2)
+                           (one-or-more space)
+                           (group (opt "#") (one-or-more alphanumeric)))))))
           ((string= match-1 "var")
            (setq color
-                 (colorful--get-css-variable-color j-l-end
-                   (rx (seq (literal match-2) ":" (zero-or-more space)
-                            (group (opt "#") (one-or-more alphanumeric))))))))))
+                 (colorful--get-css-variable-color
+                  j-l-end
+                  (rx (seq (literal match-2) ":" (zero-or-more space)
+                           (group (opt "#") (one-or-more alphanumeric))))))))))
 
       ;; Ensure that COLOR is a valid color
       (if (and color (color-defined-p color))
@@ -748,7 +751,7 @@ J-L-END is the position where jit-lock region ends."
 ;; MATCH is optional, must be a number which specifies the match to
 ;; use, if not set, it will use 0 instead.
 ;;
-;; if IGNORE-CASE is non-nil, then match will be case-insensitive
+;; IGNORE-CASE is optional, if non-nil, then match will be case-insensitive
 
 ;;; Hex
 (defvar colorful-hex-font-lock-keywords
@@ -823,11 +826,11 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                       (opt "%"))
                (zero-or-more " ")
                (opt (or "/" ",") (zero-or-more " ")
-                    (group (or (seq (zero-or-one digit)
-                                    (opt ".")
-                                    digit)
-                               digit)
-                           (opt (or "%" (zero-or-more " ")))))
+                    (or (seq (zero-or-one digit)
+                             (opt ".")
+                             digit)
+                        digit)
+                    (opt (or "%" (zero-or-more " "))))
                ")"))
      css-rgb))
   "Font-lock keywords to add RGB colors.")
@@ -893,18 +896,18 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 
 (defvar colorful-hsl-font-lock-keywords
   `((,(rx (seq "hsl" (opt "a") "(" (zero-or-more " ")
-               (group (repeat 1 3 digit) (opt "deg"))
+               (group (repeat 1 3 digit) (opt (or "deg" "grad" "rad")))
                (zero-or-more " ") (opt "," (zero-or-more " "))
                (group (repeat 1 3 digit) (opt "%"))
                (zero-or-more " ") (opt "," (zero-or-more " "))
                (group (repeat 1 3 digit) (opt "%"))
                (zero-or-more " ")
                (opt (or "/" ",") (zero-or-more " ")
-                    (group (or (seq (zero-or-one digit)
-                                    (opt ".")
-                                    digit)
-                               digit)
-                           (opt (or "%" (zero-or-more " ")))))
+                    (or (seq (zero-or-one digit)
+                             (opt ".")
+                             digit)
+                        digit)
+                    (opt (or "%" (zero-or-more " "))))
                ")"))
      css-hsl))
   "Font-lock keywords to add HSL colors.")
