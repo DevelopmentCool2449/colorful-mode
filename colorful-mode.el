@@ -384,7 +384,7 @@ H must be a float not divided."
 
 (defun colorful--hex-to-name (hex)
   "Return HEX as color name."
-  (car (rassoc (color-values hex) color-name-rgb-alist)))
+  (car (rassoc (color-values-from-color-spec hex) color-name-rgb-alist)))
 
 (defun colorful--name-to-hex (name)
   "Return color NAME as hex color format."
@@ -600,28 +600,28 @@ from `readable-foreground-color'."
                      (:background ,color)
                      (:inherit colorful-base)))))))
 
-(defun colorful--get-css-variable-color (j-l-end regexp)
-  "Return CSS variable color value matching REGEXP from end to beginning.
-REGEXP must have a group that contains the color value.
-J-L-END is the position where jit-lock region ends."
+;; TODO: Use _local for css vars in local scopes, use (car (syntax-ppss)) ?
+(defun colorful--get-css-variable-color (regexp pos &optional _local)
+  "Return the CSS variable color value matches REGEXP.
+Subgroup 1 of REGEXP should match the color value.
+POS is the position where start the search."
   (save-excursion
-    (goto-char j-l-end)
+    (goto-char pos)
     (when (re-search-backward regexp nil t)
       ;; Get color value from colorful overlay.
-      ;; if not color value found, use the one from REGEXP 1st group.
+      ;; if not color value found, use the one from 1st subgroup of REGEXP.
       (or (and (colorful--find-overlay (match-beginning 1)) ; Ensure overlay exists.
                (overlay-get (colorful--find-overlay
                              (match-beginning 1))
                             'colorful--overlay-color))
           (match-string-no-properties 1)))))
 
-;; NOTE: Modify this functions for handle new colors added to this package.
-(defun colorful--colorize (kind color beg end &optional j-l-end)
+;; Modify this functions for handle new colors added to this package.
+(defun colorful--colorize (kind color beg end)
   "Helper function to colorize each KIND of MATCH with itself.
 KIND is the color type.
 COLOR is the string which contains the color matched.
-BEG and END are color match positions.
-J-L-END is the position where jit-lock region ends."
+BEG and END are color match positions."
   (when-let* (;; Check if match isn't blacklisted and is not in a comment ...
               ((and (not (member color colorful-exclude-colors))
                     (not (nth 4 (syntax-ppss)))
@@ -642,9 +642,9 @@ J-L-END is the position where jit-lock region ends."
            (match-3 (match-string-no-properties 3)))
       (pcase kind
         ('hex
-         (setq beg (match-beginning 0))
-         (setq end (match-end 0))
-         (setq color (string-replace "0x" "#" color)))
+         (setq beg (match-beginning 0)
+               end (match-end 0)
+               color (string-replace "0x" "#" color)))
 
         ('color-name
          (setq color (colorful--name-to-hex color)))
@@ -675,7 +675,7 @@ J-L-END is the position where jit-lock region ends."
                              (colorful--percentage-to-absolute match-3)))) ; b
 
         ((and 'css-hsl
-              (guard (< (string-to-number match-1) 360))) ; Ensure Hue is not greater than 360.
+              (guard (<= (string-to-number match-1) 360))) ; Ensure Hue is not greater than 360.
          (setq color (colorful--hsl-to-hex match-1 match-2 match-3))) ; h s l
 
         ('css-oklab
@@ -694,18 +694,18 @@ J-L-END is the position where jit-lock region ends."
                 (not (string= match-2 "define_color")))
            (setq color
                  (colorful--get-css-variable-color
-                  j-l-end
                   (rx (seq "@define_color"
                            (one-or-more space)
                            (literal match-2)
                            (one-or-more space)
-                           (group (opt "#") (one-or-more alphanumeric)))))))
+                           (group (opt "#") (one-or-more alphanumeric))))
+                  beg)))
           ((string= match-1 "var")
            (setq color
                  (colorful--get-css-variable-color
-                  j-l-end
                   (rx (seq (literal match-2) ":" (zero-or-more space)
-                           (group (opt "#") (one-or-more alphanumeric))))))))))
+                           (group (opt "#") (one-or-more alphanumeric))))
+                  beg))))))
 
       ;; Ensure that COLOR is a valid color
       (if (and color (color-defined-p color))
@@ -714,30 +714,29 @@ J-L-END is the position where jit-lock region ends."
 ;;; Fontify functions
 (defun colorful-mode-fontify-region (start end)
   ;; Clean up colorful overlays if found
-  (setq start (progn (goto-char start) (line-beginning-position)))
-  (setq end (progn (goto-char end) (line-end-position)))
+  (setq start (progn (goto-char start) (line-beginning-position))
+        end (progn (goto-char end) (line-end-position)))
 
-  (save-excursion
-    (remove-overlays start end 'colorful--overlay t)
+  (remove-overlays start end 'colorful--overlay t)
 
-    (dolist (el colorful-color-keywords)
-      (let* ((keywords (car el))
-             (type (nth 1 el))
-             (match (or (nth 2 el) 0))
-             (ignore-case (nth 3 el)))
-        (goto-char start)
-        (cond
-         ((stringp keywords)
+  (dolist (el colorful-color-keywords)
+    (let* ((keywords (car el))
+           (type (nth 1 el))
+           (match (or (nth 2 el) 0))
+           (ignore-case (nth 3 el)))
+      (goto-char start)
+      (cond
+       ((stringp keywords)
+        (while (re-search-forward keywords end t)
+          (colorful--colorize type (match-string-no-properties match)
+                              (match-beginning match) (match-end match))))
+       (ignore-case
+        (let ((case-fold-search t))
           (while (re-search-forward keywords end t)
             (colorful--colorize type (match-string-no-properties match)
-                                (match-beginning match) (match-end match)
-                                end)))
-         (ignore-case
-          (let ((case-fold-search t))
-            (while (re-search-forward keywords end t)
-              (colorful--colorize type (match-string-no-properties match)
-                                  (match-beginning match) (match-end match))))))))
-    `(jit-lock-bounds ,start . ,end)))
+                                (match-beginning match) (match-end match))))))))
+
+  `(jit-lock-bounds ,start . ,end))
 
 
 ;;;; Extra coloring definitions
