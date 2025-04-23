@@ -1,3 +1,5 @@
+;; -*- mode: eask; lexical-binding: t -*-
+
 (package "colorful-mode"
          "1.0.4"
          "Preview any color in your buffer in real time")
