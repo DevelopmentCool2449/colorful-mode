@@ -946,7 +946,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   (dolist (fn colorful-extra-color-keyword-functions)
     (cond
      ((and (listp fn)
-           (derived-mode-p (car fn)))
+           (cl-some #'derived-mode-p (ensure-list (car fn))))
       (if (listp (cdr fn))
           (dolist (fn-list (cdr fn))
             (funcall fn-list))
