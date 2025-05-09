@@ -297,7 +297,7 @@ In case colorful breaks a buffer, such as a buffer
 derived from `help-mode', this option can be useful for you."
   :type '(repeat string))
 
-;; (make-obsolete-variable colorful-excluded-buffers nil "1.3.0")
+;; (make-obsolete-variable colorful-excluded-buffers nil "1.2.4")
 
 (defcustom colorful-short-hex-conversions t
   "If non-nil, colorful will converted long hex colors to \"#RRGGBB\" format.
@@ -307,15 +307,24 @@ Setting this to non-nil can make converted hex inaccurate."
 (defcustom colorful-only-strings nil
   "If non-nil, colorful will only highlight colors inside strings.
 If set to `only-prog', the colors in `prog-mode' will be highlighted
-only if they are inside a string.
-This doesn't include `css-mode' and derived."
+only if they are inside a string, this doesn't include `css-mode' and
+derived."
   :type '(choice boolean (const :tag "Only in prog-modes" only-prog)))
+
+(defcustom colorful-highlight-in-comments nil
+  "If non-nil, colorful will highlight colors inside comments.
+NOTE: If this is set, this will highlight any keyword within the
+comments, including color names, which can be annoying."
+  :type 'boolean)
 
 
 ;;;; Internal variables
 
 (defvar-local colorful-color-keywords nil
   "Font-lock colors keyword to highlight.")
+
+(defvar-local colorful--highlight nil
+  "Internal variable used for check when the highlighting must be done.")
 
 
 ;;;; Internal Functions
@@ -603,20 +612,23 @@ POS is the position where start the search."
 KIND is the color type.
 COLOR is the string which contains the color matched.
 BEG and END are color match positions."
-  (when-let* (;; Check if match isn't blacklisted and is not in a comment ...
-              ((and (not (member color colorful-exclude-colors))
-                    (not (nth 4 (syntax-ppss)))
-                    ;; ... and wheter color is in a string according colorful-only-strings...
-                    (or (not colorful-only-strings)
-                        (and colorful-only-strings
-                             (nth 3 (syntax-ppss)))
-                        (and (eq colorful-only-strings 'only-prog)
-                             (or (not (derived-mode-p 'prog-mode))
-                                 ;; CSS is prog-mode derived so ignore only-strings
-                                 ;; in CSS derived modes.
-                                 (derived-mode-p 'css-mode)
-                                 (and (derived-mode-p 'prog-mode)
-                                      (nth 3 (syntax-ppss)))))))))
+  (when
+      (and
+       ;; Check if match isn't blacklisted ...
+       (not (member color colorful-exclude-colors))
+       ;; ... and color is in a comment according
+       ;; colorful-highlight-in-comments ...
+       (or colorful-highlight-in-comments (not (nth 4 (syntax-ppss))))
+       ;; ... and wheter color is in a string according colorful-only-strings.
+       (or (not colorful-only-strings)
+           (when (or (eq colorful--highlight 'prog)
+                     (eq colorful-only-strings t))
+             (if colorful-highlight-in-comments
+                 ;; Highlight only for strings and comments
+                 (syntax-ppss-context (syntax-ppss))
+               ;; Highlight only for strings
+               (nth 3 (syntax-ppss))))
+           (eq colorful--highlight t)))
 
     (let* ((match-1 (match-string-no-properties 1))
            (match-2 (match-string-no-properties 2))
@@ -963,15 +975,29 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   "C-x c c" #'colorful-convert-and-copy-color
   "C-x c r" #'colorful-convert-and-change-color)
 
+
+;;;; Minor mode definition
+
 ;;;###autoload
 (define-minor-mode colorful-mode
   "Preview any color in your buffer such as hex, color names, CSS rgb in real time."
   :global nil
-  ;; Do not activate it in these buffers.
-  (unless (member (buffer-name) colorful-excluded-buffers)
-    (if colorful-mode
-        (colorful--turn-on)
-      (colorful--turn-off))))
+  (if colorful-mode
+      (progn
+        ;; If `colorful-only-strings' is set to `only-prog', check if
+        ;; the current major mode is derived from prog-mode for
+        ;; highlight in strings, otherwise highlight wherever.
+        (if (eq colorful-only-strings 'only-prog)
+            (cond
+             ;; CSS is prog-mode derived so ignore only-strings
+             ;; in CSS derived modes.
+             ((or (derived-mode-p 'css-mode)
+                  (not (derived-mode-p 'prog-mode)))
+              (setq colorful--highlight t))
+             ((derived-mode-p 'prog-mode)
+              (setq colorful--highlight 'prog))))
+        (colorful--turn-on))
+    (colorful--turn-off)))
 
 ;; Silence a byte-compile warning about global-colorful-modes not
 ;; being defined
