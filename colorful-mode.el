@@ -942,16 +942,23 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 ;;;; Minor mode definitions
 (defun colorful--turn-on ()
   "Helper function to turn on `colorful-mode'."
-  ;; Run functions from list for add keywords to `colorful-color-keywords'.
+  ;; Run functions from `colorful-extra-color-keyword-functions' list
+  ;; for add keywords to `colorful-color-keywords'.
   (dolist (fn colorful-extra-color-keyword-functions)
     (cond
+     ;; Enable some highlighting for some major modes defined in
+     ;; `colorful-extra-color-keyword-functions'
      ((and (listp fn)
-           (cl-some #'derived-mode-p (ensure-list (car fn))))
+           ;; For emacs < 28.1 compatibility (see: github#19)
+           (seq-some #'derived-mode-p (ensure-list (car fn))))
       (if (listp (cdr fn))
           (dolist (fn-list (cdr fn))
             (funcall fn-list))
         (funcall (cdr fn))))
 
+     ;; If current major mode is not derived from any mode defined in
+     ;; `colorful-extra-color-keyword-functions', use the
+     ;; functions without the cons.
      ((functionp fn)
       (funcall fn))))
 
