@@ -333,8 +333,11 @@ If PERCENTAGE is above 100%, it is converted to 100."
     (string-to-number percentage)))
 
 (defun colorful--short-hex (hex)
-  "Convert a 12-digit hexadecimal color form to a 6-digit form.
-HEX should be a string in the format `#RRRRGGGGBBBB' (12-digit form)."
+  "Convert a 12-digit hexadecimal color form to a 6-digit (#RRGGBB) form.
+HEX should be a string in the format `#RRRRGGGGBBBB' (12-digit form).
+
+The conversion is controlled by `colorful-short-hex-conversions'.  If
+`colorful-short-hex-conversions' is set to nil, then just return HEX."
   (if colorful-short-hex-conversions
       (let ((r (substring hex 1 5))
             (g (substring hex 5 9))
@@ -389,7 +392,7 @@ H must be a float not divided."
 (defun colorful--name-to-hex (name)
   "Return color NAME as hex color format."
   (if (color-defined-p name)
-      name
+      (apply #'format "#%04x%04x%04x" (color-values name))
     (cdr (assoc-string name colorful-html-colors-alist t))))
 
 ;;;;; Overlay functions
@@ -523,30 +526,21 @@ CHOICE is used for get kind of color."
          (end (overlay-end ov))
          (kind (overlay-get ov 'colorful--overlay-kind))
          (color-value (overlay-get ov 'colorful--overlay-color)))
-
     (pcase choice ; Check and convert color to any of the options:
       ('hex ; COLOR to HEX
        (pcase kind
          ('hex "%s is already a Hex color. Try again: ")
-         ;; Is COLOR a Name?
-         ('color-name (list (colorful--short-hex color-value) beg end))
-         ;; Is COLOR a CSS rgb?
-         ('css-rgb (list (colorful--short-hex color-value) beg end))
-         ;; Is COLOR a HSL?
-         ('css-hsl (list (colorful--short-hex color-value) beg end))))
+         ((or 'css-rgb 'css-hsl 'color-name)
+          (list
+           (colorful--short-hex
+            (if (eq kind 'color-name)
+                (colorful--name-to-hex color-value)
+              color-value))
+           beg end))))
       ('name ; COLOR to NAME
        (pcase kind
          ('color-name "%s is already a color name. Try again: ")
-         ;; Is COLOR a Hex?
-         ('hex
-          (if-let* ((color (colorful--hex-to-name color-value)))
-              (list color beg end)))
-         ;; Is COLOR a CSS rgb?
-         ('css-rgb
-          (if-let* ((color (colorful--hex-to-name color-value)))
-              (list color beg end)))
-         ;; Is COLOR a HSL?
-         ('css-hsl
+         ((or 'hex 'css-rgb 'css-hsl)
           (if-let* ((color (colorful--hex-to-name color-value)))
               (list color beg end))))))))
 
@@ -567,10 +561,7 @@ from `readable-foreground-color'."
     ;; Set kind tag
     (overlay-put ov 'colorful--overlay-kind kind)
     ;; Set color value as tag
-    (overlay-put ov 'colorful--overlay-color
-                 (if (eq 'color-name kind)
-                     (colorful--name-to-hex color)
-                   color))
+    (overlay-put ov 'colorful--overlay-color color)
 
     ;; Enable auto deletion.
     (overlay-put ov 'evaporate t)
@@ -647,7 +638,10 @@ BEG and END are color match positions."
                color (string-replace "0x" "#" color)))
 
         ('color-name
-         (setq color (colorful--name-to-hex color)))
+         (setq color
+               (if (color-defined-p color)
+                   color
+                 (cdr (assoc-string color colorful-html-colors-alist t)))))
 
         ('latex-rgb
          (setq color
