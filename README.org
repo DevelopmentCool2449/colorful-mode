@@ -34,7 +34,7 @@ in real time and in a user friendly way based/inspired on 🌈[[https://elpa.gnu
     - hsl/hsla
     - oklab/oklch
     - user-defined colors variables:
-      - @define_color
+      - gtk @define-color
       - var()
   - LaTeX colors (gray, rbg, RGB, HTML)
 - Convert current color at point or in region to other formats

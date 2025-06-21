@@ -386,7 +386,8 @@ H must be a float not divided."
 
 (defun colorful--hex-to-name (hex)
   "Return HEX as color name."
-  (car (rassoc (color-values-from-color-spec hex) color-name-rgb-alist)))
+  (car (or (rassoc (color-values-from-color-spec hex) color-name-rgb-alist)
+           (rassoc hex colorful-html-colors-alist))))
 
 (defun colorful--name-to-hex (name)
   "Return color NAME as hex color format."
@@ -686,20 +687,23 @@ BEG and END are color match positions."
         ('css-color-variable
          (cond
           ((and (string= match-1 "@")
-                (not (string= match-2 "define_color")))
+                (or (not (member match-2 '("define_color" "define-color")))))
            (setq color
                  (colorful--get-css-variable-color
-                  (rx (seq "@define_color"
-                           (one-or-more space)
-                           (literal match-2)
-                           (one-or-more space)
-                           (group (opt "#") (one-or-more alphanumeric))))
+                  (rx-to-string
+                   `(seq (or "@define_color"
+                             "@define-color")
+                         (one-or-more space)
+                         ,match-2
+                         (one-or-more space)
+                         (group (opt "#") (one-or-more alphanumeric))))
                   beg)))
           ((string= match-1 "var")
            (setq color
                  (colorful--get-css-variable-color
-                  (rx (seq (literal match-2) ":" (zero-or-more space)
-                           (group (opt "#") (one-or-more alphanumeric))))
+                  (rx-to-string
+                   `(seq ,match-2 ":" (zero-or-more space)
+                         (group (opt "#") (one-or-more alphanumeric))))
                   beg))))))
 
       ;; Ensure that COLOR is a valid color
