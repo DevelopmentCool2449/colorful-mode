@@ -228,17 +228,17 @@ for you:
 #+end_src
 
 * How does it compare to =rainbow-mode= or built-in =css fontify colors=?
-=colorful-mode= improves =rainbow-mode= and =css-fontify-colors= in adding more features:
+=colorful-mode= improves =rainbow-mode= and =css fontify-colors= in adding more features:
 
-| Comparation                                           | colorful-mode.el | rainbow-mode.el | built-in css-fontify-colors |
-|-------------------------------------------------------+------------------+-----------------+-----------------------------|
-| Compatible with hl-line and other overlays?           | ✓                | ❌             | ❌                         |
-| Convert color to other formats?                       | ✓                | ❌             | ❌                         |
-| Optionally use string prefix/suffix instead highlight | ✓                | ❌             | ❌                         |
-| Blacklist colors?                                     | ✓                | ❌^{1}            | ❌                         |
-| Allow highlight specifics colors in specific modes    | ✓                | ✓^{2}              | ❌                         |
-| Optionally highlight only in strings                  | ✓                | ❌             | ❌                         |
-| No performance issues?^{3}                               | ❌              | ✓               | ✓                           |
+| Comparison                                            | colorful-mode.el | rainbow-mode.el | built-in css |
+|-------------------------------------------------------+------------------+-----------------+--------------|
+| Compatible with hl-line and other overlays?           | ✓               | ❌             | ❌          |
+| Convert color to other formats?                       | ✓               | ❌             | ✓           |
+| Optionally use string prefix/suffix instead highlight | ✓               | ❌             | ❌          |
+| Blacklist colors?                                     | ✓               | ❌^{1}            | ❌          |
+| Allow highlight specifics colors in specific modes    | ✓               | ✓^{2}             | ❌          |
+| Optionally highlight only in strings                  | ✓               | ❌             | ❌          |
+| No performance issues?^{3}                               | ❌              | ✓              | ✓           |
 
 #+begin_src text
 [1] rainbow-mode (like colorful) uses regex for highlight some
