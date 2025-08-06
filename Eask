@@ -1,7 +1,7 @@
 ;; -*- mode: eask; lexical-binding: t -*-
 
 (package "colorful-mode"
-         "1.0.4"
+         "1.2.4"
          "Preview any color in your buffer in real time")
 
 (website-url "https://github.com/DevelopmentCool2449/colorful-mode")
