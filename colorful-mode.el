@@ -421,7 +421,7 @@ BEG is the position to check for the overlay."
              (choice (alist-get
                       (completing-read "Change colors in region: " choices nil t nil nil)
                       choices nil nil 'equal))
-             (ignored-colors 0)
+             (ignored-colors 0) ; Define counter
              (changed-colors 0))
 
         (dolist (ov (overlays-in beg end))
@@ -430,11 +430,11 @@ BEG is the position to check for the overlay."
             (if-let* ((result (colorful--converter ov choice))
                       ((consp result))
                       (range (cdr result)) ; Get the positions where it should be replaced.
+                      (start (car range))
+                      (end (cdr range))
                       (new-color (car result)))
-                (save-excursion
-                  (apply #'delete-region range)
-                  (goto-char (car range))
-                  (insert new-color)
+                (progn
+                  (replace-region-contents start end new-color 0)
                   (setq changed-colors (1+ changed-colors)))
               (setq ignored-colors (1+ ignored-colors)))))
 
@@ -450,11 +450,11 @@ BEG is the position to check for the overlay."
               (result (colorful--prompt-converter colorful-ov "Change '%s' to: "))
               (new-color (car result))
               ;; Get the positions where it should be replaced.
-              (range (cdr result)))
+              (range (cdr result))
+              (start (car range))
+              (end (cdr range)))
         ;; Replace color at point.
-        (save-excursion
-          (apply #'delete-region range)
-          (insert new-color))
+        (replace-region-contents start end new-color 0)
       ;; Otherwise throw error.
       (user-error "No color found"))))
 
@@ -526,7 +526,7 @@ CHOICE is used for get kind of color."
          (kind (overlay-get ov 'colorful--overlay-kind))
          (color-value (overlay-get ov 'colorful--overlay-color)))
     (pcase choice ; Check and convert color to any of the options:
-      ('hex ; COLOR to HEX
+      ('hex ; color to HEX
        (pcase kind
          ('hex "%s is already a Hex color. Try again: ")
          ((or 'css-rgb 'css-hsl 'color-name)
@@ -536,7 +536,7 @@ CHOICE is used for get kind of color."
                 (colorful--name-to-hex color-value)
               color-value))
            beg end))))
-      ('name ; COLOR to NAME
+      ('name ; color to NAME
        (pcase kind
          ('color-name "%s is already a color name. Try again: ")
          ((or 'hex 'css-rgb 'css-hsl)
