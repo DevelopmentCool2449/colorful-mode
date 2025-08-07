@@ -371,18 +371,31 @@ The conversion is controlled by `colorful-short-hex-conversions'.  If
 
 (defun colorful--oklab-to-hex (l a b)
   "Convert OKLab color (L, A, B) to HEX format.
-L, A and B must be floats divided by 100."
-  (let ((rgb (mapcar #'color-clamp (color-oklab-to-srgb l a b))))
+L A and B must be strings."
+  (let* ((l (if (not (seq-contains-p l ?%))
+                (string-to-number l)
+              (/ (string-to-number l) 100.0)))
+         (a (string-to-number a))
+         (b (string-to-number b))
+         (rgb (mapcar #'color-clamp (color-oklab-to-srgb l a b))))
     (apply #'color-rgb-to-hex rgb)))
 
 (defun colorful--oklch-to-hex (l c h)
   "Convert OKLCH color (L, C, H) to HEX format.
-L, A and must be floats divided by 100.
-H must be a float not divided."
-  (let* ((h-rad (* h (/ float-pi 180.0)))
+L C and H must be strings."
+  (let* ((l (if (not (seq-contains-p l ?%))
+                (string-to-number l)
+              (/ (string-to-number l) 100.0)))
+         (c (string-to-number c))
+         (h (float (string-to-number h)))
+         ;; Convert to LAB
+         (h-rad (* h (/ float-pi 180.0)))
          (a (* c (cos h-rad)))
-         (b (* c (sin h-rad))))
-    (colorful--oklab-to-hex l a b)))
+         (b (* c (sin h-rad)))
+         ;; Convert to RGB
+         (rgb (mapcar #'color-clamp (color-oklab-to-srgb l a b))))
+    ;; Return HEX
+    (apply #'color-rgb-to-hex rgb)))
 
 (defun colorful--hex-to-name (hex)
   "Return HEX as color name."
@@ -675,14 +688,14 @@ BEG and END are color match positions."
          (setq color (colorful--hsl-to-hex match-1 match-2 match-3))) ; h s l
 
         ('css-oklab
-         (setq color (colorful--oklab-to-hex (/ (string-to-number match-1) 100.0) ; l
-                                             (string-to-number match-2) ; a
-                                             (string-to-number match-3)))) ; b
+         (setq color (colorful--oklab-to-hex match-1 ; l
+                                             match-2 ; a
+                                             match-3))) ; b
 
         ('css-oklch
-         (setq color (colorful--oklch-to-hex (/ (string-to-number match-1) 100.0) ; l
-                                             (string-to-number match-2) ; c
-                                             (float (string-to-number match-3))))) ; h
+         (setq color (colorful--oklch-to-hex match-1 ; l
+                                             match-2 ; c
+                                             match-3))) ; h
 
         ('css-color-variable
          (cond
@@ -845,8 +858,8 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 (defvar colorful-oklab-oklch-font-lock-keywords
   `((,(rx (seq "oklab(" (zero-or-more " ")
                (group (repeat 1 3 digit)
-                      (opt "." (1+ (any digit)))
-                      "%")
+                      (opt "." (1+ digit))
+                      (opt "%"))
                (zero-or-more " ") (opt "," (zero-or-more " "))
                (group (opt "-")
                       digit
@@ -864,10 +877,10 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                            (opt (or "%" (zero-or-more " ")))))
                ")"))
      css-oklab)
-    (,(rx (seq "oklch" "(" (zero-or-more " ")
+    (,(rx (seq "oklch(" (zero-or-more " ")
                (group (repeat 1 3 digit)
                       (opt "." (1+ digit))
-                      "%")
+                      (opt "%"))
                (zero-or-more " ") (opt "," (zero-or-more " "))
                (group digit
                       (opt "." (1+ digit)))

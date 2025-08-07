@@ -66,11 +66,15 @@ Support for color changing at region.
   for change color.
 - =colorful-use-prefix (default: nil)= If non-nil, use prefix for preview color
   instead highlight them.
-#+begin_src C
-⛔ WARNING: CSS-DERIVED MODES COLORIZE RGB AND HEX COLORS OUT THE BOX,
+
+#+begin_quote
+[!WARNING]
+
+CSS-DERIVED MODES COLORIZE RGB AND HEX COLORS OUT THE BOX,
 THIS MAY INTERFERE WITH COLORFUL PREFIX, YOU CAN DISABLE THIS SETTING
-`css-fontify-colors' TO nil
-#+end_src
+'css-fontify-colors' TO nil
+#+end_quote
+
 - =colorful-prefix-string (default: "●")= String to be used in highlights.
   Only relevant if `colorful-use-prefix' is non-nil.
 - =colorful-prefix-alignment (default: 'left)= The position to put prefix string.
