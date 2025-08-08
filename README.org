@@ -2,11 +2,6 @@
 #+title: colorful-mode
 #+subtitle: Preview any color in your buffer in real time.
 #+author: Elias G. Perez
-#+language: en
-#+export_file_name: colorful-mode.texi
-#+texinfo_dir_category: Emacs misc features
-#+texinfo_dir_title: colorful-mode: (colorful-mode).
-#+texinfo_dir_desc: Preview any color in your buffer in real time.
 
 [[https://raw.githubusercontent.com/DevelopmentCool2449/colorful-mode/main/assets/colorful-mode-logo.svg]]
 
@@ -70,9 +65,9 @@ Support for color changing at region.
 #+begin_quote
 [!WARNING]
 
-CSS-DERIVED MODES COLORIZE RGB AND HEX COLORS OUT THE BOX,
-THIS MAY INTERFERE WITH COLORFUL PREFIX, YOU CAN DISABLE THIS SETTING
-'css-fontify-colors' TO nil
+css-derived modes colorize rgb and hex colors out the box,
+this may interfere with colorful prefix, you can disable this setting
+'css-fontify-colors' to nil
 #+end_quote
 
 - =colorful-prefix-string (default: "●")= String to be used in highlights.
@@ -234,20 +229,20 @@ for you:
 * How does it compare to =rainbow-mode= or built-in =css fontify colors=?
 =colorful-mode= improves =rainbow-mode= and =css fontify-colors= in adding more features:
 
-| Comparison                                            | colorful-mode.el | rainbow-mode.el | built-in css |
-|-------------------------------------------------------+------------------+-----------------+--------------|
-| Compatible with hl-line and other overlays?           | ✓               | ❌             | ❌          |
-| Convert color to other formats?                       | ✓               | ❌             | ✓           |
-| Optionally use string prefix/suffix instead highlight | ✓               | ❌             | ❌          |
-| Blacklist colors?                                     | ✓               | ❌^{1}            | ❌          |
-| Allow highlight specifics colors in specific modes    | ✓               | ✓^{2}             | ❌          |
-| Optionally highlight only in strings                  | ✓               | ❌             | ❌          |
-| No performance issues?^{3}                               | ❌              | ✓              | ✓           |
+| Comparison                                            | colorful-mode.el | rainbow-mode.el | built-in css-mode |
+|-------------------------------------------------------+------------------+-----------------+-------------------|
+| Compatible with hl-line and other overlays?           | ✓               | ❌             | ❌               |
+| Convert color to other formats?                       | ✓               | ❌             | ✓                |
+| Optionally use string prefix/suffix instead highlight | ✓               | ❌             | ❌               |
+| Blacklist colors?                                     | ✓               | ❌^{1}            | ❌               |
+| Allow highlight specifics colors in specific modes    | ✓               | ✓^{2}             | ❌               |
+| Optionally highlight only in strings                  | ✓               | ❌             | ❌               |
+| No performance issues?^{3}                               | ❌              | ✓              | ✓                |
 
 #+begin_src text
 [1] rainbow-mode (like colorful) uses regex for highlight some
-    keywords, however it cannot exclude specifics colors keywords
-    (such as "#def" that overrides C "#define" keyword).
+    keywords, however it cannot exclude specifics colors (such as
+    "#def" that overrides C "#define" keyword).
 [2] Only for some colors.
 [3] I didn't a benchmark however due colorful-mode uses overlays
     instead text properties it can be a bit slow.

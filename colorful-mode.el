@@ -444,7 +444,7 @@ BEG is the position to check for the overlay."
                       ((consp result))
                       (range (cdr result)) ; Get the positions where it should be replaced.
                       (start (car range))
-                      (end (cdr range))
+                      (end (cadr range))
                       (new-color (car result)))
                 (progn
                   (replace-region-contents start end new-color 0)
@@ -465,7 +465,7 @@ BEG is the position to check for the overlay."
               ;; Get the positions where it should be replaced.
               (range (cdr result))
               (start (car range))
-              (end (cdr range)))
+              (end (cadr range)))
         ;; Replace color at point.
         (replace-region-contents start end new-color 0)
       ;; Otherwise throw error.
