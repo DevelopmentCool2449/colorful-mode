@@ -536,8 +536,8 @@ otherwise return a formatted string for message error.
 CHOICE is used for get kind of color."
   (let* ((beg (overlay-start ov)) ; Find positions.
          (end (overlay-end ov))
-         (kind (overlay-get ov 'colorful--overlay-kind))
-         (color-value (overlay-get ov 'colorful--overlay-color)))
+         (kind (overlay-get ov 'colorful--color-kind))
+         (color-value (overlay-get ov 'colorful--color)))
     (pcase choice ; Check and convert color to any of the options:
       ('hex ; color to HEX
        (pcase kind
@@ -556,24 +556,18 @@ CHOICE is used for get kind of color."
           (if-let* ((color (colorful--hex-to-name color-value)))
               (list color beg end))))))))
 
-(defun colorful--colorize-match (color beg end kind)
+(defun colorful--colorize-match (color beg end kind face map)
   "Overlay match with a face from BEG to END.
 The background uses COLOR color value.  The foreground is obtained
 from `readable-foreground-color'."
-  (let* ((ov (make-overlay beg end))
-         (map (make-sparse-keymap)))
-
-    (if colorful-allow-mouse-clicks
-        (keymap-set map "<mouse-1>" (if buffer-read-only
-                                        #'colorful-convert-and-copy-color
-                                      #'colorful-change-or-copy-color)))
+  (let ((ov (make-overlay beg end)))
 
     ;; Define colorful overlay tag
     (overlay-put ov 'colorful--overlay t)
     ;; Set kind tag
-    (overlay-put ov 'colorful--overlay-kind kind)
+    (overlay-put ov 'colorful--color-kind kind)
     ;; Set color value as tag
-    (overlay-put ov 'colorful--overlay-color color)
+    (overlay-put ov 'colorful--color color)
 
     ;; Enable auto deletion.
     (overlay-put ov 'evaporate t)
@@ -584,13 +578,12 @@ from `readable-foreground-color'."
                    (if (eq colorful-prefix-alignment 'left)
                        'before-string
                      'after-string)
-                   (if colorful-allow-mouse-clicks
-                       (propertize colorful-prefix-string
-                                   'face `(:foreground ,color)
-                                   'mouse-face 'highlight
-                                   'keymap map)
-                     (propertize colorful-prefix-string
-                                 'face `(:foreground ,color))))
+                   (apply #'propertize
+                          colorful-prefix-string
+                          `( face ,face
+                             ,@(when colorful-allow-mouse-clicks
+                                 `( mouse-face highlight
+                                    keymap ,map)))))
       ;; Use no face for matched color
       (overlay-put ov 'face nil))
 
@@ -598,10 +591,7 @@ from `readable-foreground-color'."
       (when colorful-allow-mouse-clicks
         (overlay-put ov 'mouse-face 'highlight)
         (overlay-put ov 'keymap map))
-      (overlay-put ov 'face
-                   `((:foreground ,(readable-foreground-color color))
-                     (:background ,color)
-                     (:inherit colorful-base)))))))
+      (overlay-put ov 'face face)))))
 
 ;; TODO: Use _local for css vars in local scopes, use (car (syntax-ppss)) ?
 (defun colorful--get-css-variable-color (regexp pos &optional _local)
@@ -616,7 +606,7 @@ POS is the position where start the search."
       (or (and (colorful--find-overlay (match-beginning 1)) ; Ensure overlay exists.
                (overlay-get (colorful--find-overlay
                              (match-beginning 1))
-                            'colorful--overlay-color))
+                            'colorful--color))
           (match-string-no-properties 1)))))
 
 ;; Modify this functions for handle new colors added to this package.
@@ -719,9 +709,23 @@ BEG and END are color match positions."
                          (group (opt "#") (one-or-more alphanumeric))))
                   beg))))))
 
+      ;; Highlight the color
       ;; Ensure that COLOR is a valid color
-      (if (and color (color-defined-p color))
-          (colorful--colorize-match color beg end kind)))))
+      (when (and color (color-defined-p color))
+        (let ((face (if colorful-use-prefix
+                        (list :foreground color)
+                      (list
+                       :foreground (readable-foreground-color color)
+                       :background color
+                       :inherit 'colorful-base)))
+              (map (when colorful-allow-mouse-clicks
+                     `(keymap
+                       ,(cons
+                         'mouse-1
+                         (if buffer-read-only
+                             'colorful-convert-and-copy-color
+                           'colorful-change-or-copy-color))))))
+          (colorful--colorize-match color beg end kind face map))))))
 
 ;;; Fontify functions
 (defun colorful-mode-fontify-region (start end)
