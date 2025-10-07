@@ -756,7 +756,7 @@ BEG and END are color match positions."
 
 
 ;;;; Extra coloring definitions
-;; Each element of these lists must be in the form:
+;; The local variables which contains the color regexp must be in the form:
 ;; (KEYWORDS TYPE MATCH IGNORE-CASE)
 ;;
 ;; KEYWORDS must be a regexp string which contains the keywords
@@ -770,65 +770,69 @@ BEG and END are color match positions."
 ;; IGNORE-CASE is optional, if non-nil, then match will be case-insensitive
 
 ;;; Hex
-(defvar colorful-hex-font-lock-keywords
-  `((,(rx (seq (group (or "#" "0x") (= 3 hex)) (opt hex)
-               word-boundary))
-     hex 1)
-    (,(rx (seq (group (or "#" "0x") (= 3 hex hex)) (opt hex hex)
-               word-boundary))
-     hex 1)
-    (,(rx (seq (group "#" (= 12 hex))
-               word-boundary))
-     hex 1))
-  "Font-lock keywords to add Hex colors (with alpha).")
 
 (defun colorful-add-hex-colors ()
-  "Add hex color highlighting.
+  "Enable hex color highlighting.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
-  (dolist (colors colorful-hex-font-lock-keywords)
-    (cl-pushnew colors colorful-color-keywords)))
+  (cl-pushnew
+   `(,(rx (seq (group (or "#" "0x") (= 3 hex)) (opt hex)
+               word-boundary))
+     hex 1)
+   colorful-color-keywords)
+
+  (cl-pushnew
+   `(,(rx (seq (group (or "#" "0x") (= 3 hex hex)) (opt hex hex)
+               word-boundary))
+     hex 1)
+   colorful-color-keywords)
+
+  (cl-pushnew
+   `(,(rx (seq (group "#" (= 12 hex))
+               word-boundary))
+     hex 1)
+   colorful-color-keywords))
 
 ;;; Color names
 
-(defvar colorful--color-names-regexp
-  (regexp-opt (append
-               (mapcar #'car colorful-html-colors-alist)
-               (defined-colors))
-              'symbols))
-
-(defvar colorful-color-name-font-lock-keywords
-  `((,colorful--color-names-regexp
-     color-name 0 t))
-  "Font-lock keywords to add color names.")
-
 (defun colorful-add-color-names ()
-  "Add color name highlighting.
+  "Enable color name highlighting.
+This includes CSS and Emacs color names.
+
 This is intended to be used with `colorful-extra-color-keyword-functions'."
-  ;; HTML/CSS/Emacs color names are case insensitive.
-  (dolist (colors colorful-color-name-font-lock-keywords)
-    (cl-pushnew colors colorful-color-keywords)))
+  (cl-pushnew
+   `(,(regexp-opt
+       (append
+        (mapcar #'car colorful-html-colors-alist)
+        (defined-colors))
+       'symbols)
+     ;; HTML/CSS/Emacs color names are case insensitive.
+     color-name 0 t)
+   colorful-color-keywords))
 
 ;;; CSS user-defined colors
 
-(defvar colorful-css-variables-keywords
-  `((,(rx (group "@") (group (one-or-more (any alphabetic "_"))))
+(defun colorful-add-css-variables-colors ()
+  "Enable CSS user-defined color highlighting.
+This is intended to be used with `colorful-extra-color-keyword-functions'."
+  (cl-pushnew
+   `(,(rx (group "@") (group (one-or-more (any alphabetic "_"))))
      css-color-variable)
-    (,(rx (group "var") "(" (zero-or-more space)
+   colorful-color-keywords)
+
+  (cl-pushnew
+   `(,(rx (group "var") "(" (zero-or-more space)
           (group (one-or-more (any alphanumeric "-")))
           (zero-or-more space) ")")
-     css-color-variable))
-  "Font-lock keywords to add css user-defined colors.")
-
-(defun colorful-add-css-variables-colors ()
-  "Add CSS user-defined color highlighting.
-This is intended to be used with `colorful-extra-color-keyword-functions'."
-  (dolist (colors colorful-css-variables-keywords)
-    (cl-pushnew colors colorful-color-keywords)))
+     css-color-variable)
+   colorful-color-keywords))
 
 ;;; CSS rgb(a)
 
-(defvar colorful-rgb-font-lock-keywords
-  `((,(rx (seq "rgb" (opt "a") "(" (zero-or-more " ")
+(defun colorful-add-rgb-colors ()
+  "Enable CSS RGB color highlighting.
+This is intended to be used with `colorful-extra-color-keyword-functions'."
+  (cl-pushnew
+   `(,(rx (seq "rgb" (opt "a") "(" (zero-or-more " ")
                (group (repeat 1 3 digit)
                       (opt "." (1+ digit))
                       (opt "%"))
@@ -848,19 +852,17 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                         digit)
                     (opt (or "%" (zero-or-more " "))))
                ")"))
-     css-rgb))
-  "Font-lock keywords to add RGB colors.")
-
-(defun colorful-add-rgb-colors ()
-  "Add CSS RGB color highlighting.
-This is intended to be used with `colorful-extra-color-keyword-functions'."
-  (dolist (colors colorful-rgb-font-lock-keywords)
-    (cl-pushnew colors colorful-color-keywords)))
+     css-rgb)
+   colorful-color-keywords))
 
 ;;; CSS oklab and oklch
 
-(defvar colorful-oklab-oklch-font-lock-keywords
-  `((,(rx (seq "oklab(" (zero-or-more " ")
+(defun colorful-add-oklab-oklch-colors ()
+  "Add CSS OKLAB and OKLCH color highlighting.
+This is intended to be used with `colorful-extra-color-keyword-functions'."
+  ;; OKLAB
+  (cl-pushnew
+   `(,(rx (seq "oklab(" (zero-or-more " ")
                (group (repeat 1 3 digit)
                       (opt "." (1+ digit))
                       (opt "%"))
@@ -881,7 +883,11 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                            (opt (or "%" (zero-or-more " ")))))
                ")"))
      css-oklab)
-    (,(rx (seq "oklch(" (zero-or-more " ")
+   colorful-color-keywords)
+
+  ;; OKLCH
+  (cl-pushnew
+   `(,(rx (seq "oklch(" (zero-or-more " ")
                (group (repeat 1 3 digit)
                       (opt "." (1+ digit))
                       (opt "%"))
@@ -899,19 +905,16 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                                digit)
                            (opt (or "%" (zero-or-more " ")))))
                ")"))
-     css-oklch))
-  "Font-lock keywords to add OKLAB and OKLCH colors.")
-
-(defun colorful-add-oklab-oklch-colors ()
-  "Add CSS OKLAB and OKLCH color highlighting.
-This is intended to be used with `colorful-extra-color-keyword-functions'."
-  (dolist (colors colorful-oklab-oklch-font-lock-keywords)
-    (cl-pushnew colors colorful-color-keywords)))
+     css-oklch)
+   colorful-color-keywords))
 
 ;;; CSS hsl(a)
 
-(defvar colorful-hsl-font-lock-keywords
-  `((,(rx (seq "hsl" (opt "a") "(" (zero-or-more " ")
+(defun colorful-add-hsl-colors ()
+  "Enable CSS HSL color highlighting.
+This is intended to be used with `colorful-extra-color-keyword-functions'."
+  (cl-pushnew
+   `(,(rx (seq "hsl" (opt "a") "(" (zero-or-more " ")
                (group (repeat 1 3 digit) (opt (or "deg" "grad" "rad")))
                (zero-or-more " ") (opt "," (zero-or-more " "))
                (group (repeat 1 3 digit) (opt "%"))
@@ -925,34 +928,31 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                         digit)
                     (opt (or "%" (zero-or-more " "))))
                ")"))
-     css-hsl))
-  "Font-lock keywords to add HSL colors.")
-
-(defun colorful-add-hsl-colors ()
-  "Add CSS HSL color highlighting.
-This is intended to be used with `colorful-extra-color-keyword-functions'."
-  (dolist (colors colorful-hsl-font-lock-keywords)
-    (cl-pushnew colors colorful-color-keywords)))
+     css-hsl)
+   colorful-color-keywords))
 
 ;;; All (almost) LaTeX colors
 
-(defvar colorful-latex-keywords
-  `((,(rx (seq "{" (or "rgb" "RGB") "}{" (zero-or-more " ")
+(defun colorful-add-latex-colors ()
+  "Enable LaTeX rgb/RGB/HTML/Grey colors highlighting.
+This is intended to be used with `colorful-extra-color-keyword-functions'."
+  (cl-pushnew
+   `(,(rx (seq "{" (or "rgb" "RGB") "}{" (zero-or-more " ")
                (group (one-or-more (any digit "."))) (zero-or-more " ") "," (zero-or-more " ")
                (group (one-or-more (any digit "."))) (zero-or-more " ") "," (zero-or-more " ")
                (group (one-or-more (any digit "."))) (zero-or-more " ") "}"))
      latex-rgb)
-    (,(rx (seq "{HTML}{" (group (= 6 hex)) "}"))
-     latex-HTML)
-    (,(rx (seq "{gray}{" (group (one-or-more (any digit "."))) "}"))
-     latex-gray))
-  "Font-lock keywords to add LaTeX rgb/RGB/HTML/Grey colors.")
+   colorful-color-keywords)
 
-(defun colorful-add-latex-colors ()
-  "Add LaTeX rgb/RGB/HTML/Grey colors highlighting.
-This is intended to be used with `colorful-extra-color-keyword-functions'."
-  (dolist (colors colorful-latex-keywords)
-    (cl-pushnew colors colorful-color-keywords)))
+  (cl-pushnew
+   `(,(rx (seq "{HTML}{" (group (= 6 hex)) "}"))
+     latex-HTML)
+   colorful-color-keywords)
+
+  (cl-pushnew
+   `(,(rx (seq "{gray}{" (group (one-or-more (any digit "."))) "}"))
+     latex-gray)
+   colorful-color-keywords))
 
 
 ;;;; Minor mode definitions
