@@ -917,9 +917,9 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
    `(,(rx (seq "hsl" (opt "a") "(" (zero-or-more " ")
                (group (repeat 1 3 digit) (opt (or "deg" "grad" "rad")))
                (zero-or-more " ") (opt "," (zero-or-more " "))
-               (group (repeat 1 3 digit) (opt "%"))
+               (group (repeat 1 3 digit) (opt "." (1+ digit)) (opt "%"))
                (zero-or-more " ") (opt "," (zero-or-more " "))
-               (group (repeat 1 3 digit) (opt "%"))
+               (group (repeat 1 3 digit) (opt "." (1+ digit)) (opt "%"))
                (zero-or-more " ")
                (opt (or "/" ",") (zero-or-more " ")
                     (or (seq (zero-or-one digit)
@@ -967,10 +967,8 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
      ((and (listp fn)
            ;; For emacs < 28.1 compatibility (see: github#19)
            (seq-some #'derived-mode-p (ensure-list (car fn))))
-      (if (listp (cdr fn))
-          (dolist (fn-list (cdr fn))
-            (funcall fn-list))
-        (funcall (cdr fn))))
+      (dolist (fn-list (ensure-list (cdr fn)))
+        (funcall fn-list)))
 
      ;; If current major mode is not derived from any mode defined in
      ;; `colorful-extra-color-keyword-functions', use the
