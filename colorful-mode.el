@@ -427,6 +427,7 @@ BEG is the position to check for the overlay."
           (if (use-region-p)
               (list (region-beginning) (region-end)))))
 
+  ;; 1# Case: replace all the colors in an active region.
   (if (and beg end)
       (let* ((choices '(("Hexadecimal color format" . hex)
                         ("Color name" . name)))
@@ -434,7 +435,8 @@ BEG is the position to check for the overlay."
              (choice (alist-get
                       (completing-read "Change colors in region: " choices nil t nil nil)
                       choices nil nil 'equal))
-             (ignored-colors 0) ; Define counter
+             ;; Define counters
+             (ignored-colors 0)
              (changed-colors 0))
 
         (dolist (ov (overlays-in beg end))
@@ -451,13 +453,14 @@ BEG is the position to check for the overlay."
                   (setq changed-colors (1+ changed-colors)))
               (setq ignored-colors (1+ ignored-colors)))))
 
-        (if (and (= changed-colors 0)
-                 (= ignored-colors 0))
+        (if (and (zerop changed-colors)
+                 (zerop ignored-colors))
             (message "No color found in region.")
           (message (concat (propertize "Changed colors: %d" 'face 'success) " / "
                            (propertize "Ignored colors: %d" 'face 'error))
                    changed-colors ignored-colors)))
 
+    ;; 2# Case: replace only the color at point
     (if-let* ((colorful-ov (colorful--find-overlay)) ; Find colorful overlay tag at point/cursor.
               ;; Start prompt for color change and get new color.
               (result (colorful--prompt-converter colorful-ov "Change '%s' to: "))
@@ -484,7 +487,7 @@ BEG is the position to check for the overlay."
       ;; Copy color and notify to user it's done
       (progn (kill-new color)
              (message "`%s' copied." color))
-    ;; Otherwise throw error.
+    ;; Otherwise throw an error.
     (user-error "No color found")))
 
 (defun colorful-change-or-copy-color ()
@@ -718,13 +721,18 @@ BEG and END are color match positions."
                        :foreground (readable-foreground-color color)
                        :background color
                        :inherit 'colorful-base)))
+              ;; Make the function for the mouse clicks
               (map (when colorful-allow-mouse-clicks
                      `(keymap
-                       ,(cons
-                         'mouse-1
-                         (if buffer-read-only
-                             'colorful-convert-and-copy-color
-                           'colorful-change-or-copy-color))))))
+                       (mouse-1
+                        . ,(lambda ()
+                             (interactive)
+                             (save-excursion
+                               (goto-char beg)
+                               (call-interactively
+                                (if buffer-read-only
+                                    #'colorful-convert-and-copy-color
+                                  #'colorful-change-or-copy-color)))))))))
           (colorful--colorize-match color beg end kind face map))))))
 
 ;;; Fontify functions
