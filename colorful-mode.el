@@ -655,9 +655,9 @@ BEG and END are color match positions."
          (setq color
                (if (string-prefix-p "{R" color)  ; Check if it's RGB (shorted as "{R")
                    (format "#%02x%02x%02x"
-                           (/ (string-to-number match-1) 250.0) ; r
-                           (/ (string-to-number match-2) 250.0) ; g
-                           (/ (string-to-number match-3) 250.0)) ; b
+                           (string-to-number match-1) ; r
+                           (string-to-number match-2) ; g
+                           (string-to-number match-3)) ; b
                  (color-rgb-to-hex
                   (string-to-number match-1) ; r
                   (string-to-number match-2) ; g
