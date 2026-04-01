@@ -40,3 +40,7 @@ Crimson     "Crimson"
 Red         "Red"
 Lime        "Lime"
 Green       "Green"
+
+;;; ANSI Colors
+"\e[0;41m test_red_color \e[0m"
+"\033[0;46m test_blue_color \033[0m"

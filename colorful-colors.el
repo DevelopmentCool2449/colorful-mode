@@ -30,7 +30,8 @@
 ;; :keywords must be a regexp string which contains the keywords
 ;; to highlight
 ;;
-;; :type (optional) is a symbol which specifies the color type.
+;; :type (optional) is a symbol which specifies the color type (only
+;; used to convert between colors).
 ;;
 ;; :match (optional) must be a number which specifies the match to
 ;; use, if not set, it will use 0 instead.
@@ -62,6 +63,8 @@
 (declare-function colorful--hsl-to-hex "colorful-mode")
 (declare-function color-hsl-to-rgb "colorful-mode")
 (declare-function colorful--find-overlay "colorful-mode")
+
+(declare-function ansi-color-apply "ansi-color")
 
 
 ;;; Hex
@@ -115,7 +118,6 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                    (defined-colors))
                   'symbols)
       :type color-name
-      :match 0
       :case t ; HTML/CSS/Emacs color names are case insensitive.
       :function colorful--color-names-fn)
    colorful-color-keywords))
@@ -234,7 +236,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
     (colorful--oklch-to-hex match-1 match-2 match-3)))
 
 (defun colorful-add-oklab-oklch-colors ()
-  "Add CSS OKLAB and OKLCH color highlighting.
+  "Enable CSS OKLAB and OKLCH color highlighting.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   ;; OKLAB
   (cl-pushnew
@@ -358,6 +360,32 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
       :function colorful-latex-gray)
    colorful-color-keywords))
 
+
+;;; Shell colors
+
+(defun colorful--ansi-fn (&rest _)
+  (let* ((match (format "\033%sX" (match-string-no-properties 2)))
+         (face-property (get-text-property
+                         0 'font-lock-face
+                         (ansi-color-apply match))))
+    (or (plist-get face-property :foreground)
+        (plist-get face-property :background)
+        (cadr (or (assq :background face-property)
+                  (assq :foreground face-property))))))
+
+(defun colorful-add-ansi-shell-colors ()
+  "Enable ANSI shell color highlighting.
+This is intended to be used with `colorful-extra-color-keyword-functions'."
+  (require 'ansi-color)
+  (cl-pushnew
+   `( :keywords ,(rx (group (or (seq "\\" (any "Ee"))
+                                "\\033"
+                                (seq "\\x1" (any "Bb"))
+                                "\033"))
+                     (group "[" (zero-or-more (any "0-9" ";")) "m"))
+      :type ansi
+      :function colorful--ansi-fn)
+   colorful-color-keywords))
 
 (provide 'colorful-colors)
 ;;; colorful-colors.el ends here

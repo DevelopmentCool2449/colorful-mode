@@ -243,7 +243,8 @@ Available functions are:
  - `colorful-add-rgb-colors'
  - `colorful-add-hsl-colors'
  - `colorful-add-oklab-oklch-colors'
- - `colorful-add-latex-colors'"
+ - `colorful-add-latex-colors'
+ - `colorful-add-ansi-shell-colors'"
   :type '(repeat
           (choice (cons (choice :tag "Mode(s)" symbol (repeat symbol))
                         (choice :tag "Function(s)" (repeat function)
@@ -322,10 +323,15 @@ comments, including color names, which can be annoying."
 ;;;; Internal variables
 
 (defvar-local colorful-color-keywords nil
-  "Font-lock colors keyword to highlight.")
+  "List of colors keywords to highlight.")
 
 (defvar-local colorful--highlight nil
   "Internal variable used for check when the highlighting must be done.")
+
+(defvar colorful--conversion-choices
+  '(("Hexadecimal color format" . hex)
+    ("Color name" . color-name))
+  "Alist with all supported conversions formats.")
 
 
 ;;;; Internal Functions
@@ -431,12 +437,13 @@ BEG is the position to check for the overlay."
 
   ;; 1# Case: replace all the colors in an active region.
   (if (and beg end)
-      (let* ((choices '(("Hexadecimal color format" . hex)
-                        ("Color name" . name)))
-             ;; Start prompt.
+      (let* (;; Start prompt.
              (choice (alist-get
-                      (completing-read "Change colors in region: " choices nil t nil nil)
-                      choices nil nil 'equal))
+                      (completing-read "Change colors in region: "
+                                       colorful--conversion-choices
+                                       nil t nil nil)
+                      colorful--conversion-choices
+                      nil nil 'equal))
              ;; Define counters
              (ignored-colors 0)
              (changed-colors 0))
@@ -444,7 +451,8 @@ BEG is the position to check for the overlay."
         (dolist (ov (overlays-in beg end))
           ;; Ensure we are in colorful--overlay
           (when (overlay-get ov 'colorful--overlay)
-            (if-let* ((result (colorful--converter ov choice))
+            (if-let* ((kind (overlay-get ov 'colorful--color-kind))
+                      (result (colorful--converter ov choice kind))
                       ((consp result))
                       (range (cdr result)) ; Get the positions where it should be replaced.
                       (start (car range))
@@ -514,38 +522,29 @@ BEG is the position to check for the overlay."
          ;; If not COLOR string then get it from buffer.
          (color (or color (buffer-substring-no-properties beg end)))
          (prompt (format prompt color))
-         (choices '(("Hexadecimal color format" . hex)
-                    ("Color name" . color-name)))
+         (kind (overlay-get ov 'colorful--color-kind))
          ;; Get choice.
          (choice (alist-get
-                  (completing-read prompt choices nil t nil nil)
-                  choices nil nil 'equal))
-         (converted-color (colorful--converter ov choice)))
+                  (completing-read prompt colorful--conversion-choices
+                                   (lambda (elt) (not (eq (cdr elt) kind)))
+                                   t nil nil)
+                  colorful--conversion-choices nil nil 'equal))
+         (converted-color (colorful--converter ov choice kind)))
 
     (unless converted-color
       (user-error "No color available"))
 
-    ;; If choice is the same type as the color at point
-    ;; run again this function and send a message saying the color
-    ;; is the same type.
-    (if (stringp converted-color)
-        (colorful--prompt-converter ov converted-color beg end color)
+    converted-color))
 
-      converted-color)))
-
-(defun colorful--converter (ov choice)
+(defun colorful--converter (ov choice kind)
   "Convert color from OV to other format.
-Return a list which contains the new color and the positions to replace,
-otherwise return a string for message error.
-
+Return a list which contains the new color and the positions to replace.
+KIND (a symbol) is the kind of color.
 CHOICE is used for get kind of color."
   (let* ((beg (overlay-start ov)) ; Find positions.
          (end (overlay-end ov))
-         (kind (overlay-get ov 'colorful--color-kind))
          (color-value (overlay-get ov 'colorful--color)))
     (pcase choice ; Check and convert color to any of the options:
-      ((pred (eq kind))
-       (format "%s is already a %s. Try again: " color-value kind))
       ('hex ; color to HEX
        (list
         (colorful--short-hex
@@ -613,7 +612,8 @@ and positions to colorize."
                  (nth 3 (syntax-ppss))))
              (eq colorful--highlight t)))
 
-    (let* ((return (funcall function color beg end))
+    (let* ((return (save-match-data
+                     (funcall function color beg end)))
            (color (or (car-safe return) return)))
       (when (and color (color-defined-p color))
         (let ((beg (if (consp return) (nth 1 return) beg))
