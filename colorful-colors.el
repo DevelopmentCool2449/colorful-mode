@@ -255,16 +255,32 @@ Each entry should have the form (COLOR-NAME . HEXADECIMAL-COLOR)."
   :type 'alist
   :group 'colorful)
 
-(defun colorful--color-names-fn (color &rest _)
-  (if (color-defined-p color)
-      color
-    (cdr (assoc-string color colorful-html-colors-alist t))))
+(defun colorful-add-web-color-names ()
+  "Enable web (CSS/HTML) color name highlighting.
+This is intended to be used with `colorful-extra-color-keyword-functions'."
+  (cl-pushnew
+   `( :keywords ,(regexp-opt (mapcar #'car colorful-html-colors-alist) 'symbols)
+      :type color-name
+      :case t ; color names are case insensitive.
+      :function (lambda (color &rest _)
+                  (cdr (assoc-string color colorful-html-colors-alist t))))
+   colorful-color-keywords))
+
+(defun colorful-add-emacs-color-names ()
+  "Enable Emacs color name highlighting.
+This is intended to be used with `colorful-extra-color-keyword-functions'."
+  (cl-pushnew
+   `( :keywords ,(regexp-opt (defined-colors) 'symbols)
+      :type color-name
+      :case t ; color names are case insensitive.
+      :function (lambda (color &rest _) color))
+   colorful-color-keywords))
 
 (defun colorful-add-color-names ()
   "Enable color name highlighting.
 This includes CSS and Emacs color names.
-
 This is intended to be used with `colorful-extra-color-keyword-functions'."
+  (declare (obsolete "Use `colorful-add-emacs-color-names' or `colorful-add-web-color-names' or both" "1.2.6"))
   (cl-pushnew
    `( :keywords ,(regexp-opt
                   (append
@@ -273,7 +289,10 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                   'symbols)
       :type color-name
       :case t ; HTML/CSS/Emacs color names are case insensitive.
-      :function colorful--color-names-fn)
+      :function (lambda (color &rest _)
+                  (if (color-defined-p color)
+                      color
+                    (cdr (assoc-string color colorful-html-colors-alist t)))))
    colorful-color-keywords))
 
 

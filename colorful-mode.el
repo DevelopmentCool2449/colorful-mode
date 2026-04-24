@@ -62,13 +62,13 @@ Changing the background or foreground color will have no effect."
 
 (defcustom colorful-extra-color-keyword-functions
   '(colorful-add-hex-colors
-    (emacs-lisp-mode . colorful-add-color-names)
+    (emacs-lisp-mode . colorful-add-emacs-color-names)
     ((html-mode css-mode) .
      (colorful-add-css-variables-colors
       colorful-add-rgb-colors
       colorful-add-hsl-colors
       colorful-add-oklab-oklch-colors
-      colorful-add-color-names))
+      colorful-add-web-color-names))
     (latex-mode . colorful-add-latex-colors))
   "List of functions to add color highlighting to `colorful-color-keywords'.
 It can be a cons cell specifying the mode (or a list of modes),
@@ -85,13 +85,20 @@ Or a simple list of functions for executing wherever colorful is active:
 
 Available functions are:
  - `colorful-add-hex-colors'
- - `colorful-add-color-names'
+ - `colorful-add-emacs-color-names'
+ - `colorful-add-web-color-names'
  - `colorful-add-css-variables-colors'
  - `colorful-add-rgb-colors'
  - `colorful-add-hsl-colors'
  - `colorful-add-oklab-oklch-colors'
  - `colorful-add-latex-colors'
- - `colorful-add-ansi-shell-colors'"
+ - `colorful-add-ansi-shell-colors'
+
+WARNING: The order of the functions specifies the priority they
+should have to be highlighted first, for example, if you enable
+`colorful-add-emacs-color-names' and `colorful-add-web-color-names' in
+the same major mode, depending on which one was called last, it will
+overwrite the highlighting of the previous call."
   :type '(repeat
           (choice (cons (choice :tag "Mode(s)" symbol (repeat symbol))
                         (choice :tag "Function(s)" (repeat function)
@@ -500,19 +507,13 @@ and positions to colorize."
            (ignore-case (plist-get el :case))
            (function (plist-get el :function)))
       (goto-char start)
-      (cond
-       ((stringp keywords)
+      (let ((case-fold-search ignore-case))
         (while (re-search-forward keywords end t)
-          (colorful--colorize type (match-string-no-properties match)
-                              (match-beginning match) (match-end match)
-                              function)))
-       (ignore-case
-        (let ((case-fold-search t))
-          (while (re-search-forward keywords end t)
+          ;; Check if it is not already highlighted
+          (unless (colorful--find-overlay (match-beginning match))
             (colorful--colorize type (match-string-no-properties match)
                                 (match-beginning match) (match-end match)
-                                function)))))))
-
+                                function))))))
   `(jit-lock-bounds ,start . ,end))
 
 

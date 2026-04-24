@@ -36,10 +36,12 @@ green       "green"
 
 
 Chocolate   "Chocolate"
-Crimson     "Crimson"
 Red         "Red"
-Lime        "Lime"
 Green       "Green"
+;; These are not available as valid Emacs color names
+;; thus these should not be highlighted
+Crimson     "Crimson"
+Lime        "Lime"
 
 ;;; ANSI Colors
 "\e[0;41m test_red_color \e[0m"
