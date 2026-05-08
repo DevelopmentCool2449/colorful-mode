@@ -6,7 +6,7 @@
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;;             Elias G. Perez <eg642616@gmail.com>
 ;; Created: 2024-04-10
-;; Package-Requires: ((emacs "28.1") (compat "30.1.0.0"))
+;; Package-Requires: ((emacs "28.1") (compat "31") (cl-lib "1.0"))
 ;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
 ;; Keywords: faces, tools, matching, convenience
 ;; Version: 1.2.5
@@ -39,10 +39,6 @@
 (require 'compat)
 (require 'color)
 (require 'colorful-colors)
-(eval-when-compile
-  (require 'subr-x)
-  (require 'rx)
-  (require 'cl-lib))
 
 
 ;;;; User Options
@@ -275,9 +271,8 @@ L C and H must be strings."
 (defun colorful--find-overlay (&optional beg)
   "Return colorful overlay if found at current point.
 BEG is the position to check for the overlay."
-  (cl-dolist (ov (overlays-at (or beg (point))))
-    (if (overlay-get ov 'colorful--overlay)
-        (cl-return ov))))
+  (any (lambda (ov) (overlay-get ov 'colorful--overlay))
+       (overlays-at (or beg (point)))))
 
 
 ;;;; User Interactive Functions

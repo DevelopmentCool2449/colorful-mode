@@ -49,7 +49,9 @@
 ;; with the computed color, or just the string hex color.
 
 ;;; Code:
-(require 'cl-lib)
+(eval-when-compile
+  (require 'rx)
+  (require 'cl-lib)) ; For `cl-pushnew'
 
 
 ;;; Declarations
