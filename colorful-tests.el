@@ -1,4 +1,4 @@
-;;; colorful-color-tests.el --- Tests for colorful-mode  -*- lexical-binding: t; no-byte-compile: t; no-update-autoloads: t; -*-
+;;; colorful-tests.el --- Tests for colorful-mode  -*- lexical-binding: t; no-byte-compile: t; no-update-autoloads: t; -*-
 
 ;; Copyright (C) 2026 Free Software Foundation, Inc
 
@@ -352,7 +352,8 @@ foreground: var(--error-color);")
   (let ((colorful-only-strings t))
     (with-temp-buffer
       (prog-mode)
-      (insert "\"#152364\" \"0x1f1d2e\" \"#def\" \"cyan\" \"red\"")
+      (insert "cyan" "#ffffff" ; <- Should not be highlighted
+              "\"#152364\" \"0x1f1d2e\" \"#def\" \"cyan\" \"red\"")
       (colorful-add-hex-colors)
       (colorful-add-emacs-color-names)
       (colorful-mode-fontify-region (point-min) (point-max))
@@ -364,5 +365,5 @@ foreground: var(--error-color);")
         (should (string= (overlay-get (nth 4 ovs) 'colorful--color) "red"))))))
 
 
-(provide 'colorful-color-tests)
-;;; colorful-color-tests.el ends here
+(provide 'colorful-tests)
+;;; colorful-tests.el ends here
