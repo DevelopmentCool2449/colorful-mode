@@ -29,7 +29,7 @@
 (ert-deftest colorful-hl-hex-rgb ()
   "Check all the supported hex color codes are highlighted and in the proper positions."
   (with-temp-buffer
-    (let (colorful-only-strings colorful-color-keywords)
+    (let (colorful-only-strings)
       (insert "#152364 0x1f1d2e #def124 0xf00 #f00C #def")
       (colorful-add-hex-colors)
       (colorful-mode-fontify-region (point-min) (point-max))
