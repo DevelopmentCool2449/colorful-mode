@@ -23,30 +23,37 @@
 ;;; Commentary:
 
 ;; This file contains functions intended to be used in
-;; `colorful-extra-color-keyword-functions'
+;; `colorful-extra-color-keyword-functions' to enable color
+;; highlighting.
 ;;
-;; These functions must return a plist which contains:
+;; A function for each highlighting must be defined, these functions
+;; must return a plist which contains:
 ;;
-;; :keywords must be a regexp string which contains the keywords
-;; to highlight
+;; :keywords
+;;   It must be a regexp string to match the color to highlight.
 ;;
-;; :type (optional) is a symbol which specifies the color type (only
-;; used to convert between colors).
+;; :type (optional)
+;;   It is a symbol which specifies the color type (only used to convert
+;;   between colors).
 ;;
-;; :match (optional) must be a number which specifies the match to
-;; use, if not set, it will use 0 instead.
+;; :match (optional)
+;;   It must be a number which specifies the subexpression to use, if
+;;   not set, it will use 0 instead.
 ;;
-;; :case (optional), if non-nil, then match will be case-insensitive
+;; :case (optional)
+;    If non-nil, the match will be case-insensitive.
 ;;
-;; :function must be a function.
-;; It is called with three arguments COLOR, BEG, and END.
+;; :function
+;;   It must be a function, intended to be used to compute the color matched.
+;;   It is called with three arguments COLOR, BEG, and END.
 ;;
-;; COLOR is the string which contains the color matched.
-;; BEG and END are color matched positions.
+;;   COLOR is the string which contains the color matched (the text matched by :keywords).
+;;   BEG and END are the color matched positions.
 ;;
-;; The function must return either a list with the computed string hex
-;; color to colorize, the beg and end buffer positions to colorize
-;; with the computed color, or just the string hex color.
+;;   The function must return either: a list with 3 elements including
+;;   the computed string color in hexadecimal format to colorize and the
+;;   beginning and end buffer positions to where colorize with the
+;;   computed color; or just the string hexadecimal color.
 
 ;;; Code:
 (eval-when-compile
