@@ -439,12 +439,12 @@ from `readable-foreground-color'."
                    (if (eq colorful-prefix-alignment 'left)
                        'before-string
                      'after-string)
-                   (apply #'propertize
-                          colorful-prefix-string
-                          `( face ,face
-                             ,@(when colorful-allow-mouse-clicks
-                                 `( mouse-face highlight
-                                    keymap ,map)))))
+                   (propertize "c" 'display
+                               (apply #'propertize colorful-prefix-string
+                                      'face face
+                                      `(,@(when colorful-allow-mouse-clicks
+                                            `( mouse-face highlight
+                                               keymap ,map))))))
       ;; Use no face for matched color
       (overlay-put ov 'face nil))
 
@@ -478,8 +478,7 @@ and positions to colorize."
                  (nth 3 (syntax-ppss))))
              (eq colorful--highlight t)))
 
-    (let* ((return (save-match-data
-                     (funcall function color beg end)))
+    (let* ((return (save-match-data (funcall function color beg end)))
            (color (or (car-safe return) return)))
       (when (and color (color-defined-p color))
         (let ((beg (if (consp return) (nth 1 return) beg))
