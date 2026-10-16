@@ -47,13 +47,15 @@
 ;;   It must be a function, intended to be used to compute the color matched.
 ;;   It is called with three arguments COLOR, BEG, and END.
 ;;
-;;   COLOR is the string which contains the color matched (the text matched by :keywords).
+;;   COLOR is the string which contains the color matched (the text matched by :keywords with :match).
 ;;   BEG and END are the color matched positions.
 ;;
 ;;   The function must return either: a list with 3 elements including
 ;;   the computed string color in hexadecimal format to colorize and the
 ;;   beginning and end buffer positions to where colorize with the
 ;;   computed color; or just the string hexadecimal color.
+;;
+;;   If the function returns nil, then no highlighting is performed.
 
 ;;; Code:
 (eval-when-compile
@@ -279,8 +281,9 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   "Enable Emacs color name highlighting.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (cl-pushnew
-   `( :keywords ,(regexp-opt (defined-colors) 'symbols)
+   `( :keywords ,(concat "\"" (regexp-opt (defined-colors) 'symbols) "\"")
       :type color-name
+      :match 1
       :case t ; color names are case insensitive.
       :function (lambda (color &rest _) color))
    colorful-color-keywords))

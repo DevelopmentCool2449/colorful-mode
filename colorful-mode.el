@@ -27,9 +27,9 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;;  Minor mode for coloring color names, hex values, or rgb/hsl values
-;;  (CSS), and more inside your buffer in real time,
-;;  developer-friendly and effective based/inspired on `rainbow-mode.el'
+;;  Minor mode for coloring color names, hexadecimal values, or CSS
+;;  rgb and hsl values, and more inside your buffer in real time and
+;;  developer-friendly inspired on `rainbow-mode.el'
 
 ;;; Code:
 
@@ -485,6 +485,7 @@ and positions to colorize."
          (or (not colorful-only-strings)
              (when (or (eq colorful--highlight 'prog)
                        (eq colorful-only-strings t))
+               (save-excursion (goto-char beg)) ; Needed to match strings
                (if colorful-highlight-in-comments
                    ;; Highlight only for strings and comments
                    (syntax-ppss-context (syntax-ppss))

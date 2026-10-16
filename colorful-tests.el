@@ -60,7 +60,7 @@
                      ;; These are not available as valid Emacs color names
                      ;; thus these should not be highlighted
                      "Crimson" "Lime")))
-      (insert (string-join content " "))
+      (insert (string-join (mapcar (lambda (s) (concat "\"" s "\"")) content) " "))
       (colorful-add-emacs-color-names-colors)
       (colorful-mode-fontify-region (point-min) (point-max))
       (let ((ovs (overlays-in (point-min) (point-max))))
@@ -338,7 +338,7 @@ foreground: var(--error-color);")
   (with-temp-buffer
     (let (colorful-only-strings
           (colorful-exclude-colors '("#define" "#ffffff" "red" "yellow"))
-          (content " cyan #000000"))
+          (content " \"cyan\" #000000"))
       (insert (string-join colorful-exclude-colors " ") content)
       (colorful-add-hex-colors)
       (colorful-add-emacs-color-names-colors)
@@ -352,7 +352,7 @@ foreground: var(--error-color);")
   (let ((colorful-only-strings t))
     (with-temp-buffer
       (prog-mode)
-      (insert "cyan" "#ffffff" ; <- Should not be highlighted
+      (insert "cyan #ffffff " ; <- Should not be highlighted
               "\"#152364\" \"0x1f1d2e\" \"#def\" \"cyan\" \"red\"")
       (colorful-add-hex-colors)
       (colorful-add-emacs-color-names-colors)
