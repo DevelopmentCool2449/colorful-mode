@@ -70,13 +70,13 @@ Changing the background or foreground color will have no effect."
 It can be a cons cell specifying the mode (or a list of modes),
 e.g.:
 \(((`css-mode' `css-ts-mode') . `colorful-add-rgb-colors')
-  (`emacs-lisp-mode' . (`colorful-add-color-names'
+  (`emacs-lisp-mode' . (`colorful-add-emacs-color-names'
                         `colorful-add-rgb-colors'))
-  ((`text-mode' `html-mode') . (`colorful-add-color-names'
+  ((`text-mode' `html-mode') . (`colorful-add-web-color-names'
                                 `colorful-add-rgb-colors'))
   ...)
 Or a simple list of functions for executing wherever colorful is active:
-\(`colorful-add-color-names'
+\(`colorful-add-web-color-names'
   `colorful-add-rgb-colors')
 
 Available functions are:
