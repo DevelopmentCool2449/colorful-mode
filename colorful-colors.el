@@ -257,7 +257,7 @@ Each entry should have the form (COLOR-NAME . HEXADECIMAL-COLOR)."
   :type 'alist
   :group 'colorful)
 
-(defun colorful-add-web-color-names ()
+(defun colorful-add-web-color-names-colors ()
   "Enable web (CSS/HTML) color name highlighting.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (cl-pushnew
@@ -268,7 +268,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                   (cdr (assoc-string color colorful-html-colors-alist t))))
    colorful-color-keywords))
 
-(defun colorful-add-emacs-color-names ()
+(defun colorful-add-emacs-color-names-colors ()
   "Enable Emacs color name highlighting.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
   (cl-pushnew
@@ -282,7 +282,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   "Enable color name highlighting.
 This includes CSS and Emacs color names.
 This is intended to be used with `colorful-extra-color-keyword-functions'."
-  (declare (obsolete "Use `colorful-add-emacs-color-names' or `colorful-add-web-color-names' or both" "1.2.6"))
+  (declare (obsolete "Use `colorful-add-emacs-color-names-colors' or `colorful-add-web-color-names-colors' or both" "1.2.6"))
   (cl-pushnew
    `( :keywords ,(regexp-opt
                   (append

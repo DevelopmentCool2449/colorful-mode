@@ -58,31 +58,31 @@ Changing the background or foreground color will have no effect."
 
 (defcustom colorful-extra-color-keyword-functions
   '(colorful-add-hex-colors
-    (emacs-lisp-mode . colorful-add-emacs-color-names)
+    (emacs-lisp-mode . colorful-add-emacs-color-names-colors)
     ((html-mode css-mode) .
      (colorful-add-css-variables-colors
       colorful-add-rgb-colors
       colorful-add-hsl-colors
       colorful-add-oklab-oklch-colors
-      colorful-add-web-color-names))
+      colorful-add-web-color-names-colors))
     (latex-mode . colorful-add-latex-colors))
   "List of functions to add color highlighting to `colorful-color-keywords'.
 It can be a cons cell specifying the mode (or a list of modes),
 e.g.:
 \(((`css-mode' `css-ts-mode') . `colorful-add-rgb-colors')
-  (`emacs-lisp-mode' . (`colorful-add-emacs-color-names'
+  (`emacs-lisp-mode' . (`colorful-add-emacs-color-names-colors'
                         `colorful-add-rgb-colors'))
-  ((`text-mode' `html-mode') . (`colorful-add-web-color-names'
+  ((`text-mode' `html-mode') . (`colorful-add-web-color-names-colors'
                                 `colorful-add-rgb-colors'))
   ...)
 Or a simple list of functions for executing wherever colorful is active:
-\(`colorful-add-web-color-names'
+\(`colorful-add-web-color-names-colors'
   `colorful-add-rgb-colors')
 
 Available functions are:
  - `colorful-add-hex-colors'
- - `colorful-add-emacs-color-names'
- - `colorful-add-web-color-names'
+ - `colorful-add-emacs-color-names-colors'
+ - `colorful-add-web-color-names-colors'
  - `colorful-add-css-variables-colors'
  - `colorful-add-rgb-colors'
  - `colorful-add-hsl-colors'
@@ -92,7 +92,7 @@ Available functions are:
 
 WARNING: The order of the functions specifies the priority they
 should have to be highlighted first, for example, if you enable
-`colorful-add-emacs-color-names' and `colorful-add-web-color-names' in
+`colorful-add-emacs-color-names-colors' and `colorful-add-web-color-names-colors' in
 the same major mode, depending on which one was called last, it will
 overwrite the highlighting of the previous call."
   :type '(repeat
