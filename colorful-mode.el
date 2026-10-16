@@ -475,48 +475,49 @@ COLOR is the string which contains the color matched.
 BEG and END are color match positions.
 FUNCTION is a function to call to get the respective color
 and positions to colorize."
-  (when (and
-         ;; Check if match isn't blacklisted ...
-         (not (member color colorful-exclude-colors))
-         ;; ... and color is in a comment according
-         ;; colorful-highlight-in-comments ...
-         (or colorful-highlight-in-comments (not (nth 4 (syntax-ppss))))
-         ;; ... and wheter color is in a string according colorful-only-strings.
-         (or (not colorful-only-strings)
-             (when (or (eq colorful--highlight 'prog)
-                       (eq colorful-only-strings t))
-               (save-excursion (goto-char beg)) ; Needed to match strings
-               (if colorful-highlight-in-comments
-                   ;; Highlight only for strings and comments
-                   (syntax-ppss-context (syntax-ppss))
-                 ;; Highlight only for strings
-                 (nth 3 (syntax-ppss))))
-             (eq colorful--highlight t)))
+  (save-excursion
+    (goto-char beg) ; Needed to match strings and comments
+    (when (and
+           ;; Check if match isn't blacklisted ...
+           (not (member color colorful-exclude-colors))
+           ;; ... and color is in a comment according
+           ;; colorful-highlight-in-comments ...
+           (or colorful-highlight-in-comments (not (nth 4 (syntax-ppss))))
+           ;; ... and wheter color is in a string according colorful-only-strings.
+           (or (not colorful-only-strings)
+               (when (or (eq colorful--highlight 'prog)
+                         (eq colorful-only-strings t))
+                 (if colorful-highlight-in-comments
+                     ;; Highlight only for strings and comments
+                     (syntax-ppss-context (syntax-ppss))
+                   ;; Highlight only for strings
+                   (nth 3 (syntax-ppss))))
+               (eq colorful--highlight t)))
 
-    (let* ((return (save-match-data (funcall function color beg end)))
-           (color (or (car-safe return) return)))
-      (when (and color (color-defined-p color))
-        (let ((beg (if (consp return) (nth 1 return) beg))
-              (end (if (consp return) (nth 2 return) end))
-              (face (if colorful-use-prefix
-                        (list :foreground color)
-                      (list
-                       :foreground (readable-foreground-color color)
-                       :background color
-                       :inherit 'colorful-base)))
-              ;; Make the function for the mouse clicks
-              (map (when colorful-allow-mouse-clicks
-                     `(keymap
-                       (mouse-1
-                        . ,(lambda ()
-                             (interactive)
-                             (save-excursion
-                               (goto-char beg)
-                               (call-interactively
-                                (if buffer-read-only
-                                    #'colorful-convert-and-copy-color
-                                  #'colorful-change-or-copy-color)))))))))
-          (colorful--colorize-match color beg end kind face map))))))
+      (let* ((return (save-match-data (funcall function color beg end)))
+             (color (or (car-safe return) return)))
+        (when (and color (color-defined-p color))
+          (let ((beg (if (consp return) (nth 1 return) beg))
+                (end (if (consp return) (nth 2 return) end))
+                (face (if colorful-use-prefix
+                          (list :foreground color)
+                        (list
+                         :foreground (readable-foreground-color color)
+                         :background color
+                         :inherit 'colorful-base)))
+                ;; Make the function for the mouse clicks
+                (map (when colorful-allow-mouse-clicks
+                       `(keymap
+                         (mouse-1
+                          . ,(lambda ()
+                               (interactive)
+                               (save-excursion
+                                 (goto-char beg)
+                                 (call-interactively
+                                  (if buffer-read-only
+                                      #'colorful-convert-and-copy-color
+                                    #'colorful-change-or-copy-color)))))))))
+            (colorful--colorize-match color beg end kind face map)))))))
 
 ;;; Fontify functions
 (defun colorful-mode-fontify-region (start end)
