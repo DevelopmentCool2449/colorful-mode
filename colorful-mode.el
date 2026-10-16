@@ -67,7 +67,10 @@ Changing the background or foreground color will have no effect."
       colorful-add-web-color-names-colors))
     (latex-mode . colorful-add-latex-colors))
   "List of functions to add color highlighting to `colorful-color-keywords'.
-It can be a cons cell specifying the mode (or a list of modes),
+It can be a cons cell specifying the major mode (or a list of modes) and
+the function color highlighting (or a list of functions) to add to the
+major-mode.
+
 e.g.:
 \(((`css-mode' `css-ts-mode') . `colorful-add-rgb-colors')
   (`emacs-lisp-mode' . (`colorful-add-emacs-color-names-colors'
@@ -75,7 +78,9 @@ e.g.:
   ((`text-mode' `html-mode') . (`colorful-add-web-color-names-colors'
                                 `colorful-add-rgb-colors'))
   ...)
-Or a simple list of functions for executing wherever colorful is active:
+
+Or a simple list of functions for wherever colorful is active:
+
 \(`colorful-add-web-color-names-colors'
   `colorful-add-rgb-colors')
 
@@ -182,7 +187,8 @@ comments, including color names, which can be annoying."
   '(("Hexadecimal color format" . hex)
     ("Color name" . color-name)
     ("CSS RGB" . css-rgb)
-    ("CSS HSL" . css-hsl))
+    ("CSS HSL" . css-hsl)
+    ("CSS OKLAB" . css-oklab))
   "Alist of supported conversions formats for prompt.")
 
 (defvar colorful--conversion-functions
@@ -202,11 +208,19 @@ comments, including color names, which can be annoying."
                   (seq-let (r g b)
                       (apply #'color-rgb-to-hsl (color-name-to-rgb color))
                     (format "hsl(%d, %d%%, %d%%)"
-                            (* r 360) (* g 100) (* b 100))))))
+                            (* r 360) (* g 100) (* b 100)))))
+    (css-oklab . ,(lambda (color _kind)
+                    (seq-let (l a b)
+                        (apply #'color-srgb-to-oklab (color-name-to-rgb color))
+                      (format "oklab(%.2f%%, %.2f, %.2f)"
+                              (* l 100) a b)))))
   "Alist of functions for colors conversion by kind.
 Each function in this alist is called with 2 arguments:
 COLOR - the color string (in hex/name format) to convert.
-KIND - the kind of color (a symbol) of the original color.")
+KIND - the kind of color (a symbol) of the original COLOR.
+
+The function must return the COLOR converted to another color format as
+a string.")
 
 
 ;;;; Internal Functions
