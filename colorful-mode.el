@@ -166,13 +166,15 @@ Setting this to non-nil can make converted hex inaccurate."
 If set to `only-prog', the colors in `prog-mode' will be highlighted
 only if they are inside a string, this doesn't include `css-mode' and
 derived."
-  :type '(choice boolean (const :tag "Only in prog-modes" only-prog)))
+  :type '(choice boolean (const :tag "Only in prog-modes" only-prog))
+  :safe #'(lambda (value) (and (memq value '(nil t only-prog)) t)))
 
 (defcustom colorful-highlight-in-comments nil
   "If non-nil, colorful will highlight colors inside comments.
 NOTE: If this is set, this will highlight any keyword within the
 comments, including color names, which can be annoying."
-  :type 'boolean)
+  :type 'boolean
+  :safe #'booleanp)
 
 
 ;;;; Internal variables
