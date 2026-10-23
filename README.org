@@ -25,7 +25,7 @@
     - =oklab= / =oklch=
     - =@define-color= CSS-specific variables /(used only in gtk's CSS files)/
     - =var()= CSS-specific variables
-  - LaTeX colors: =gray=, =rbg=, =RGB=, =HTML=
+  - LaTeX colors: =gray=, =rgb=, =RGB=, =HTML=
   - ANSI Shell color codes /(partially)/
 - Convert current color at point or in the current region to other formats
   such as hexadecimal or color names *(only available for some colors)*
