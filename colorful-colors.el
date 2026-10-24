@@ -27,7 +27,8 @@
 ;; highlighting.
 ;;
 ;; A function for each highlighting must be defined, these functions
-;; must return a plist which contains:
+;; must push a plist to `colorful-color-keywords', the plist must
+;; contain:
 ;;
 ;; :keywords
 ;;   It must be a regexp string to match the color to highlight.
@@ -48,11 +49,12 @@
 ;;   It is called with three arguments COLOR, BEG, and END.
 ;;
 ;;   COLOR is the string which contains the color matched (the text matched by :keywords with :match).
+
 ;;   BEG and END are the color matched positions.
 ;;
 ;;   The function must return either: a list with 3 elements including
-;;   the computed string color in hexadecimal format to colorize and the
-;;   beginning and end buffer positions to where colorize with the
+;;   the computed string color in hexadecimal format to colorize and
+;;   the beginning and end buffer positions to where colorize with the
 ;;   computed color; or just the string hexadecimal color.
 ;;
 ;;   If the function returns nil, then no highlighting is performed.
@@ -73,9 +75,15 @@
 (declare-function colorful--oklch-to-hex "colorful-mode")
 (declare-function colorful--hsl-to-hex "colorful-mode")
 (declare-function colorful--find-overlay "colorful-mode")
+(declare-function colorful--colorize-match "colorful-mode")
 
 (declare-function color-hsl-to-rgb "color")
 (declare-function ansi-color-apply "ansi-color")
+
+(declare-function eglot--TextDocumentIdentifier "eglot")
+(declare-function eglot--request "eglot")
+(declare-function eglot--current-server-or-lose "eglot")
+(declare-function eglot--lsp-position-to-point "eglot")
 
 
 ;;; Hex
@@ -571,6 +579,37 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
       :type ansi
       :function colorful--ansi-fn)
    colorful-color-keywords))
+
+
+;;; LSP textDocument/documentColor colors
+
+(defun colorful-lsp--colorize-in-region (beg end)
+  "Colorize LSP's documentColor colors between BEG and END positions."
+  ;; NOTE: eglot--request is used here instead of eglot--async-request
+  ;; because the latter is hard to implement in jit-lock.  Probably
+  ;; using eglot--request makes it slow, but the difference is not
+  ;; noticeable.
+  (let ((resp (eglot--request
+               (eglot--current-server-or-lose)
+               :textDocument/documentColor
+               (list :textDocument (eglot--TextDocumentIdentifier)))))
+    (pcase-dolist (`(:color ,color-spec :range ,range-spec)
+                   (append resp nil))
+      (let* ((color (color-rgb-to-hex (plist-get color-spec :red)
+                                      (plist-get color-spec :green)
+                                      (plist-get color-spec :blue)))
+             (color-beg (eglot--lsp-position-to-point (plist-get range-spec :start)))
+             (color-end (eglot--lsp-position-to-point (plist-get range-spec :end))))
+        (when (and (<= beg color-beg) (>= end color-end))
+          (colorful--colorize-match color color-beg color-end))))))
+
+(defun colorful-lsp--fontify-region (beg end)
+  ;; Clean up colorful overlays if found
+  (setq beg (progn (goto-char beg) (line-beginning-position 0))
+        end (progn (goto-char end) (line-end-position)))
+  (remove-overlays beg end 'colorful--overlay t)
+  (colorful-lsp--colorize-in-region beg end)
+  `(jit-lock-bounds ,beg . ,end))
 
 (provide 'colorful-colors)
 ;;; colorful-colors.el ends here

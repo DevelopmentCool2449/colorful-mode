@@ -40,6 +40,9 @@
 (require 'color)
 (require 'colorful-colors)
 
+(declare-function eglot-server-capable "eglot")
+(declare-function eglot-current-server "eglot")
+
 
 ;;;; User Options
 
@@ -95,11 +98,12 @@ Available functions are:
  - `colorful-add-latex-colors'
  - `colorful-add-ansi-shell-colors'
 
-WARNING: The order of the functions specifies the priority they
-should have to be highlighted first, for example, if you enable
-`colorful-add-emacs-color-names-colors' and `colorful-add-web-color-names-colors' in
-the same major mode, depending on which one was called last, it will
-overwrite the highlighting of the previous call."
+WARNING: The order of the functions specifies the priority they should
+have to be highlighted first, for example, if you enable
+`colorful-add-emacs-color-names-colors' and
+`colorful-add-web-color-names-colors' in the same major mode, depending
+on which one was called last, it will overwrite the highlighting of the
+previous call."
   :type '(repeat
           (choice (cons (choice :tag "Mode(s)" symbol (repeat symbol))
                         (choice :tag "Function(s)" (repeat function)
@@ -438,11 +442,32 @@ CHOICE is used to get kind of color from the user."
                   color-value kind)))
       (list result beg end))))
 
-(defun colorful--colorize-match (color beg end kind face map)
+(defun colorful--colorize-match (color beg end &optional kind)
   "Overlay match with a face from BEG to END.
-The background uses COLOR color value.  The foreground is obtained
-from `readable-foreground-color'."
-  (let ((ov (make-overlay beg end)))
+The background uses COLOR color value.  The foreground is obtained from
+`readable-foreground-color'.
+
+KIND is optional, it specifies the kind of COLOR, it is only used for
+color conversions."
+  (let ((ov (make-overlay beg end))
+        (face (if colorful-use-prefix
+                  (list :foreground color)
+                (list
+                 :foreground (readable-foreground-color color)
+                 :background color
+                 :inherit 'colorful-base)))
+        ;; Make the function for the mouse clicks
+        (map (when colorful-allow-mouse-clicks
+               `(keymap
+                 (mouse-1
+                  . ,(lambda ()
+                       (interactive)
+                       (save-excursion
+                         (goto-char beg)
+                         (call-interactively
+                          (if buffer-read-only
+                              #'colorful-convert-and-copy-color
+                            #'colorful-change-or-copy-color)))))))))
 
     (overlay-put ov 'colorful--overlay t) ; Define colorful overlay tag
     (overlay-put ov 'colorful--color-kind kind) ; Set kind tag
@@ -500,26 +525,8 @@ and positions to colorize."
              (color (or (car-safe return) return)))
         (when (and color (color-defined-p color))
           (let ((beg (if (consp return) (nth 1 return) beg))
-                (end (if (consp return) (nth 2 return) end))
-                (face (if colorful-use-prefix
-                          (list :foreground color)
-                        (list
-                         :foreground (readable-foreground-color color)
-                         :background color
-                         :inherit 'colorful-base)))
-                ;; Make the function for the mouse clicks
-                (map (when colorful-allow-mouse-clicks
-                       `(keymap
-                         (mouse-1
-                          . ,(lambda ()
-                               (interactive)
-                               (save-excursion
-                                 (goto-char beg)
-                                 (call-interactively
-                                  (if buffer-read-only
-                                      #'colorful-convert-and-copy-color
-                                    #'colorful-change-or-copy-color)))))))))
-            (colorful--colorize-match color beg end kind face map)))))))
+                (end (if (consp return) (nth 2 return) end)))
+            (colorful--colorize-match color beg end kind)))))))
 
 ;;; Fontify functions
 (defun colorful-mode-fontify-region (start end)
@@ -588,10 +595,26 @@ and positions to colorize."
 ;;;; Minor mode definition
 
 ;;;###autoload
+(define-minor-mode colorful-lsp-mode
+  "Minor mode for highlighting LSP server's documentColor colors."
+  :global nil
+  (if colorful-lsp-mode
+      (progn
+        (require 'eglot)
+        (if (and (eglot-current-server) (eglot-server-capable :colorProvider))
+            (progn
+              (jit-lock-register #'colorful-lsp--fontify-region)
+              (colorful-mode -1))
+          (colorful-lsp-mode -1)))
+    (jit-lock-unregister #'colorful-lsp--fontify-region)
+    (remove-overlays nil nil 'colorful--overlay t)
+    (colorful-mode +1)))
+
+;;;###autoload
 (define-minor-mode colorful-mode
   "Preview any color in your buffer such as hex, color names, CSS rgb in real time."
   :global nil
-  (if colorful-mode
+  (if (and colorful-mode (not colorful-lsp-mode))
       (progn
         ;; If `colorful-only-strings' is set to `only-prog', check if
         ;; the current major mode is derived from prog-mode for
