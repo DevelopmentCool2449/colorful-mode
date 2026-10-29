@@ -6,7 +6,7 @@
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;;             Elias G. Perez <eg642616@gmail.com>
 ;; Created: 2024-04-10
-;; Package-Requires: ((emacs "28.1") (compat "31") (cl-lib "1.0"))
+;; Package-Requires: ((emacs "28.1") (compat "31") (seq "2"))
 ;; Homepage: https://github.com/DevelopmentCool2449/colorful-mode
 ;; Keywords: faces, tools, matching, convenience
 ;; Version: 1.2.6
@@ -510,7 +510,7 @@ and positions to colorize."
            ;; ... and color is in a comment according
            ;; colorful-highlight-in-comments ...
            (or colorful-highlight-in-comments (not (nth 4 (syntax-ppss))))
-           ;; ... and wheter color is in a string according colorful-only-strings.
+           ;; ... and whether color is in a string according colorful-only-strings.
            (or (not colorful-only-strings)
                (when (or (eq colorful--highlight 'prog)
                          (eq colorful-only-strings t))
@@ -596,19 +596,26 @@ and positions to colorize."
 
 ;;;###autoload
 (define-minor-mode colorful-lsp-mode
-  "Minor mode for highlighting LSP server's documentColor colors."
+  "Minor mode for highlighting LSP server's documentColor colors via eglot.
+LSP-based highlighting requires `eglot' and a LSP server which supports
+`textDocument/documentColor'.  If the current server does not supports
+`textDocument/documentColor' LSP-based highlighting is not performed and
+`colorful-mode' will fallback to regexp highlighting."
   :global nil
   (if colorful-lsp-mode
       (progn
         (require 'eglot)
-        (if (and (eglot-current-server) (eglot-server-capable :colorProvider))
+        (if (and (eglot-current-server)
+                 (eglot-server-capable :colorProvider))
             (progn
               (jit-lock-register #'colorful-lsp--fontify-region)
               (colorful-mode -1))
-          (colorful-lsp-mode -1)))
+          (when (eglot-current-server)
+            (warn "Current server does not support textDocument/documentColor, using regexp highlighting instead."))
+          (colorful-lsp-mode -1)
+          (colorful-mode 1)))
     (jit-lock-unregister #'colorful-lsp--fontify-region)
-    (remove-overlays nil nil 'colorful--overlay t)
-    (colorful-mode +1)))
+    (remove-overlays nil nil 'colorful--overlay t)))
 
 ;;;###autoload
 (define-minor-mode colorful-mode
