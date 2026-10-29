@@ -27,7 +27,7 @@
     - =var()= CSS-specific variables
   - LaTeX colors: =gray=, =rgb=, =RGB=, =HTML=
   - ANSI Shell color codes /(partially)/
-  - Highlighting with LSP's documentColor (via eglot)
+  - LSP's documentColor (via eglot)
 - Convert current color at point or in the current region to other formats
   such as hexadecimal or color names *(only available for some colors)*
   with mouse click support.
@@ -104,7 +104,7 @@ These key bindings are defined by: =colorful-mode-map=
 
 ** Enabling highlighting with LSP
 
-Starting v2.0.0, =colorful-mode= supports highlighting colors using
+Starting v1.3.0, =colorful-mode= supports highlighting colors using
 LSP's =textDocument/documentColor= via eglot, to enable it turn on
 =colorful-lsp-mode= in a buffer with eglot enabled and colorful-mode
 will use LSP highlighting when the current server supports it,

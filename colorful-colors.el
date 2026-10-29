@@ -588,7 +588,7 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
   ;; NOTE: eglot--request is used here instead of eglot--async-request
   ;; because the latter is hard to implement in jit-lock.  Probably
   ;; using eglot--request makes it slow, but the difference is not
-  ;; noticeable.
+  ;; noticeable in some LSP servers.
   (let ((resp (eglot--request
                (eglot--current-server-or-lose)
                :textDocument/documentColor
@@ -604,7 +604,6 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
           (colorful--colorize-match color color-beg color-end))))))
 
 (defun colorful-lsp--fontify-region (beg end)
-  ;; Clean up colorful overlays if found
   (setq beg (progn (goto-char beg) (line-beginning-position 0))
         end (progn (goto-char end) (line-end-position)))
   (remove-overlays beg end 'colorful--overlay t)
