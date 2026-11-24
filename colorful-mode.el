@@ -443,12 +443,14 @@ CHOICE is used to get kind of color from the user."
       (list result beg end))))
 
 (defun colorful--colorize-match (color beg end &optional kind)
-  "Overlay match with a face from BEG to END.
+  "Create the overlay from BEG to END.
 The background uses COLOR color value.  The foreground is obtained from
 `readable-foreground-color'.
 
 KIND is optional, it specifies the kind of COLOR, it is only used for
-color conversions."
+color conversions.
+
+This returns the overlay."
   (let ((ov (make-overlay beg end))
         (face (if colorful-use-prefix
                   (list :foreground color)
@@ -493,7 +495,8 @@ color conversions."
       (when colorful-allow-mouse-clicks
         (overlay-put ov 'mouse-face 'highlight)
         (overlay-put ov 'keymap map))
-      (overlay-put ov 'face face)))))
+      (overlay-put ov 'face face)))
+    ov))
 
 (defun colorful--colorize (kind color beg end function)
   "Helper function to colorize each KIND of MATCH with itself.
@@ -605,12 +608,12 @@ LSP-based highlighting requires `eglot' and a LSP server which supports
   (if colorful-lsp-mode
       (progn
         (require 'eglot)
-        (if (and (eglot-current-server)
-                 (eglot-server-capable :colorProvider))
+        (if-let* ((serverp (eglot-current-server))
+                  (_ (eglot-server-capable :colorProvider)))
             (progn
               (jit-lock-register #'colorful-lsp--fontify-region)
               (colorful-mode -1))
-          (when (eglot-current-server)
+          (when serverp
             (warn "Current server does not support textDocument/documentColor, using regexp highlighting instead."))
           (colorful-lsp-mode -1)
           (colorful-mode 1)))

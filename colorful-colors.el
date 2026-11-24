@@ -81,9 +81,9 @@
 (declare-function ansi-color-apply "ansi-color")
 
 (declare-function eglot--TextDocumentIdentifier "eglot")
-(declare-function eglot--request "eglot")
+(declare-function eglot--async-request "eglot")
 (declare-function eglot--current-server-or-lose "eglot")
-(declare-function eglot--lsp-position-to-point "eglot")
+(declare-function eglot-range-region "eglot")
 
 
 ;;; Hex
@@ -583,31 +583,32 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 
 ;;; LSP textDocument/documentColor colors
 
-(defun colorful-lsp--colorize-in-region (beg end)
-  "Colorize LSP's documentColor colors between BEG and END positions."
-  ;; NOTE: eglot--request is used here instead of eglot--async-request
-  ;; because the latter is hard to implement in jit-lock.  Probably
-  ;; using eglot--request makes it slow, but the difference is not
-  ;; noticeable in some LSP servers.
-  (let ((resp (eglot--request
-               (eglot--current-server-or-lose)
-               :textDocument/documentColor
-               (list :textDocument (eglot--TextDocumentIdentifier)))))
-    (pcase-dolist (`(:color ,color-spec :range ,range-spec)
-                   (append resp nil))
-      (let* ((color (color-rgb-to-hex (plist-get color-spec :red)
-                                      (plist-get color-spec :green)
-                                      (plist-get color-spec :blue)))
-             (color-beg (eglot--lsp-position-to-point (plist-get range-spec :start)))
-             (color-end (eglot--lsp-position-to-point (plist-get range-spec :end))))
-        (when (and (<= beg color-beg) (>= end color-end))
-          (colorful--colorize-match color color-beg color-end))))))
+(defun colorful-lsp--colorize-in-region (beg end buffer)
+  "Colorize LSP's documentColor colors between BEG and END positions in BUFFER."
+  (eglot--async-request
+   (eglot--current-server-or-lose)
+   :textDocument/documentColor
+   (list :textDocument (eglot--TextDocumentIdentifier))
+   :success-fn
+   (lambda (resp)
+     (eglot--when-buffer-window buffer
+       (remove-overlays beg end 'colorful--overlay t)
+       (pcase-dolist (`(:color ,color-spec :range ,range-spec) (append resp nil))
+         (when-let* ((color (color-rgb-to-hex (plist-get color-spec :red)
+                                              (plist-get color-spec :green)
+                                              (plist-get color-spec :blue)))
+                     (color-range (eglot-range-region range-spec))
+                     (ov (and (<= beg (car color-range)) (>= end (cdr color-range))
+                              (not (colorful--find-overlay (car color-range)))
+                              (colorful--colorize-match color (car color-range) (cdr color-range)))))
+           (overlay-put ov 'modification-hooks (list (lambda (overlay &rest _)
+                                                       (delete-overlay overlay))))))))
+   :hint :textDocument/documentColor))
 
 (defun colorful-lsp--fontify-region (beg end)
   (setq beg (progn (goto-char beg) (line-beginning-position 0))
         end (progn (goto-char end) (line-end-position)))
-  (remove-overlays beg end 'colorful--overlay t)
-  (colorful-lsp--colorize-in-region beg end)
+  (colorful-lsp--colorize-in-region beg end (current-buffer))
   `(jit-lock-bounds ,beg . ,end))
 
 (provide 'colorful-colors)
