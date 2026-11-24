@@ -601,6 +601,9 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
                      (ov (and (<= beg (car color-range)) (>= end (cdr color-range))
                               (not (colorful--find-overlay (car color-range)))
                               (colorful--colorize-match color (car color-range) (cdr color-range)))))
+           ;; `modification-hooks' is needed here to delete the
+           ;; overlay when the color is being changed and avoid
+           ;; confusions
            (overlay-put ov 'modification-hooks (list (lambda (overlay &rest _)
                                                        (delete-overlay overlay))))))))
    :hint :textDocument/documentColor))
