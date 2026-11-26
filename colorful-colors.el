@@ -583,6 +583,9 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
 
 ;;; LSP textDocument/documentColor colors
 
+(defun colorful-lsp--remove-overlay (ov &rest _)
+  (delete-overlay ov))
+
 (defun colorful-lsp--colorize-in-region (beg end buffer)
   "Colorize LSP's documentColor colors between BEG and END positions in BUFFER."
   (eglot--async-request
@@ -591,25 +594,29 @@ This is intended to be used with `colorful-extra-color-keyword-functions'."
    (list :textDocument (eglot--TextDocumentIdentifier))
    :success-fn
    (lambda (resp)
-     (eglot--when-buffer-window buffer
-       (remove-overlays beg end 'colorful--overlay t)
-       (pcase-dolist (`(:color ,color-spec :range ,range-spec) (append resp nil))
-         (when-let* ((color (color-rgb-to-hex (plist-get color-spec :red)
-                                              (plist-get color-spec :green)
-                                              (plist-get color-spec :blue)))
-                     (color-range (eglot-range-region range-spec))
-                     (ov (and (<= beg (car color-range)) (>= end (cdr color-range))
-                              (not (colorful--find-overlay (car color-range)))
-                              (colorful--colorize-match color (car color-range) (cdr color-range)))))
-           ;; `modification-hooks' is needed here to delete the
-           ;; overlay when the color is being changed and avoid
-           ;; confusions
-           (overlay-put ov 'modification-hooks (list (lambda (overlay &rest _)
-                                                       (delete-overlay overlay))))))))
+     (when (and (buffer-live-p buffer))
+       (with-current-buffer buffer
+         (remove-overlays beg end 'colorful--overlay t)
+         (dolist (spec-list (append resp nil))
+           (when-let* ((color-spec (plist-get spec-list :color))
+                       (range-spec (plist-get spec-list :range))
+                       (color (color-rgb-to-hex (plist-get color-spec :red)
+                                                (plist-get color-spec :green)
+                                                (plist-get color-spec :blue)))
+                       (color-range (eglot-range-region range-spec))
+                       (ov (and (>= (car color-range) beg) (<= (cdr color-range) end)
+                                (not (colorful--find-overlay (car color-range)))
+                                (colorful--colorize-match color (car color-range) (cdr color-range)))))
+             ;; `modification-hooks' is needed here to delete the
+             ;; overlay when the color is being changed and avoid
+             ;; confusions
+             (overlay-put ov 'modification-hooks '(colorful-lsp--remove-overlay))
+             (overlay-put ov 'insert-in-front-hooks '(colorful-lsp--remove-overlay))
+             (overlay-put ov 'insert-behind-hooks '(colorful-lsp--remove-overlay)))))))
    :hint :textDocument/documentColor))
 
 (defun colorful-lsp--fontify-region (beg end)
-  (setq beg (progn (goto-char beg) (line-beginning-position 0))
+  (setq beg (progn (goto-char beg) (line-beginning-position))
         end (progn (goto-char end) (line-end-position)))
   (colorful-lsp--colorize-in-region beg end (current-buffer))
   `(jit-lock-bounds ,beg . ,end))
